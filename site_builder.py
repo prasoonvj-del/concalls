@@ -90,6 +90,17 @@ def build(quiet=False):
     meta = {"briefs": index, "updated": dt.datetime.now(IST).isoformat(timespec="minutes"),
             "concalls": len(cc["calls"]), "overviews": len(cc["overviews"])}
     (data / "index.js").write_text(_js("DESK_INDEX", None, meta), encoding="utf-8")
+    # cache-busting: every build gets new file addresses, so a refresh always shows the latest edition
+    stamp = dt.datetime.now(IST).strftime("%Y%m%d%H%M")
+    page = (PUBLIC / "index.html").read_text(encoding="utf-8")
+    for name in ("app.css", "app.js", "data/index.js"):
+        page = page.replace(f'"{name}"', f'"{name}?v={stamp}"')
+    page = page.replace("<head>", '<head>\n<meta http-equiv="Cache-Control" content="no-cache">', 1)
+    (PUBLIC / "index.html").write_text(page, encoding="utf-8")
+    js = (PUBLIC / "app.js").read_text(encoding="utf-8")
+    js = js.replace('"data/brief-" + date + ".js"', '"data/brief-" + date + ".js?v=' + stamp + '"')
+    js = js.replace('loadScript("data/concalls.js")', 'loadScript("data/concalls.js?v=' + stamp + '")')
+    (PUBLIC / "app.js").write_text(js, encoding="utf-8")
     if not quiet:
         C.say(f"Website built: {PUBLIC / 'index.html'}  ({len(index)} briefs, {len(cc['calls'])} concall summaries)")
     return PUBLIC / "index.html"
