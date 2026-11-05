@@ -28,6 +28,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Restore saved data (kept on the 'data' branch)
+        run: |
+          if git ls-remote --exit-code --heads origin data >/dev/null; then
+            git fetch --depth 1 origin data
+            rm -rf data summaries
+            git archive FETCH_HEAD | tar -x
+          fi
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -46,15 +54,20 @@ jobs:
           if [ "${{ github.event.schedule }}" = "40 1,4,7,10,16 * * *" ]; then MODE=--news-only; else MODE=; fi
           python daily.py $MODE 2>&1 | tee data/last_run.log
 
-      - name: Save today's data in the repository
+      - name: Save data (one commit, replaced each run - the repository doesn't grow)
         if: always()
         run: |
+          tmp=$(mktemp -d)
+          cp -r data "$tmp/" 2>/dev/null || true
+          cp -r summaries "$tmp/" 2>/dev/null || true
+          rm -rf "$tmp/data/pdf" "$tmp/data/text"
+          cd "$tmp"
+          git init -q -b data
           git config user.name "market-desk-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git diff --cached --quiet || git commit -m "Daily update $(date -u +%F)"
-          git pull --rebase --autostash || true
-          git push
+          git commit -qm "Data as of $(date -u '+%F %H:%M') UTC"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:data
 
       - uses: actions/configure-pages@v5
 

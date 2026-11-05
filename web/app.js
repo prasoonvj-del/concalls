@@ -240,6 +240,71 @@
       h.appendChild(s);
     });
   }
+  /** Scatter: one dot per company, dashed medians, hover + tap. */
+  function scatterChart(host, pts, xl, yl) {
+    mount(host, (h, W) => {
+      const H = 300, L = 46, R = 16, T = 12, B = 40;
+      const s = svg(W, H);
+      const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
+      const pad = (lo, hi) => { const d = (hi - lo) || Math.abs(hi) || 1; return [lo - d * 0.08, hi + d * 0.08]; };
+      const [x0, x1] = pad(Math.min(0, ...xs), Math.max(...xs)), [y0, y1] = pad(Math.min(0, ...ys), Math.max(...ys));
+      const X = (v) => L + ((v - x0) / (x1 - x0)) * (W - L - R), Y = (v) => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
+      for (let k = 0; k <= 4; k++) {
+        const vy = y0 + ((y1 - y0) * k) / 4, vx = x0 + ((x1 - x0) * k) / 4;
+        el("line", { x1: L, x2: W - R, y1: Y(vy), y2: Y(vy), class: "gridl" }, s);
+        el("text", { x: L - 6, y: Y(vy) + 4, "text-anchor": "end" }, s, Math.round(vy * 10) / 10);
+        el("text", { x: X(vx), y: H - B + 16, "text-anchor": "middle" }, s, Math.round(vx * 10) / 10);
+      }
+      if (x0 < 0) el("line", { x1: X(0), x2: X(0), y1: T, y2: H - B, class: "axis" }, s);
+      if (y0 < 0) el("line", { x1: L, x2: W - R, y1: Y(0), y2: Y(0), class: "axis" }, s);
+      const med = (a) => { const b = a.slice().sort((p, q) => p - q), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
+      const mx = med(xs), my = med(ys);
+      el("line", { x1: X(mx), x2: X(mx), y1: T, y2: H - B, stroke: cssv("--muted"), "stroke-dasharray": "4 4", "stroke-width": 1 }, s);
+      el("line", { x1: L, x2: W - R, y1: Y(my), y2: Y(my), stroke: cssv("--muted"), "stroke-dasharray": "4 4", "stroke-width": 1 }, s);
+      el("text", { x: (L + W - R) / 2, y: H - 4, "text-anchor": "middle" }, s, xl);
+      const yt = el("text", { x: 12, y: (T + H - B) / 2, "text-anchor": "middle", transform: `rotate(-90 12 ${(T + H - B) / 2})` }, s, yl);
+      yt.setAttribute("class", "val");
+      pts.forEach((p) => {
+        const dot = el("circle", { cx: X(p.x), cy: Y(p.y), r: 5, fill: cssv("--s1"), stroke: cssv("--surface"), "stroke-width": 2, style: "cursor:pointer" }, s);
+        const hit = el("circle", { cx: X(p.x), cy: Y(p.y), r: 12, fill: "transparent", style: "cursor:pointer" }, s);
+        const html = `<b>${esc(p.label)}</b><br>${esc(xl)}: ${p.x}<br>${esc(yl)}: ${p.y}<br><span class="m">Tap to open</span>`;
+        hit.addEventListener("mousemove", (e) => { dot.setAttribute("r", 7); showTip(html, e); });
+        hit.addEventListener("mouseleave", () => { dot.setAttribute("r", 5); hideTip(); });
+        hit.addEventListener("click", () => { hideTip(); p.onclick && p.onclick(); });
+      });
+      h.appendChild(s);
+    });
+  }
+
+  /** Ranked bars that may be negative (growth, margin change). */
+  function rankChart(host, rows, unit) {
+    mount(host, (h, W) => {
+      const narrow = W < 520, labW = narrow ? 120 : 190, rowH = 26, barH = 14;
+      const H = rows.length * rowH + 6, s = svg(W, H);
+      const hasNeg = rows.some((r) => r.value < 0);
+      const lo = Math.min(0, ...rows.map((r) => r.value)), hi = Math.max(0, ...rows.map((r) => r.value));
+      const span = W - labW - (hasNeg ? 90 : 50);
+      const sc = span / ((hi - lo) || 1);
+      const zero = labW + (hasNeg ? 40 : 0) + -lo * sc;
+      if (hasNeg) el("line", { x1: zero, x2: zero, y1: 0, y2: H, class: "axis" }, s);
+      rows.forEach((r, i) => {
+        const y = i * rowH + 3, by = y + (rowH - barH) / 2 - 2;
+        const g = el("g", { class: "row" }, s);
+        el("rect", { x: 0, y, width: W, height: rowH - 2, rx: 6, class: "hl", fill: "transparent" }, g);
+        el("text", { x: labW - 10, y: by + barH - 3, "text-anchor": "end", class: "lab" }, g, trunc(r.label, narrow ? 16 : 26));
+        const end = zero + r.value * sc;
+        el("path", { d: barPath(zero, end, by, barH), fill: cssv("--s1") }, g);
+        el("text", { x: r.value >= 0 ? end + 5 : end - 5, y: by + barH - 3, "text-anchor": r.value >= 0 ? "start" : "end", class: "val" }, g,
+          (Math.round(r.value * 10) / 10) + (r.flag ? " ⚠" : ""));
+        const hit = el("rect", { x: 0, y, width: W, height: rowH, class: "hit" }, g);
+        const html = `<b>${esc(r.label)}</b><br>${Math.round(r.value * 100) / 100} ${esc(unit)}${r.flag ? "<br>⚠ not stated word-for-word in the transcript (likely calculated)" : ""}`;
+        hit.addEventListener("mousemove", (e) => showTip(html, e));
+        hit.addEventListener("mouseleave", hideTip);
+        hit.addEventListener("click", () => { hideTip(); r.onclick && r.onclick(); });
+      });
+      h.appendChild(s);
+    });
+  }
   const legend = (items) => `<div class="legend">${items.map(([n, c]) => `<span><i style="background:${c}"></i>${esc(n)}</span>`).join("")}</div>`;
 
   /* ------------------------------------------------------------ story popover */
@@ -456,11 +521,21 @@
           ${call.tone ? `<span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>` : ""} ${call.compared ? `<span class="badge">vs last quarter</span>` : ""}
           ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""} <span class="m">· ${esc(call.sector)} · filed ${esc(call.date)}</span></div>
           ${call.checks.length ? `<div class="warn">Highlighted figures weren't found word-for-word in the transcript - check them in the PDF.</div>` : ""}
-          ${call.html}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p>` : `<div class="m">No concall summary for this company yet.</div>`}</div>
+          ${keyFigures(call)}${call.html}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p>` : `<div class="m">No concall summary for this company yet.</div>`}</div>
       </div>`;
     view.querySelectorAll("[data-sid]").forEach((d) => d.addEventListener("click", async () => {
       currentBrief = await getBrief(d.dataset.storyDate); current = currentBrief.date; openStory(d.dataset.sid);
     }));
+  }
+
+  function keyFigures(c) {
+    const m = c.metrics || {};
+    const ks = colsFor(c.sector).filter((k) => typeof m[k] === "number");
+    if (!ks.length) return "";
+    return `<div class="tiles" style="margin:6px 0 4px">${ks.map((k) => `<div class="tile"><div class="v" style="font-size:19px">${fmtM(m[k])}${
+      c.unchecked.includes(k) ? ' <span title="Not stated word-for-word in the transcript - likely calculated" style="font-size:13px">⚠</span>' : ""}</div>
+      <div class="k">${esc(MET[k][0])} · ${esc(MET[k][1])}</div></div>`).join("")}</div>
+      <div class="m" style="margin-bottom:6px"><a href="#peers/${encodeURIComponent(c.sector)}">Compare with ${esc(c.sector)} peers →</a></div>`;
   }
 
   async function pageConcalls(sector) {
@@ -503,6 +578,115 @@
         empty("Nothing matches.");
     };
     $("#ks").onchange = draw; $("#kq").onchange = draw; $("#kf").oninput = draw; draw();
+  }
+
+  const FIN = ["Banks", "NBFC & Financial Services", "Insurance"];
+  const MET = {
+    revenue_cr: ["Revenue", "Rs cr"], revenue_growth_yoy_pct: ["Revenue growth", "% YoY"],
+    ebitda_margin_pct: ["EBITDA margin", "%"], ebitda_margin_change_bps_yoy: ["Margin change", "bps YoY"],
+    pat_cr: ["PAT", "Rs cr"], pat_growth_yoy_pct: ["PAT growth", "% YoY"], capacity_utilisation_pct: ["Utilisation", "%"],
+    net_debt_cr: ["Net debt", "Rs cr (−=cash)"], capex_guidance_cr: ["Capex guidance", "Rs cr"],
+    loan_book_or_aum_growth_yoy_pct: ["Loan/AUM growth", "% YoY"], nim_pct: ["NIM", "%"],
+    gross_npa_pct: ["Gross NPA", "%"], credit_cost_pct: ["Credit cost", "%"],
+  };
+  const colsFor = (sector) => FIN.includes(sector)
+    ? ["loan_book_or_aum_growth_yoy_pct", "nim_pct", "gross_npa_pct", "credit_cost_pct", "pat_cr", "pat_growth_yoy_pct"]
+    : ["revenue_cr", "revenue_growth_yoy_pct", "ebitda_margin_pct", "ebitda_margin_change_bps_yoy", "pat_growth_yoy_pct",
+       "capacity_utilisation_pct", "net_debt_cr", "capex_guidance_cr"];
+  const TONE_N = { Positive: 3, Mixed: 2, Cautious: 1, Negative: 0 };
+  const fmtM = (v) => (v == null ? "–" : Math.abs(v) >= 100 ? fmt(Math.round(v)) : String(Math.round(v * 10) / 10));
+
+  async function pagePeers(sector) {
+    const cc = await getConcalls();
+    const byCo = {};
+    cc.calls.forEach((c) => { const k = norm(c.company); if (!byCo[k] || c.date > byCo[k].date) byCo[k] = c; });
+    const latest = Object.values(byCo);
+    const withM = latest.filter((c) => Object.values(c.metrics || {}).some((v) => typeof v === "number"));
+    if (!withM.length) { view.innerHTML = empty("Peer figures appear here as concalls are summarised."); return; }
+    const counts = {};
+    withM.forEach((c) => { counts[c.sector] = (counts[c.sector] || 0) + 1; });
+    const sectors = Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b));
+    sector = sectors.includes(sector) ? sector : sectors[0];
+    const rows = withM.filter((c) => c.sector === sector);
+    // only columns that at least one company in this sector actually reported
+    const cols = colsFor(sector).filter((k) => rows.some((c) => typeof c.metrics[k] === "number"));
+    const fin = FIN.includes(sector);
+    const xKey = fin ? "loan_book_or_aum_growth_yoy_pct" : "revenue_growth_yoy_pct";
+    const yKey = fin ? "nim_pct" : "ebitda_margin_pct";
+
+    // market-wide: guidance and tone shift by sector
+    const guid = {}, shift = {};
+    latest.forEach((c) => {
+      const gd = (c.metrics || {}).guidance;
+      if (gd && gd !== "none") { const g = guid[c.sector] = guid[c.sector] || {}; const k = gd === "initiated" ? "raised" : gd; g[k] = (g[k] || 0) + 1; }
+      if (c.prev_tone && c.tone && c.prev_tone in TONE_N && c.tone in TONE_N) {
+        const t = shift[c.sector] = shift[c.sector] || { pos: 0, neg: 0, neu: 0 };
+        const d = TONE_N[c.tone] - TONE_N[c.prev_tone];
+        if (d > 0) t.pos++; else if (d < 0) t.neg++; else t.neu++;
+      }
+    });
+
+    view.innerHTML = `<h1>Peer comparison</h1>
+      <div class="sub">Key figures from each company's latest concall · ⚠ = not stated word-for-word in the transcript (usually calculated) · tap a company for its summary</div>
+      <div class="filters"><select id="ps">${sectors.map((s) => `<option ${s === sector ? "selected" : ""}>${esc(s)} (${counts[s]})</option>`).join("")}</select></div>
+      <div class="card"><h2>${esc(sector)} <span class="m">${plural(rows.length, "company")}</span></h2>
+        <div style="overflow-x:auto"><table class="peer" id="pt"></table></div></div>
+      <div class="grid g2">
+        <div class="card"><h2>${esc(MET[xKey][0])} vs ${esc(MET[yKey][0])} <span class="m">dashed lines = sector median</span></h2><div id="c-sc"></div></div>
+        <div class="card"><h2>Rank by <select id="rk">${cols.map((k) => `<option value="${k}" ${k === yKey ? "selected" : ""}>${esc(MET[k][0])}</option>`).join("")}</select></h2><div id="c-rk"></div><div id="t-rk"></div></div>
+      </div>
+      <div class="grid g2">
+        <div class="card"><h2>Guidance this quarter <span class="m">all sectors</span></h2>
+          ${legend([["Raised", cssv("--pos")], ["Maintained", cssv("--neu")], ["Cut", cssv("--neg")]])}<div id="c-gd"></div><div id="t-gd"></div></div>
+        <div class="card"><h2>Tone vs last quarter <span class="m">companies whose management sounded better / worse</span></h2>
+          ${legend([["Worse", cssv("--neg")], ["Better", cssv("--pos")]])}<div id="c-sh"></div><div id="t-sh"></div></div>
+      </div>`;
+    $("#ps").onchange = (e) => go("#peers/" + encodeURIComponent(e.target.value.replace(/ \(\d+\)$/, "")));
+
+    let sortKey = yKey, dir = -1;
+    const drawTable = () => {
+      const val = (c, k) => (k === "company" ? c.company : k === "tone" ? (TONE_N[c.tone] ?? -1) : k === "guidance" ? (c.metrics.guidance || "") : c.metrics[k]);
+      const sorted = rows.slice().sort((a, b) => {
+        const x = val(a, sortKey), y = val(b, sortKey);
+        if (x == null) return 1; if (y == null) return -1;
+        return (x > y ? 1 : x < y ? -1 : 0) * dir;
+      });
+      const th = (k, label, unit) => `<th data-k="${k}" title="Sort">${esc(label)}${unit ? `<br><span class="m">${esc(unit)}</span>` : ""}${sortKey === k ? (dir < 0 ? " ▼" : " ▲") : ""}</th>`;
+      $("#pt").innerHTML = `<tr>${th("company", "Company")}${th("tone", "Tone")}${cols.map((k) => th(k, MET[k][0], MET[k][1])).join("")}${th("guidance", "Guidance")}</tr>` +
+        sorted.map((c) => `<tr><td><a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a><br><span class="m">${esc(c.quarter)}</span></td>
+          <td>${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : "–"}${c.prev_tone && c.prev_tone !== c.tone ? `<br><span class="m">was ${esc(c.prev_tone)}</span>` : ""}</td>
+          ${cols.map((k) => `<td class="num">${fmtM(c.metrics[k])}${c.unchecked.includes(k) && c.metrics[k] != null ? ' <span title="Not stated word-for-word in the transcript - likely calculated">⚠</span>' : ""}</td>`).join("")}
+          <td>${esc(c.metrics.guidance && c.metrics.guidance !== "none" ? c.metrics.guidance : "–")}</td></tr>`).join("");
+      $("#pt").querySelectorAll("th").forEach((t) => t.onclick = () => { const k = t.dataset.k; dir = sortKey === k ? -dir : -1; sortKey = k; drawTable(); });
+    };
+    drawTable();
+
+    const pts = rows.filter((c) => typeof c.metrics[xKey] === "number" && typeof c.metrics[yKey] === "number")
+      .map((c) => ({ label: c.company, x: c.metrics[xKey], y: c.metrics[yKey], onclick: () => go("#companies/" + encodeURIComponent(c.company)) }));
+    if (pts.length >= 2) scatterChart($("#c-sc"), pts, MET[xKey][0] + " (" + MET[xKey][1] + ")", MET[yKey][0] + " (" + MET[yKey][1] + ")");
+    else $("#c-sc").innerHTML = `<div class="m" style="padding:30px 0">Needs at least two companies with both figures.</div>`;
+
+    const drawRank = () => {
+      const k = $("#rk").value;
+      const rr = rows.filter((c) => typeof c.metrics[k] === "number").sort((a, b) => b.metrics[k] - a.metrics[k])
+        .map((c) => ({ label: c.company, value: c.metrics[k], flag: c.unchecked.includes(k), onclick: () => go("#companies/" + encodeURIComponent(c.company)) }));
+      if (rr.length) { rankChart($("#c-rk"), rr, MET[k][1]); $("#t-rk").innerHTML = tableView(["Company", MET[k][0]], rr.map((r) => [r.label, r.value])); }
+      else { $("#c-rk").innerHTML = `<div class="m">No company stated this figure.</div>`; $("#t-rk").innerHTML = ""; }
+    };
+    const drawMarket = () => {
+      const gRows = Object.entries(guid).sort((a, b) => Object.values(b[1]).reduce((x, y) => x + y, 0) - Object.values(a[1]).reduce((x, y) => x + y, 0)).slice(0, 14)
+        .map(([s, parts]) => ({ label: s, parts: { Raised: parts.raised || 0, Maintained: parts.maintained || 0, Cut: parts.cut || 0 }, onclick: () => go("#peers/" + encodeURIComponent(s)) }));
+      const gKeys = [{ key: "Raised", color: cssv("--pos") }, { key: "Maintained", color: cssv("--neu") }, { key: "Cut", color: cssv("--neg") }];
+      if (gRows.length) { stackChart($("#c-gd"), gRows, gKeys); $("#t-gd").innerHTML = tableView(["Sector", "Raised", "Maintained", "Cut"], gRows.map((r) => [r.label, r.parts.Raised, r.parts.Maintained, r.parts.Cut])); }
+      else $("#c-gd").innerHTML = `<div class="m">No guidance changes recorded yet.</div>`;
+      const sRows = Object.entries(shift).sort((a, b) => (b[1].pos + b[1].neg + b[1].neu) - (a[1].pos + a[1].neg + a[1].neu)).slice(0, 14)
+        .map(([s, t]) => ({ label: s, pos: t.pos, neg: t.neg, neu: t.neu, total: t.pos + t.neg + t.neu, onclick: () => go("#peers/" + encodeURIComponent(s)) }));
+      if (sRows.length) { divergingChart($("#c-sh"), sRows); $("#t-sh").innerHTML = tableView(["Sector", "Better", "Worse", "Same"], sRows.map((r) => [r.label, r.pos, r.neg, r.neu])); }
+      else $("#c-sh").innerHTML = `<div class="m">Fills in as companies are compared with last quarter.</div>`;
+    };
+    $("#rk").onchange = drawRank;
+    drawRank();
+    drawMarket();
   }
 
   function pageArchive() {
@@ -550,6 +734,7 @@
       else if (tab === "sectors") await pageSectors(arg || null);
       else if (tab === "companies") await pageCompanies(arg || null);
       else if (tab === "concalls") await pageConcalls(arg || null);
+      else if (tab === "peers") await pagePeers(arg || null);
       else if (tab === "archive") pageArchive();
       else if (tab === "settings") pageSettings();
       else await pageToday(null);

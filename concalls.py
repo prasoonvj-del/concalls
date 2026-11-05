@@ -91,6 +91,14 @@ Use exactly this structure:
 ### Notable analyst Q&A
 (3-6 most revealing questions and how management answered; note if they dodged)
 ### One-line takeaway
+
+Finally, add this block at the very end for a peer-comparison table. Numbers only (no units, no % sign,
+no commas); write na when the call doesn't state it or it doesn't apply. Use figures for the quarter
+discussed; growth is year-on-year. Net debt: negative means net cash.
+```metrics
+revenue_cr:\nrevenue_growth_yoy_pct:\nebitda_margin_pct:\nebitda_margin_change_bps_yoy:\npat_cr:\npat_growth_yoy_pct:\ncapacity_utilisation_pct:\nnet_debt_cr:\ncapex_guidance_cr:\nloan_book_or_aum_growth_yoy_pct:\nnim_pct:\ngross_npa_pct:\ncredit_cost_pct:
+guidance: <raised / cut / maintained / initiated / none>
+```
 """
 
 OVERVIEW_PROMPT = """You are a senior Indian equity analyst covering {sector}. Below are summaries of the {quarter} earnings calls of {n} companies in this sector.
@@ -792,6 +800,43 @@ def find_prev(lib, call):
     return max(cands, key=lambda c: c["date"]) if cands else None
 
 
+METRIC_KEYS = ["revenue_cr", "revenue_growth_yoy_pct", "ebitda_margin_pct", "ebitda_margin_change_bps_yoy",
+               "pat_cr", "pat_growth_yoy_pct", "capacity_utilisation_pct", "net_debt_cr", "capex_guidance_cr",
+               "loan_book_or_aum_growth_yoy_pct", "nim_pct", "gross_npa_pct", "credit_cost_pct"]
+GUIDANCE = ("raised", "cut", "maintained", "initiated", "none")
+
+
+def parse_metrics(text):
+    """Reads the ```metrics block. Returns (metrics dict, text without the block)."""
+    m = re.search(r"```\s*metrics\s*\n(.*?)```", text, re.S | re.I)
+    if not m:
+        return None, text
+    out = {}
+    for line in m.group(1).splitlines():
+        k, _, v = line.partition(":")
+        k, v = k.strip().lower(), v.strip().lower()
+        if k == "guidance":
+            out[k] = next((g for g in GUIDANCE if g in v), "none")
+        elif k in METRIC_KEYS:
+            num = re.search(r"-?\d[\d,]*(?:\.\d+)?", v.replace("(", "-"))
+            out[k] = float(num.group(0).replace(",", "")) if num and "na" != v else None
+    clean = (text[:m.start()] + text[m.end():]).rstrip()
+    clean = re.sub(r"\n+(Finally|Metrics)[^\n]*$", "", clean).rstrip()
+    return out, clean
+
+
+def metrics_unchecked(metrics, source):
+    """Metric values that don't appear in the transcript (usually calculated by the AI)."""
+    have = transcript_numbers(source)
+    bad = []
+    for k, v in (metrics or {}).items():
+        if isinstance(v, float):
+            whole, _, dec = ("%f" % abs(v)).rstrip("0").rstrip(".").partition(".")
+            if _num_key(whole, dec) not in have:
+                bad.append(k)
+    return bad
+
+
 def summarise_one(call, lib, pool, prev=None):
     """Summarise one call and save it. Returns True if saved."""
     text, problem = get_text(call)
@@ -807,6 +852,7 @@ def summarise_one(call, lib, pool, prev=None):
         prev_text = prev_text.split("\n---\n")[0]  # without the number-check note
         prev_info = {"quarter": prev["quarter"], "text": prev_text}
     out, ai = pool.run(lambda a: build_summary(a, call, text, prev_info))
+    metrics, out = parse_metrics(out)
     q = re.search(r"\*\*Quarter:\*\*\s*Q\s*([1-4])\s*[-' ]*FY\s*'?(\d{2,4})", out, re.I)
     call["quarter"] = f"Q{q.group(1)} FY{int(q.group(2)) % 100:02d}" if q else filing_quarter(call)
     tone = re.search(r"\*\*Tone:\*\*\s*\**\s*([A-Za-z]+)", out)
@@ -818,6 +864,9 @@ def summarise_one(call, lib, pool, prev=None):
             source += "\n" + old.read_text(encoding="utf-8")
     bad = unverified_numbers(out, source)
     call["unverified"] = bad
+    if metrics:
+        call["metrics"] = metrics
+        call["metrics_unchecked"] = metrics_unchecked(metrics, source)
     call["compared"] = bool(prev_info)
     note = ""
     if bad:

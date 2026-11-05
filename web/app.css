@@ -120,3 +120,11 @@ details.sum .b{padding:0 18px 14px;border-top:1px solid var(--line-2)}
 .archive a:hover{color:var(--accent)}
 .help{font-size:13.5px;color:var(--text-2)}
 @media (max-width:600px){main{padding:14px 10px 60px}.card{padding:14px}.top{gap:6px;padding:0 10px}nav a{padding:14px 9px 12px}}
+
+table.peer{border-collapse:collapse;width:100%;font-size:13.5px;min-width:640px}
+table.peer th{background:var(--surface-2);text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;font-weight:600;vertical-align:bottom}
+table.peer td:first-child{min-width:170px}
+table.peer td{padding:7px 9px;border-bottom:1px solid var(--line-2);vertical-align:top}
+table.peer td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.peer tr:hover td{background:var(--surface-2)}
+h2 select{font-size:13px;padding:4px 8px;margin-left:6px}

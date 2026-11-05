@@ -48,7 +48,10 @@ def concall_data():
             html = re.sub(r">([^<]+)<", lambda m: ">" + pat.sub(
                 r'<mark title="Not found word-for-word in the transcript - check it">\1</mark>', m.group(1)) + "<",
                 html)
-        calls.append({"company": c["company"], "code": c["code"], "sector": C.sector_of(lib, c),
+        prev = C.find_prev(lib, c)
+        calls.append({"metrics": c.get("metrics") or {}, "unchecked": c.get("metrics_unchecked") or [],
+                      "prev_tone": (prev or {}).get("tone", "") if prev and prev.get("summary") else "",
+                      "company": c["company"], "code": c["code"], "sector": C.sector_of(lib, c),
                       "quarter": c["quarter"], "date": c["date"], "tone": c.get("tone", ""),
                       "compared": bool(c.get("compared")), "checks": bad,
                       "pdf": c.get("pdf_url", C.BSE_PDF[0] + c["pdf"]), "html": html})

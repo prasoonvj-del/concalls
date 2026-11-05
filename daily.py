@@ -11,6 +11,7 @@ Each step is independent: if one fails (e.g. BSE is down), the others still run 
 Settings: the [cloud] section of config.ini. API keys: GEMINI_API_KEY / GROQ_API_KEY (GitHub secrets).
 """
 import configparser
+import re
 import time
 import traceback
 
@@ -32,14 +33,47 @@ def settings():
         "days": int(c.get("concall_days", "7") or 7),
         "first_days": int(c.get("first_run_days", "150") or 150),
         "sectors": None if sectors.lower() == "all" else [x.strip() for x in sectors.split(",") if x.strip()],
-        "limit": int(c.get("max_concalls_per_run", "30") or 30),
-        "compare": c.get("compare_with_last_quarter", "yes").strip().lower() in ("yes", "true", "1", "on"),
+        "limit": int(c.get("max_concalls_per_run", "60") or 60),
+        # all = every company; watchlist = only those (others compare once last quarter is summarised anyway)
+        "compare": {"yes": "all", "true": "all", "no": "none", "false": "none"}.get(
+            c.get("compare_with_last_quarter", "watchlist").strip().lower(),
+            c.get("compare_with_last_quarter", "watchlist").strip().lower()),
+        "backfill": int(c.get("metrics_backfill_per_run", "60") or 60),
     }
 
 
 def step_news():
     say("\n================ NEWS BRIEF ================")
     news.build()
+
+
+def watchlist():
+    cp = configparser.ConfigParser()
+    cp.read(C.CONFIG_FILE, encoding="utf-8")
+    raw = cp.get("cloud", "watchlist", fallback="") or cp.get("news", "watchlist", fallback="")
+    return [w.strip().lower() for w in raw.split(",") if w.strip()]
+
+
+def plan_concalls(lib, conf):
+    """Which calls to summarise this run: each company's LATEST call, your watchlist first,
+    then sectors take turns (round-robin) so no single sector uses up the run."""
+    watch = watchlist()
+    is_watch = lambda c: any(w in c["company"].lower() for w in watch)
+    latest = [c for c in C.latest_call_each(list(lib["calls"].values()))
+              if not c.get("summary") and not c.get("skip")]
+    if conf["sectors"] is not None:
+        latest = [c for c in latest if C.sector_of(lib, c) in conf["sectors"] or is_watch(c)]
+    first = sorted([c for c in latest if is_watch(c)], key=lambda c: c["date"], reverse=True)
+    queues = {}
+    for c in sorted((c for c in latest if not is_watch(c)), key=lambda c: c["date"], reverse=True):
+        queues.setdefault(C.sector_of(lib, c), []).append(c)  # newest calls first within a sector
+    order = sorted(queues, key=lambda s: (s in ("Services & Others", "Unsorted"), -len(queues[s])))
+    turns = []
+    while any(queues[s] for s in order):
+        for s in order:
+            if queues[s]:
+                turns.append(queues[s].pop(0))
+    return first + turns, is_watch
 
 
 def step_concalls(conf):
@@ -57,38 +91,88 @@ def step_concalls(conf):
     repair_once(lib)
     C.classify(lib, pool)
     recheck_figures(lib)
-    groups = {}
-    for c in C.latest_call_each(list(lib["calls"].values())):
-        groups.setdefault(C.sector_of(lib, c), []).append(c)
-    wanted = [s for s in groups if conf["sectors"] is None or s in conf["sectors"]]
-
-    def pending(sector):
-        calls = C.latest_per_company([c for c in lib["calls"].values() if C.sector_of(lib, c) == sector])
-        if not calls:
-            return 0
-        target = max((C.filing_quarter(c) for c in calls), key=C.quarter_key)
-        return sum(1 for c in calls if C.filing_quarter(c) == target and not c.get("summary") and not c.get("skip"))
-
-    # real sectors first; the catch-all bucket last
-    order = sorted(wanted, key=lambda s: (s == "Services & Others", -pending(s)))
+    queue, is_watch = plan_concalls(lib, conf)
     budget = conf["limit"]
-    say(f"Up to {budget} new summaries this run. Pending by sector: "
-        + ", ".join(f"{s} {pending(s)}" for s in order if pending(s)) or "none")
-    for sector in order:
+    say(f"\n{len(queue)} companies have a call without a summary. Doing up to {budget} AI summaries this run "
+        f"(watchlist first, then sectors in turn).")
+    touched, fails, done = set(), 0, 0
+    for c in queue:
         if budget <= 0:
-            say("\nReached this run's limit - the rest will be done on the next run.")
+            say("\nReached this run's limit - the rest continue on the next run.")
             break
-        if not pending(sector):
-            continue
-        say(f"\n--- {sector} ---")
-        stats = {}
-        calls = [c for c in lib["calls"].values() if C.sector_of(lib, c) == sector]
-        ok = C.summarise(calls, lib, pool, conf["compare"], limit=budget, stats=stats)
-        budget -= max(1, stats.get("done", 0))
-        C.overview(sector, lib, pool)
-        if not ok:
-            say("Stopping concalls for today (AI limit or repeated failures).")
+        compare = conf["compare"] == "all" or (conf["compare"] == "watchlist" and is_watch(c))
+        prev = C.find_prev(lib, c)
+        say(f"\n[{done + 1}] {c['company']}  ({C.sector_of(lib, c)}, filed {c['date']})")
+        try:
+            if compare and prev and not prev.get("summary") and not prev.get("skip"):
+                say(f"    first, last quarter's call (filed {prev['date']}) ...")
+                C.summarise_one(prev, lib, pool)
+                budget -= 1
+                time.sleep(pool.pause)
+            # compare whenever last quarter's summary already exists (costs nothing extra)
+            C.summarise_one(c, lib, pool, prev if prev and prev.get("summary") else None)
+            budget -= 1
+            done += 1
+            fails = 0
+            touched.add(C.sector_of(lib, c))
+        except C.QuotaOver as e:
+            say(f"\n{e}")
             break
+        except C.AIError as e:
+            say(f"    failed: {e}")
+            fails += 1
+            budget -= 1
+            if fails >= 3:
+                say("Stopping concalls for this run (AI failing repeatedly).")
+                break
+        time.sleep(pool.pause)
+    for sector in sorted(touched):
+        try:
+            C.overview(sector, lib, pool)
+        except C.AIError as e:
+            say(f"    overview failed: {e}")
+    backfill_metrics(lib, pool, conf["backfill"])
+
+
+METRICS_PROMPT = """For each company summary below, copy the key figures into a metrics block. Use ONLY numbers
+stated in that summary (no units, no % sign, no commas); write na when not stated or not applicable.
+Growth is year-on-year; net debt negative means net cash. Reply with one block per company, exactly:
+
+### <id>
+```metrics
+""" + "\n".join(f"{k}:" for k in C.METRIC_KEYS) + """
+guidance: <raised / cut / maintained / initiated / none>
+```
+
+SUMMARIES:
+"""
+
+
+def backfill_metrics(lib, pool, limit):
+    """Adds peer-comparison figures to summaries written before metrics existed (3 per request)."""
+    todo = [c for c in lib["calls"].values() if c.get("summary") and "metrics" not in c][:limit]
+    if not todo:
+        return
+    say(f"\nAdding peer-comparison figures to {len(todo)} earlier summaries ...")
+    for i in range(0, len(todo), 3):
+        batch = todo[i:i + 3]
+        body = ""
+        for c in batch:
+            f = C.here(c["summary"])
+            if f.exists():
+                body += f"\n=== id {c['id']} - {c['company']} ===\n" + f.read_text(encoding="utf-8").split("\n---\n")[0]
+        try:
+            text, _ = pool.ask(METRICS_PROMPT + body, label=f"figures {i + 1}-{i + len(batch)}")
+        except C.AIError as e:
+            say(f"    stopped: {e}")
+            break
+        for block in re.split(r"^###\s*", text, flags=re.M):
+            cid = block.split("\n", 1)[0].strip().removeprefix("id").strip(" -")
+            hit = next((c for c in batch if c["id"] == cid or cid.startswith(c["id"])), None)
+            m, _ = C.parse_metrics(block)
+            if hit and m:
+                hit["metrics"] = m
+        C.save_lib(lib)
         time.sleep(pool.pause)
 
 
