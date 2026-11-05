@@ -89,11 +89,38 @@ def settings():
     def lst(key, default):
         return [x.strip() for x in n.get(key, default).split(",") if x.strip()]
 
+    # separate tabs: "Tab name = folder, folder; Tab name = folder"
+    tabs = {}
+    for part in n.get("tabs", "Tech = Tech; Auto = Auto").split(";"):
+        name, _, folders = part.partition("=")
+        if name.strip() and folders.strip():
+            tabs[name.strip()] = [f.strip().lower() for f in folders.split(",") if f.strip()]
     return {"opml": n.get("opml", "feeds.opml").strip(),
-            "skip": [x.lower() for x in lst("skip_folders", "Sports, Tech, Financial History")],
+            "skip": [x.lower() for x in lst("skip_folders", "Sports, Financial History")],
+            "tabs": tabs,
+            "google": n.get("google_news", "yes").strip().lower() in ("yes", "true", "1", "on"),
             "hours": int(n.get("hours", "24") or 24),
             "watch": lst("watchlist", ""),
             "min_stories": int(n.get("min_stories_for_digest", "3") or 3)}
+
+
+def google_feeds():
+    """Google News searches (google_news.txt + watchlist companies), as extra feeds for the main brief."""
+    from urllib.parse import quote_plus
+    out, path = [], C.BASE / "google_news.txt"
+    rows = []
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "|" in line:
+                folder, _, q = line.partition("|")
+                rows.append((folder.strip(), q.strip()))
+    import daily  # watchlist companies get their own search
+    rows += [("Google: Watchlist", f'"{w}"') for w in daily.watchlist()]
+    for folder, q in rows:
+        url = f"https://news.google.com/rss/search?q={quote_plus(q + ' when:1d')}&hl=en-IN&gl=IN&ceid=IN:en"
+        out.append({"url": url, "name": f"Google News: {q}", "folder": folder})
+    return out
 
 
 def read_opml(path, skip):
@@ -463,7 +490,7 @@ def md_html(text):
     """Markdown -> HTML; [12, 40] become story chips the website makes clickable."""
     h = C.md(text)
     return re.sub(r"\[(\d+(?:\s*,\s*\d+)*)\]",
-                  lambda m: "".join(f'<a class="r" data-id="{n}">{n}</a>' for n in re.findall(r"\d+", m.group(1))), h)
+                  lambda m: "".join(f'<a class="r" data-id="{n}">{int(n) % 100000}</a>' for n in re.findall(r"\d+", m.group(1))), h)
 
 
 def newer_export(opml):
@@ -508,7 +535,10 @@ def build(conf=None, log_failed=True):
         say(f"\nFeed list not found: {opml}\nExport your feeds from FeedFlow (Settings > Export OPML), "
             f"save the file in this folder as feeds.opml, and try again.")
         return None
-    feeds = read_opml(opml, conf["skip"])
+    tab_folders = {f for fs in conf["tabs"].values() for f in fs}
+    feeds = read_opml(opml, conf["skip"] + list(tab_folders))
+    if conf["google"]:
+        feeds += google_feeds()
     say(f"\nMorning brief: reading {len(feeds)} feeds (skipping folders: {', '.join(conf['skip']) or 'none'})")
     articles, failed = collect(feeds, conf["hours"])
     stories = group(articles)
@@ -631,7 +661,14 @@ def build(conf=None, log_failed=True):
                      "sent": s["sentiment"], "outlets": s["outlets"], "sources": s["sources"]}
                     for s in relevant],
         "failed": failed if log_failed else [],
+        "tabs": [],
     }
+    for t_i, (tab, folders) in enumerate(conf["tabs"].items(), 1):
+        try:
+            brief["tabs"].append(build_tab(tab, folders, opml, conf, pool, cache, t_i * 100000))
+        except Exception as e:
+            say(f"  {tab} tab failed: {e}")
+    save_cache(cache, now_utc)
     BRIEF_DIR.mkdir(parents=True, exist_ok=True)
     path = BRIEF_DIR / f"{brief['date']}.json"
     path.write_text(json.dumps(brief, ensure_ascii=False), encoding="utf-8")
@@ -639,6 +676,72 @@ def build(conf=None, log_failed=True):
         old.unlink()
     say(f"\nSaved the brief: data/news/{path.name}")
     return brief
+
+
+TAB_PROMPT = """You are writing the "{tab}" page of an Indian investor's daily briefing, from {n} stories in
+enthusiast and industry media over the last {hours} hours. Each story has an id in brackets, the headline,
+a short description (often missing) and how many outlets covered it.
+
+Write in Markdown, using ONLY these stories. Put the ids after each point, like [12] or [12, 40].
+Merge duplicates, skip trivia and pure reviews unless they matter.
+
+**In one line:** <the most important thing today>
+### The big stories
+(4-6 bullets)
+### Launches & products
+(bullets: what launched, by whom, price/positioning if given)
+### The market angle
+(bullets: what this means for LISTED companies - name them - e.g. a launch, price cut, sales data,
+supply-chain or policy news. Skip if nothing relevant.)
+### Worth reading
+(2-4 stories with substance, one line on why)
+
+STORIES:
+"""
+
+
+def build_tab(tab, folders, opml, conf, pool, cache, offset):
+    """A separate tab (e.g. Tech, Auto): no per-story AI tagging - stories are merged and ranked by
+    coverage, then ONE AI digest. Reused while little has changed, so it costs ~1 request a run."""
+    feeds = [f for f in read_opml(opml, []) if f["folder"].lower() in folders]
+    if not feeds:
+        return {"name": tab, "html": "", "one": "", "stories": [], "stats": {"feeds": 0}}
+    say(f"\n{tab} tab: reading {len(feeds)} feeds ...")
+    articles, failed = collect(feeds, conf["hours"])
+    stories = group(articles)
+    for i, s in enumerate(stories, 1):
+        s["id"] = offset + i
+    stories.sort(key=lambda s: (-s["outlets"], -s["when"].timestamp()))
+    top = stories[:150]
+    keys = [s["key"] for s in top]
+    prev = cache["sections"].get("tab:" + tab)
+    text = ""
+    if prev and len(set(keys) - set(prev["keys"])) < max(8, 0.25 * len(keys)):
+        # keep the earlier write-up, but its [ids] must point at today's numbering
+        remap = {old: next((s["id"] for s in top if s["key"] == k), None) for old, k in prev.get("idmap", {}).items()}
+        text = re.sub(r"\[(\d+(?:\s*,\s*\d+)*)\]", lambda m: "[" + ", ".join(
+            str(remap[n]) for n in re.findall(r"\d+", m.group(1)) if remap.get(n)) + "]", prev["text"])
+        say(f"  little new - keeping the earlier {tab} digest")
+    elif top:
+        try:
+            text = ask_fitted(pool, TAB_PROMPT.format(tab=tab, n=len(top), hours=conf["hours"]),
+                              [story_line(s) for s in top], label=f"{tab} digest")
+            cache["sections"]["tab:" + tab] = {"keys": keys, "text": text,
+                                               "idmap": {str(s["id"]): s["key"] for s in top}}
+        except C.AIError as e:
+            say(f"  {tab} digest failed: {e}")
+    one = ""
+    m = re.search(r"\*\*In one line:\*\*\s*(.+)", text)
+    if m:
+        one = md_html(m.group(1)).replace("<p>", "").replace("</p>", "")
+        text = text.replace(m.group(0), "")
+    return {"name": tab, "one": one, "html": md_html(text) if text else "",
+            "stats": {"feeds": len(feeds), "articles": len(articles), "stories": len(stories), "failed": len(failed)},
+            "failed": failed,
+            "stories": [{"id": s["id"], "title": s["title"], "desc": s["desc"],
+                         "when": s["when"].astimezone(IST).isoformat(timespec="minutes"),
+                         "outlets": s["outlets"], "sources": s["sources"], "cat": tab, "companies": [],
+                         "imp": 0, "sent": "="} for s in top]}
 
 
 def run(open_page=True):

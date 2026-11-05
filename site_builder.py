@@ -87,7 +87,10 @@ def build(quiet=False):
                       "companies": dict(sorted(comp.items(), key=lambda kv: -kv[1])[:40])})
     cc = concall_data()
     (data / "concalls.js").write_text(_js("DESK_CONCALLS", None, cc), encoding="utf-8")
-    meta = {"briefs": index, "updated": dt.datetime.now(IST).isoformat(timespec="minutes"),
+    tabs = []
+    if files:
+        tabs = [t["name"] for t in json.loads(files[-1].read_text(encoding="utf-8")).get("tabs", []) if t.get("stories")]
+    meta = {"briefs": index, "tabs": tabs, "updated": dt.datetime.now(IST).isoformat(timespec="minutes"),
             "concalls": len(cc["calls"]), "overviews": len(cc["overviews"])}
     (data / "index.js").write_text(_js("DESK_INDEX", None, meta), encoding="utf-8")
     # cache-busting: every build gets new file addresses, so a refresh always shows the latest edition

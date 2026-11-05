@@ -311,13 +311,14 @@
   const pop = $("#pop"), popCard = $("#pop-card");
   function openStory(id) {
     const b = currentBrief;
-    const s = b && b.stories.find((x) => x.id === Number(id));
+    const all = b ? b.stories.concat(...(b.tabs || []).map((t) => t.stories)) : [];
+    const s = all.find((x) => x.id === Number(id));
     if (!s) return;
     const ex = (b.top || []).find((t) => t.id === s.id);
     popCard.innerHTML = `<button class="x" aria-label="Close">×</button>
       <h3>${esc(s.title)}</h3>
-      <div style="margin:6px 0 10px">${sentChip(s.sent)} &nbsp; ${impDots(s.imp)} &nbsp; <span class="m">${when(s.when)}</span></div>
-      <div><span class="chip link" data-go="#sectors/${encodeURIComponent(s.cat)}">${esc(s.cat)}</span>${
+      <div style="margin:6px 0 10px">${s.imp ? sentChip(s.sent) + " &nbsp; " + impDots(s.imp) + " &nbsp; " : ""}<span class="m">${when(s.when)}</span></div>
+      <div><span class="chip link" data-go="${s.imp ? "#sectors/" : "#tab/"}${encodeURIComponent(s.cat)}">${esc(s.cat)}</span>${
         s.companies.map((c) => `<span class="chip link" data-go="#companies/${encodeURIComponent(c)}">${esc(c)}</span>`).join("")}</div>
       ${s.desc ? `<p>${esc(s.desc)}</p>` : ""}
       ${ex ? `<div class="explain card" style="padding:10px 14px;margin:10px 0">
@@ -689,6 +690,28 @@
     drawMarket();
   }
 
+  async function pageTab(name) {
+    if (!IDX.briefs.length) { view.innerHTML = empty("Nothing yet."); return; }
+    const b = currentBrief && currentBrief.date === (current || latest()) ? currentBrief : await getBrief(current || latest());
+    currentBrief = b; current = b.date;
+    const t = (b.tabs || []).find((x) => x.name === name);
+    if (!t || !t.stories.length) { view.innerHTML = empty(`No ${esc(name)} stories in this edition.`); return; }
+    view.innerHTML = `<h1>${esc(t.name)}</h1>
+      <div class="sub">${esc(b.label)} · ${fmt(t.stats.articles || 0)} articles from ${plural(t.stats.feeds || 0, "feed")} → ${plural(t.stats.stories || 0, "story")} · top ${t.stories.length} by coverage</div>
+      ${t.html ? `<div class="card md">${t.one ? `<p><b>${t.one}</b></p>` : ""}${t.html}</div>` : ""}
+      <div class="card"><h2>Most-covered stories <span class="m">tap for all sources</span></h2>
+        <div class="filters"><input type="search" id="tq" placeholder="Search ${esc(t.name.toLowerCase())} stories"></div>
+        <ul class="list" id="tl"></ul></div>`;
+    const draw = () => {
+      const q = $("#tq").value.toLowerCase();
+      $("#tl").innerHTML = t.stories.filter((s) => !q || s.title.toLowerCase().includes(q)).map((s) => `<li>
+        <div class="t" data-story="${s.id}">${esc(s.title)}</div>
+        <div class="src">${plural(s.outlets, "outlet")} · ${esc(s.sources.map((x) => x.name).filter((v, i, a) => a.indexOf(v) === i).slice(0, 4).join(", "))} · ${when(s.when)}</div></li>`).join("")
+        || `<li class="m">Nothing matches.</li>`;
+    };
+    $("#tq").oninput = draw; draw();
+  }
+
   function pageArchive() {
     if (!IDX.briefs.length) { view.innerHTML = empty("No briefs yet."); return; }
     view.innerHTML = `<h1>Archive</h1><div class="sub">Every morning brief (about three months are kept)</div>
@@ -728,13 +751,15 @@
     const h = decodeURIComponent(location.hash.slice(1)) || "today";
     const [tab, ...rest] = h.split("/");
     const arg = rest.join("/");
-    document.querySelectorAll("#tabs a").forEach((a) => a.classList.toggle("on", a.dataset.tab === tab));
+    const key = tab === "tab" ? "tab-" + arg : tab;
+    document.querySelectorAll("#tabs a").forEach((a) => a.classList.toggle("on", a.dataset.tab === key));
     try {
       if (tab === "today") await pageToday(arg || null);
       else if (tab === "sectors") await pageSectors(arg || null);
       else if (tab === "companies") await pageCompanies(arg || null);
       else if (tab === "concalls") await pageConcalls(arg || null);
       else if (tab === "peers") await pagePeers(arg || null);
+      else if (tab === "tab") await pageTab(arg);
       else if (tab === "archive") pageArchive();
       else if (tab === "settings") pageSettings();
       else await pageToday(null);
@@ -743,6 +768,13 @@
     }
     if (!arg) scrollTo(0, 0);
   }
+  // extra tabs (e.g. Tech, Auto) from the latest edition, placed before Archive
+  const arch = document.querySelector('#tabs a[data-tab="archive"]');
+  (IDX.tabs || []).forEach((n) => {
+    const a = document.createElement("a");
+    a.href = "#tab/" + encodeURIComponent(n); a.dataset.tab = "tab-" + n; a.textContent = n;
+    arch.parentNode.insertBefore(a, arch);
+  });
   addEventListener("hashchange", route);
   route();
 })();

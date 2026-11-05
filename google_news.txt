@@ -1,0 +1,40 @@
+# Google News searches added to the morning brief (last 24 hours each).
+# One per line:  Folder | search words   (Google News search syntax works: OR, quotes, -word)
+# Your [cloud] watchlist companies are searched automatically too.
+
+Google: Markets | Sensex Nifty today
+Google: Markets | FII DII flows India equities
+Google: Markets | "block deal" OR "bulk deal" NSE BSE
+Google: Markets | IPO India subscription OR listing
+Google: Corporate | "bags order" OR "order win" OR "wins order" India
+Google: Corporate | Q2 results net profit India company
+Google: Corporate | rating upgrade OR downgrade CRISIL OR ICRA OR CARE
+Google: Corporate | promoter stake sale OR pledge OR buyback India listed
+Google: Corporate | acquisition OR merger India listed company
+Google: Policy | RBI policy OR "Reserve Bank" rates liquidity
+Google: Policy | SEBI order OR circular OR regulation
+Google: Policy | GST council OR "GST collections"
+Google: Policy | India economy GDP OR inflation OR IIP OR PMI
+Google: Sectors | bank credit growth deposits NPA India
+Google: Sectors | NBFC OR microfinance India asset quality
+Google: Sectors | IT services deal wins TCS OR Infosys OR HCLTech OR Wipro
+Google: Sectors | pharma USFDA OR "US FDA" India
+Google: Sectors | auto sales India two-wheeler OR passenger vehicle
+Google: Sectors | cement prices demand India
+Google: Sectors | steel prices India OR "steel demand"
+Google: Sectors | textile exports India OR cotton prices
+Google: Sectors | hospital India expansion beds OR healthcare stocks
+Google: Sectors | FMCG volume rural demand India
+Google: Sectors | power demand India OR renewable energy tender
+Google: Sectors | defence order India HAL OR BEL OR "Mazagon"
+Google: Sectors | real estate sales India housing
+Google: Sectors | telecom tariff India Jio OR Airtel OR Vodafone
+Google: Sectors | oil marketing companies OR refining margins India
+Google: Sectors | specialty chemicals India OR agrochemicals
+Google: Sectors | sugar ethanol India
+Google: Sectors | aviation India IndiGo OR airlines traffic
+Google: Sectors | capital goods capex order book India
+Google: Global | Federal Reserve rates markets
+Google: Global | crude oil prices Brent
+Google: Global | US tariffs India trade deal
+Google: Global | China economy stimulus markets
