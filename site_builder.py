@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""
+Builds the website in public/ from:
+  data/news/*.json   - daily news briefs (news.py)
+  data/library.json  - concall summaries (concalls.py)
+The site is plain HTML/JS: it works on GitHub Pages and also opened straight from the folder.
+Data is written as small .js files (not .json) so it also loads from file:// on a laptop or tablet.
+"""
+import datetime as dt
+import json
+import re
+import shutil
+import webbrowser
+
+import concalls as C
+
+PUBLIC = C.BASE / "public"
+WEB = C.BASE / "web"
+BRIEFS = C.DATA / "news"
+IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
+
+
+def _js(var, key, obj):
+    data = json.dumps(obj, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    if key is None:
+        return f"window.{var}={data};\n"
+    return f"window.{var}=window.{var}||{{}};window.{var}[{json.dumps(key)}]={data};\n"
+
+
+def concall_data():
+    lib = C.load_lib()
+    calls = []
+    for c in C.latest_per_company([c for c in lib["calls"].values() if c.get("summary")]):
+        f = C.here(c["summary"])
+        if not f.exists():
+            continue
+        t = f.read_text(encoding="utf-8")
+        t = re.sub(r"^# .*\n(\*Filed.*\*\n)?", "", t)
+        t = re.sub(r"\*\*Quarter:\*\*.*\n", "", t)
+        t = t.split("\n---\n")[0]
+        bad = c.get("unverified")
+        if bad is None:
+            src = C.TXT_DIR / f"{c['id']}.txt"
+            bad = C.unverified_numbers(t, src.read_text(encoding="utf-8")) if src.exists() else []
+        html = C.md(t)
+        if bad:
+            pat = re.compile(r"(?<![\w.,])(" + "|".join(re.escape(b) for b in bad) + r")(?![\w])")
+            html = re.sub(r">([^<]+)<", lambda m: ">" + pat.sub(
+                r'<mark title="Not found word-for-word in the transcript - check it">\1</mark>', m.group(1)) + "<",
+                html)
+        calls.append({"company": c["company"], "code": c["code"], "sector": C.sector_of(lib, c),
+                      "quarter": c["quarter"], "date": c["date"], "tone": c.get("tone", ""),
+                      "compared": bool(c.get("compared")), "checks": bad,
+                      "pdf": c.get("pdf_url", C.BSE_PDF[0] + c["pdf"]), "html": html})
+    overviews = []
+    for o in lib["overviews"].values():
+        f = C.here(o["file"])
+        if f.exists():
+            overviews.append({"sector": o["sector"], "quarter": o["quarter"], "companies": o["companies"],
+                              "html": C.md(f.read_text(encoding="utf-8"))})
+    return {"calls": calls, "overviews": overviews}
+
+
+def build(quiet=False):
+    """(Re)builds public/. Safe to run any time."""
+    if PUBLIC.exists():
+        shutil.rmtree(PUBLIC)
+    shutil.copytree(WEB, PUBLIC)
+    data = PUBLIC / "data"
+    data.mkdir(exist_ok=True)
+
+    index = []
+    files = sorted(BRIEFS.glob("*.json")) if BRIEFS.exists() else []
+    for f in files[-90:]:
+        b = json.loads(f.read_text(encoding="utf-8"))
+        (data / f"brief-{b['date']}.js").write_text(_js("DESK_BRIEFS", b["date"], b), encoding="utf-8")
+        comp = {}
+        for s in b["stories"]:
+            for n in s["companies"]:
+                comp[n] = comp.get(n, 0) + 1
+        index.append({"date": b["date"], "label": b["label"], "stats": b["stats"],
+                      "cats": {s["cat"]: len(s["ids"]) for s in b["sections"]},
+                      "mood": {s["cat"]: [s["pos"], s["neg"], s["neu"]] for s in b["sections"]},
+                      "companies": dict(sorted(comp.items(), key=lambda kv: -kv[1])[:40])})
+    cc = concall_data()
+    (data / "concalls.js").write_text(_js("DESK_CONCALLS", None, cc), encoding="utf-8")
+    meta = {"briefs": index, "updated": dt.datetime.now(IST).isoformat(timespec="minutes"),
+            "concalls": len(cc["calls"]), "overviews": len(cc["overviews"])}
+    (data / "index.js").write_text(_js("DESK_INDEX", None, meta), encoding="utf-8")
+    if not quiet:
+        C.say(f"Website built: {PUBLIC / 'index.html'}  ({len(index)} briefs, {len(cc['calls'])} concall summaries)")
+    return PUBLIC / "index.html"
+
+
+def open_site(anchor=""):
+    page = PUBLIC / "index.html"
+    if not page.exists():
+        build()
+    if C.IS_TABLET:
+        C.open_on_tablet("public/index.html" + anchor)
+    else:
+        webbrowser.open(page.as_uri() + anchor)
+
+
+if __name__ == "__main__":
+    build()
+    open_site()

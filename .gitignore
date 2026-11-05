@@ -1,0 +1,6 @@
+# downloaded transcripts are re-fetched when needed - not stored in the repo
+data/pdf/
+data/text/
+public/
+__pycache__/
+*.tmp

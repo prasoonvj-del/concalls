@@ -1,0 +1,544 @@
+#!/usr/bin/env python3
+"""
+Morning news brief - reads your RSS feeds (feeds.opml), groups the same story across papers,
+tags each story (sector, companies, importance, sentiment), explains the top stories, writes a digest
+per sector and the big picture, and saves it for the website (site_builder.py).
+
+Run:  python news.py           (builds the brief and opens it)
+      python news.py --quiet   (for scheduled runs: no browser)
+Uses the same AI settings as concalls.py (config.ini).
+"""
+import concurrent.futures as cf
+import configparser
+import datetime as dt
+import html
+import json
+import re
+import shutil
+import subprocess
+import sys
+import time
+import xml.etree.ElementTree as ET
+
+import concalls as C
+
+try:
+    import feedparser
+except ImportError:
+    print("Missing library 'feedparser'. Laptop: run setup.bat. Tablet: pip install feedparser")
+    sys.exit(1)
+import requests
+
+say = C.say
+NEWS_DIR = C.BASE / "news"
+SEEN_FILE = C.DATA / "news_seen.json"
+IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
+UA = ("Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) "
+      "Chrome/130.0 Mobile Safari/537.36")
+
+EXTRA = ["Economy & Policy", "Markets & Flows", "Global Markets & Macro", "Commodities",
+         "IPOs, Deals & Funding", "Personal Finance", "Not market-relevant"]
+CATEGORIES = [s for s in C.SECTORS if s != "Services & Others"] + ["Services & Others"] + EXTRA
+
+SECTION_PROMPT = """You are a senior Indian equity research analyst writing one section of an investor's morning brief.
+Topic: {cat}. Below are {n} news stories from the last {hours} hours. Each has an id in brackets, the headline,
+a short description (often missing - feeds carry little text), and how many outlets covered it.
+
+Write in Markdown, using ONLY these stories - don't invent details or numbers. After each point put the ids
+it comes from, like [12] or [12, 40]. Merge stories about the same event. Skip trivia. Skip any section
+with nothing worth saying.
+
+**In one line:** <the single most important takeaway for an investor>
+### What's happening
+(3-6 bullets: main developments and themes, and why they matter)
+### Company news
+(one bullet per company with meaningful news: **Company** - what happened, why it matters [ids])
+### Signals
+- Positive: ...
+- Negative / risks: ...
+
+STORIES:
+"""
+
+BIG_PROMPT = """You are a senior Indian equity strategist. Below are today's section briefs ({date}), built from {n}
+news stories across Indian and global financial media over the last {hours} hours.
+
+Write the top of the morning brief in Markdown, using only these briefs. Keep the [ids] after each point.
+
+## The big picture
+(5-7 bullets: the themes that matter most today for an Indian equity investor)
+## Market mood
+(2-3 lines)
+## Stocks in focus
+(table: Company | What happened | Read - Positive / Negative / Mixed)
+## Sectors to watch
+(bullets: sector - why)
+## What to watch next
+
+SECTION BRIEFS:
+"""
+
+
+# ============================================================================ settings & feeds
+
+def settings():
+    cp = configparser.ConfigParser()
+    cp.read(C.CONFIG_FILE, encoding="utf-8")
+    n = cp["news"] if cp.has_section("news") else {}
+
+    def lst(key, default):
+        return [x.strip() for x in n.get(key, default).split(",") if x.strip()]
+
+    return {"opml": n.get("opml", "feeds.opml").strip(),
+            "skip": [x.lower() for x in lst("skip_folders", "Sports, Tech, Financial History")],
+            "hours": int(n.get("hours", "24") or 24),
+            "watch": lst("watchlist", ""),
+            "min_stories": int(n.get("min_stories_for_digest", "3") or 3)}
+
+
+def read_opml(path, skip):
+    feeds, seen = [], set()
+
+    def walk(node, folder):
+        for o in node.findall("outline"):
+            url = (o.get("xmlUrl") or "").strip()
+            name = (o.get("title") or o.get("text") or "").strip()
+            if url:
+                if folder.lower() in skip or url in seen:
+                    continue
+                seen.add(url)
+                feeds.append({"url": url, "name": name or url, "folder": folder})
+            else:
+                walk(o, name)
+
+    walk(ET.parse(path).getroot().find("body"), "")
+    return feeds
+
+
+def fetch(url):
+    """Returns (bytes, error). Plain request first; if a site blocks it, retry like a browser."""
+    headers = {"User-Agent": UA, "Accept": "application/rss+xml, application/xml, text/xml, */*"}
+    err = ""
+    try:
+        r = requests.get(url, headers=headers, timeout=25)
+        if r.status_code == 200 and r.content.strip():
+            return r.content, None
+        err = f"HTTP {r.status_code}"
+    except Exception as e:
+        err = type(e).__name__
+    try:
+        if C.cffi is not None:
+            r = C.cffi.get(url, impersonate="chrome", timeout=25)
+            if r.status_code == 200 and r.content.strip():
+                return r.content, None
+            err = f"HTTP {r.status_code}"
+        elif shutil.which("curl"):
+            out = subprocess.run(["curl", "-sSL", "--compressed", "-m", "25", "-A", UA, url],
+                                 capture_output=True, timeout=40)
+            if out.returncode == 0 and out.stdout.strip():
+                return out.stdout, None
+    except Exception as e:
+        err = err or type(e).__name__
+    return None, err or "no content"
+
+
+def clean(text, limit=None):
+    text = html.unescape(re.sub(r"<[^>]+>", " ", text or ""))
+    text = re.sub(r"\s+", " ", text).strip()
+    return text[:limit].rsplit(" ", 1)[0] + "…" if limit and len(text) > limit else text
+
+
+def parse(content, feed):
+    d = feedparser.parse(content)
+    out = []
+    for e in d.entries:
+        title = clean(e.get("title", ""))
+        if not title:
+            continue
+        source = feed["name"]
+        desc = clean(e.get("summary") or e.get("description") or "", 280)
+        if "news.google." in feed["url"]:  # "Headline - Publisher"; the description is only links
+            m = re.match(r"^(.*\S)\s+[-–]\s+([^-–]{2,60})$", title)
+            if m:
+                title, source = m.group(1), m.group(2)
+            desc = ""
+        if desc[:60].lower() == title[:60].lower():
+            desc = ""
+        ts = e.get("published_parsed") or e.get("updated_parsed")
+        when = dt.datetime(*ts[:6], tzinfo=dt.timezone.utc) if ts else None
+        out.append({"title": title, "desc": desc, "link": e.get("link", ""), "source": source,
+                    "folder": feed["folder"], "when": when})
+    return out
+
+
+def collect(feeds, hours):
+    """Fetch all feeds in parallel; keep articles from the last `hours`."""
+    now = dt.datetime.now(dt.timezone.utc)
+    since = now - dt.timedelta(hours=hours)
+    seen = json.loads(SEEN_FILE.read_text(encoding="utf-8")) if SEEN_FILE.exists() else {}
+    articles, failed, done = [], [], 0
+    with cf.ThreadPoolExecutor(max_workers=16) as pool:
+        jobs = {pool.submit(fetch, f["url"]): f for f in feeds}
+        for fut in cf.as_completed(jobs):
+            f = jobs[fut]
+            done += 1
+            print(f"\r  feeds read: {done}/{len(feeds)} ", end="", flush=True)
+            content, err = fut.result()
+            if err:
+                failed.append({"name": f["name"], "folder": f["folder"], "error": err})
+                continue
+            try:
+                items = parse(content, f)
+            except Exception as e:
+                failed.append({"name": f["name"], "folder": f["folder"], "error": f"unreadable ({type(e).__name__})"})
+                continue
+            if not items:
+                failed.append({"name": f["name"], "folder": f["folder"], "error": "empty feed"})
+            for a in items:
+                key = a["link"] or a["title"]
+                if a["when"] is None:  # undated: treat as published when first seen
+                    first = seen.get(key)
+                    a["when"] = dt.datetime.fromisoformat(first) if first else now
+                seen.setdefault(key, a["when"].isoformat())
+                if since <= a["when"] <= now + dt.timedelta(hours=2):
+                    articles.append(a)
+    say("")
+    cutoff = (now - dt.timedelta(days=10)).isoformat()
+    seen = {k: v for k, v in seen.items() if v >= cutoff}
+    C.DATA.mkdir(parents=True, exist_ok=True)
+    SEEN_FILE.write_text(json.dumps(seen), encoding="utf-8")
+    return articles, failed
+
+
+# ============================================================================ grouping
+
+STOP = set("""a an the and or of to in on for with at by from as is are was were be been its it this that
+after over under into amid about up down new says said say will may can could would than more most less
+news today live update updates latest india indian stock stocks share shares market markets ltd limited
+check here why how what who when top key amp via report reports sees seen""".split())
+
+
+def tokens(title):
+    return {w for w in re.findall(r"[a-z0-9]+(?:\.\d+)?", title.lower())
+            if w not in STOP and (len(w) > 2 or w.isdigit())}
+
+
+def group(articles):
+    """The same event in several papers becomes one story."""
+    # exact duplicates first (same link or same headline)
+    uniq, keys = [], set()
+    for a in sorted(articles, key=lambda a: a["when"], reverse=True):
+        k1, k2 = a["link"], re.sub(r"\W+", "", a["title"].lower())
+        if (k1 and k1 in keys) or k2 in keys:
+            continue
+        keys.update({k1, k2})
+        uniq.append(a)
+    stories, index = [], {}
+    for a in uniq:
+        t = tokens(a["title"])
+        best, best_score = None, 0
+        counts = {}
+        for w in t:
+            for sid in index.get(w, ()):
+                counts[sid] = counts.get(sid, 0) + 1
+        for sid, inter in counts.items():
+            score = inter / max(1, min(len(t), len(stories[sid]["tokens"])))
+            same = (inter >= 3 and score >= 0.6) or (inter >= 4 and score >= 0.5)
+            if same and score > best_score:
+                best, best_score = sid, score
+        if best is None:
+            sid = len(stories)
+            stories.append({"tokens": t, "items": [a]})
+            for w in t:
+                index.setdefault(w, []).append(sid)
+        else:
+            stories[best]["items"].append(a)
+    out = []
+    for i, s in enumerate(stories, 1):
+        items = s["items"]
+        lead = items[0]
+        out.append({"id": i, "title": lead["title"],
+                    "desc": max((x["desc"] for x in items), key=len),
+                    "when": max(x["when"] for x in items),
+                    "folder": lead["folder"],
+                    "sources": [{"name": x["source"], "link": x["link"]} for x in items],
+                    "outlets": len({x["source"] for x in items})})
+    return out
+
+
+# ============================================================================ AI steps
+
+TAG_PROMPT = """Tag each news story for an Indian stock-market investor.
+For every story reply with ONE line, exactly:  <id>|<category>|<companies>|<importance>|<sentiment>
+- category: exactly one of:
+{cats}
+- companies: listed companies the story is mainly about, by common name (e.g. Tata Motors, HUL, Infosys),
+  comma-separated; "-" if none.
+- importance 1-5 for an Indian equity investor: 5 = market-moving (policy rates, big results surprises,
+  major regulation, large M&A); 3 = useful sector/company news; 1 = minor or routine.
+- sentiment for the companies/sector involved: + (positive), - (negative) or = (neutral/mixed).
+Use "Not market-relevant" for gadget reviews, sports, lifestyle and anything an equity investor wouldn't care about.
+No other text.
+
+STORIES (id | headline | feed folder):
+{rows}
+"""
+
+EXPLAIN_PROMPT = """You are a senior Indian equity research analyst. For each of today's most important stories below,
+explain it for a smart investor who hasn't followed the topic. Use the headline and description, plus
+well-established background knowledge (how the business, sector or policy works) - but do NOT invent new
+facts, figures or events about today's story.
+
+For EACH story write exactly this block:
+### [<id>]
+Context: <1-2 sentences of background needed to understand it>
+Why it matters: <1-2 sentences on the impact for the company, sector or market>
+What to watch: <1 sentence: the next signal or date to track>
+
+STORIES:
+"""
+
+
+def tag(stories, pool):
+    lookup = {c.lower(): c for c in CATEGORIES}
+    for i in range(0, len(stories), 100):
+        batch = stories[i:i + 100]
+        rows = "\n".join(f"{s['id']} | {s['title']} | {s['folder']}" for s in batch)
+        text, _ = pool.ask(TAG_PROMPT.format(cats="\n".join(CATEGORIES), rows=rows),
+                           label=f"sorting stories {i + 1}-{i + len(batch)} of {len(stories)}")
+        got = {}
+        for line in text.splitlines():
+            parts = [p.strip() for p in line.strip().strip("-* ").split("|")]
+            if len(parts) >= 2 and parts[0].isdigit():
+                got[int(parts[0])] = parts + [""] * 5
+        for s in batch:
+            p = got.get(s["id"])
+            cat = lookup.get(p[1].lower()) if p else None
+            if p and not cat:
+                cat = next((c for c in CATEGORIES if p[1].lower() in c.lower() or c.lower() in p[1].lower()),
+                           "Services & Others")
+            s["category"] = cat or "Services & Others"
+            comps = p[2] if p else "-"
+            s["companies"] = [c.strip() for c in comps.split(",") if c.strip() and c.strip() != "-"]
+            imp = re.search(r"[1-5]", p[3]) if p else None
+            s["importance"] = int(imp.group(0)) if imp else 2
+            sent = (p[4] if p else "").strip()[:1]
+            s["sentiment"] = sent if sent in "+-=" and sent else "="
+
+
+def explain_top(stories, pool, n=12):
+    """Context / why it matters / what to watch for the day's most important stories."""
+    top = sorted(stories, key=lambda s: (-s["importance"], -s["outlets"], -s["when"].timestamp()))[:n]
+    if not top:
+        return []
+    lines = [story_line(s) for s in top]
+    text = ask_fitted(pool, EXPLAIN_PROMPT, lines, label="explaining top stories")
+    out = []
+    for block in re.split(r"^###\s*", text, flags=re.M):
+        m = re.match(r"\[?(\d+)\]?", block.strip())
+        if not m:
+            continue
+
+        def field(name):
+            f = re.search(rf"{name}:\s*(.+?)(?=\n\s*(?:Context|Why it matters|What to watch):|\Z)", block, re.S | re.I)
+            return re.sub(r"\s+", " ", f.group(1)).strip() if f else ""
+
+        out.append({"id": int(m.group(1)), "context": field("Context"), "why": field("Why it matters"),
+                    "watch": field("What to watch")})
+    known = {s["id"] for s in top}
+    return [o for o in out if o["id"] in known]
+
+
+def story_line(s):
+    d = f" - {s['desc']}" if s["desc"] else ""
+    return f"[{s['id']}] {s['title']}{d} ({s['outlets']} outlet{'s' if s['outlets'] > 1 else ''})"
+
+
+def ask_fitted(pool, head, lines, label):
+    """One request if the provider can take it all; otherwise in parts, then merged."""
+    def job(ai):
+        body = "\n".join(lines)
+        budget = ai.max_input_tokens
+        if not budget or C.est_tokens(head + body) <= budget:
+            return ai.ask(head + body, label=label)
+        room = max(2000, (budget - 1500) * 4 - len(head))
+        parts, cur = [], ""
+        for ln in lines:
+            if cur and len(cur) + len(ln) > room:
+                parts.append(cur)
+                cur = ""
+            cur += ln + "\n"
+        parts.append(cur)
+        notes = [ai.ask(head + f"(Part {i} of {len(parts)} - cover just these.)\n" + p,
+                        label=f"{label} {i}/{len(parts)}") for i, p in enumerate(parts, 1)]
+        merged = "\n\n".join(notes)[:max(2000, (budget - 800) * 4)]
+        if len(parts) > 1 and head is EXPLAIN_PROMPT:
+            return merged  # explainer blocks are independent - no merge needed
+        return ai.ask("Merge these partial briefs into ONE brief with the same headings. Remove repetition, "
+                      "keep the [ids], don't add anything new:\n\n" + merged, label=f"{label} (merging)")
+    return pool.run(job)[0]
+
+
+# ============================================================================ output
+
+BRIEF_DIR = C.DATA / "news"
+
+
+def md_html(text):
+    """Markdown -> HTML; [12, 40] become story chips the website makes clickable."""
+    h = C.md(text)
+    return re.sub(r"\[(\d+(?:\s*,\s*\d+)*)\]",
+                  lambda m: "".join(f'<a class="r" data-id="{n}">{n}</a>' for n in re.findall(r"\d+", m.group(1))), h)
+
+
+def newer_export(opml):
+    """On the tablet: if you exported a fresher OPML from FeedFlow into Download, use it."""
+    from pathlib import Path
+    dl = Path.home() / "storage" / "shared" / "Download"
+    if not C.IS_TABLET or not dl.exists():
+        return
+    exports = sorted(dl.glob("feedflow-export*.opml"), key=lambda p: p.stat().st_mtime)
+    if exports and (not opml.exists() or exports[-1].stat().st_mtime > opml.stat().st_mtime):
+        shutil.copy(exports[-1], opml)
+        say(f"Using your latest FeedFlow export: {exports[-1].name}")
+
+
+def build(conf=None, log_failed=True):
+    """Builds today's brief. Returns the saved brief dict, or None."""
+    conf = conf or settings()
+    opml = C.here(conf["opml"])
+    newer_export(opml)
+    if not opml.exists():
+        say(f"\nFeed list not found: {opml}\nExport your feeds from FeedFlow (Settings > Export OPML), "
+            f"save the file in this folder as feeds.opml, and try again.")
+        return None
+    feeds = read_opml(opml, conf["skip"])
+    say(f"\nMorning brief: reading {len(feeds)} feeds (skipping folders: {', '.join(conf['skip']) or 'none'})")
+    articles, failed = collect(feeds, conf["hours"])
+    stories = group(articles)
+    say(f"  {len(articles)} articles in the last {conf['hours']}h -> {len(stories)} distinct stories "
+        f"after merging duplicates. {len(failed)} feed(s) not readable.")
+    if not stories:
+        say("Nothing new to summarise.")
+        return None
+    try:
+        pool = C.Pool()
+        say("Checking the AI connection ...")
+        pool.ask("Reply with exactly: OK", label="check", max_wait=45)
+    except C.AIError as e:
+        say(f"  PROBLEM: {e}")
+        return None
+
+    say("\nSorting stories by sector, company, importance and sentiment ...")
+    tag(stories, pool)
+    relevant = [s for s in stories if s["category"] != "Not market-relevant"]
+    by_cat = {}
+    for s in relevant:
+        by_cat.setdefault(s["category"], []).append(s)
+    for v in by_cat.values():
+        v.sort(key=lambda s: (-s["importance"], -s["outlets"], -s["when"].timestamp()))
+    cats = sorted(by_cat, key=lambda c: -len(by_cat[c]))
+    say(f"  {len(relevant)} market-relevant stories in {len(cats)} sectors/topics "
+        f"({len(stories) - len(relevant)} set aside as not market-relevant).")
+
+    say("\nExplaining the most important stories ...")
+    try:
+        top = explain_top(relevant, pool)
+    except C.AIError as e:
+        say(f"    failed: {e}")
+        top = []
+    time.sleep(pool.pause)
+
+    sections = {}
+    todo = [c for c in cats if len(by_cat[c]) >= conf["min_stories"]]
+    say(f"\nWriting {len(todo)} sector briefs ...")
+    for i, c in enumerate(todo, 1):
+        say(f"[{i}/{len(todo)}] {c} ({len(by_cat[c])} stories)")
+        head = SECTION_PROMPT.format(cat=c, n=len(by_cat[c][:250]), hours=conf["hours"])
+        try:
+            sections[c] = ask_fitted(pool, head, [story_line(s) for s in by_cat[c][:250]], label=c)
+        except C.QuotaOver as e:
+            say(f"\n{e}")
+            break
+        except C.AIError as e:
+            say(f"    failed: {e}")
+        time.sleep(pool.pause)
+
+    big = ""
+    now = dt.datetime.now(IST)
+    label = now.strftime("%a %d %b %Y")
+    if sections:
+        say("\nWriting the big picture ...")
+        lines = [f"### {c}\n{sections[c]}\n" for c in cats if c in sections]
+        try:
+            big = ask_fitted(pool, BIG_PROMPT.format(date=label, n=len(relevant), hours=conf["hours"]), lines,
+                             label="big picture")
+            big = re.sub(r"^\s*#+\s*(Morning brief.*|The big picture)\s*$", "", big, count=2,
+                         flags=re.M | re.I).strip()
+        except C.AIError as e:
+            say(f"    failed: {e}")
+
+    out_sections = []
+    for c in cats:
+        items = by_cat[c]
+        text = sections.get(c, "")
+        one = ""
+        m = re.search(r"\*\*In one line:\*\*\s*(.+)", text)
+        if m:
+            one = md_html(m.group(1)).replace("<p>", "").replace("</p>", "")
+            text = text.replace(m.group(0), "")
+        out_sections.append({"cat": c, "one": one, "html": md_html(text) if text else "",
+                             "ids": [s["id"] for s in items],
+                             "pos": sum(s["sentiment"] == "+" for s in items),
+                             "neg": sum(s["sentiment"] == "-" for s in items),
+                             "neu": sum(s["sentiment"] == "=" for s in items)})
+    brief = {
+        "date": now.strftime("%Y-%m-%d"), "label": label, "built": now.isoformat(timespec="minutes"),
+        "hours": conf["hours"],
+        "stats": {"feeds": len(feeds), "articles": len(articles), "stories": len(stories),
+                  "relevant": len(relevant), "failed": len(failed),
+                  "sources": len({x["name"] for s in relevant for x in s["sources"]})},
+        "big": md_html(big), "top": top, "sections": out_sections,
+        "stories": [{"id": s["id"], "title": s["title"], "desc": s["desc"],
+                     "when": s["when"].astimezone(IST).isoformat(timespec="minutes"),
+                     "cat": s["category"], "companies": s["companies"], "imp": s["importance"],
+                     "sent": s["sentiment"], "outlets": s["outlets"], "sources": s["sources"]}
+                    for s in relevant],
+        "failed": failed if log_failed else [],
+    }
+    BRIEF_DIR.mkdir(parents=True, exist_ok=True)
+    path = BRIEF_DIR / f"{brief['date']}.json"
+    path.write_text(json.dumps(brief, ensure_ascii=False), encoding="utf-8")
+    for old in sorted(BRIEF_DIR.glob("*.json"))[:-90]:  # keep ~3 months
+        old.unlink()
+    say(f"\nSaved the brief: data/news/{path.name}")
+    return brief
+
+
+def run(open_page=True):
+    """Menu / command line: build today's brief and refresh the website."""
+    brief = build()
+    if brief is None:
+        return
+    import site_builder
+    site_builder.build()
+    if open_page:
+        site_builder.open_site("#today")
+    notify(f"Morning brief ready: {brief['stats']['relevant']} stories")
+
+
+def notify(text):
+    if C.IS_TABLET and shutil.which("termux-notification"):
+        try:
+            subprocess.run(["termux-notification", "--title", "Morning brief", "--content", text], timeout=10)
+        except Exception:
+            pass
+
+
+if __name__ == "__main__":
+    C.disable_quickedit()
+    C.wake_lock(True)
+    try:
+        run(open_page="--quiet" not in sys.argv)
+    finally:
+        C.wake_lock(False)

@@ -1,0 +1,9 @@
+{
+  "name": "Market Desk",
+  "short_name": "Market Desk",
+  "start_url": "index.html#today",
+  "display": "standalone",
+  "background_color": "#f6f5f1",
+  "theme_color": "#13201f",
+  "icons": [{"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
+}

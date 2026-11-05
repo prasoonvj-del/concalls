@@ -1,0 +1,268 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<opml version="1.0">
+  <head>
+    <title>Subscriptions from FeedFlow</title>
+  </head>
+  <body>
+    <outline text="Technical Analysis" title="Technical Analysis">
+      <outline type="rss" text="Rohit Srivastava" title="Rohit Srivastava" xmlUrl="https://rohitsrivastava21.substack.com/feed" />
+      <outline type="rss" text="Technical Analysis of Indian Equities" title="Technical Analysis of Indian Equities" xmlUrl="https://www.nooreshtech.co.in/feed" />
+    </outline>
+    <outline text="Paper Financial Express" title="Paper Financial Express">
+      <outline type="rss" text="Commodity FE" title="Commodity FE" xmlUrl="https://news.google.com/rss/search?q=commodity+financial+express&amp;hl=en-US&amp;gl=US&amp;ceid=US:en" />
+      <outline type="rss" text="FE" title="FE" xmlUrl="https://news.google.com/rss/search?q=stock+insights+financial+express&amp;hl=en-US&amp;gl=US&amp;ceid=US:en" />
+    </outline>
+    <outline text="Reuters" title="Reuters">
+      <outline type="rss" text="www.reuters.com" title="www.reuters.com" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/01092696714" />
+      <outline type="rss" text="www.reuters.com" title="www.reuters.com" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/01092696762" />
+    </outline>
+    <outline text="Whalesbook" title="Whalesbook">
+      <outline type="rss" text="Brokerage Reports News Today | Whalesbook" title="Brokerage Reports News Today | Whalesbook" xmlUrl="https://politepaul.com/fd/p0rs7lXalIgN.xml" />
+      <outline type="rss" text="Whalesbook: AI-Powered Stock Updates via WhatsApp" title="Whalesbook: AI-Powered Stock Updates via WhatsApp" xmlUrl="https://politepaul.com/fd/8wCtqa5u2tAq.xml" />
+      <outline type="rss" text="www.whalesbook.com" title="www.whalesbook.com" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/30082691977" />
+    </outline>
+    <outline text="Paper Business Line" title="Paper Business Line">
+      <outline type="rss" text="Big Storys BL" title="Big Storys BL" xmlUrl="https://www.thehindubusinessline.com/portfolio/big-story/feeder/default.rss" />
+      <outline type="rss" text="BL Deep Dive" title="BL Deep Dive" xmlUrl="https://www.thehindubusinessline.com/data-stories/deep-dive/feeder/default.rss" />
+      <outline type="rss" text="Business News " title="Business News " xmlUrl="https://www.thehindubusinessline.com/feeder/default.rss" />
+      <outline type="rss" text="BusinessLine Markets" title="BusinessLine Markets" xmlUrl="https://www.thehindubusinessline.com/markets/feeder/default.rss" />
+      <outline type="rss" text="Data Stories BL" title="Data Stories BL" xmlUrl="https://www.thehindubusinessline.com/data-stories/feeder/default.rss" />
+      <outline type="rss" text="Economy News BL" title="Economy News BL" xmlUrl="https://www.thehindubusinessline.com/economy/feeder/default.rss" />
+      <outline type="rss" text="Latest Money &amp; Banking The HinduBusinessLine" title="Latest Money &amp; Banking The HinduBusinessLine" xmlUrl="https://www.thehindubusinessline.com/money-and-banking/feeder/default.rss" />
+      <outline type="rss" text="Stocks Fundamentals Analysis BusinessLine" title="Stocks Fundamentals Analysis BusinessLine" xmlUrl="https://www.thehindubusinessline.com/portfolio/stock-fundamental-analysis-india/feeder/default.rss" />
+      <outline type="rss" text="Stocks News Analys BL" title="Stocks News Analys BL" xmlUrl="https://www.thehindubusinessline.com/portfolio/news-analysis/feeder/default.rss" />
+      <outline type="rss" text="Wealth management" title="Wealth management" xmlUrl="https://www.thehindubusinessline.com/portfolio/feeder/default.rss" />
+    </outline>
+    <outline text="Markets" title="Markets">
+      <outline type="rss" text="Business News Today – Finance, Industry &amp; Economy | The Hindu" title="Business News Today – Finance, Industry &amp; Economy | The Hindu" xmlUrl="https://www.thehindu.com/business/feeder/default.rss" />
+      <outline type="rss" text="Equitypandit" title="Equitypandit" xmlUrl="https://www.equitypandit.com/feed/" />
+      <outline type="rss" text="Market | The Indian Express" title="Market | The Indian Express" xmlUrl="https://indianexpress.com/section/business/market/feed/" />
+      <outline type="rss" text="Markets BS" title="Markets BS" xmlUrl="https://www.business-standard.com/rss/markets-106.rss" />
+      <outline type="rss" text="Markets ET Now" title="Markets ET Now" xmlUrl="https://www.etnownews.com/feeds/gns-etn-markets.xml" />
+      <outline type="rss" text="Markets The Hindu" title="Markets The Hindu" xmlUrl="https://www.thehindu.com/business/markets/feeder/default.rss" />
+      <outline type="rss" text="Stock Market Today, Stock Market Live News Update | The HinduBusinessLine" title="Stock Market Today, Stock Market Live News Update | The HinduBusinessLine" xmlUrl="https://www.thehindubusinessline.com/markets/stock-markets/feeder/default.rss" />
+    </outline>
+    <outline text="Sports" title="Sports">
+      <outline type="rss" text=" Live Scores" title=" Live Scores" xmlUrl="https://static.cricinfo.com/rss/livescores.xml" />
+      <outline type="rss" text=" The Hindu" title=" The Hindu" xmlUrl="https://www.thehindu.com/sport/cricket/feeder/default.rss" />
+      <outline type="rss" text="Australia Cricinfo.com" title="Australia Cricinfo.com" xmlUrl="https://www.espncricinfo.com/rss/content/story/feeds/2.xml" />
+      <outline type="rss" text="England Cricinfo.com" title="England Cricinfo.com" xmlUrl="https://www.espncricinfo.com/rss/content/story/feeds/1.xml" />
+      <outline type="rss" text="India Cricinfo.com" title="India Cricinfo.com" xmlUrl="https://www.espncricinfo.com/rss/content/story/feeds/6.xml" />
+      <outline type="rss" text="New zealand Cricinfo.com" title="New zealand Cricinfo.com" xmlUrl="https://www.espncricinfo.com/rss/content/story/feeds/5.xml" />
+      <outline type="rss" text="rediff cricket" title="rediff cricket" xmlUrl="https://m.rediff.com/rss/cricketrss.xml" />
+      <outline type="rss" text="South Africa Cricinfo.com" title="South Africa Cricinfo.com" xmlUrl="https://www.espncricinfo.com/rss/content/story/feeds/3.xml" />
+    </outline>
+    <outline text="Paper Live Mint" title="Paper Live Mint">
+      <outline type="rss" text="mint - companies" title="mint - companies" xmlUrl="https://www.livemint.com/rss/companies" />
+      <outline type="rss" text="mint - industry" title="mint - industry" xmlUrl="https://www.livemint.com/rss/industry" />
+      <outline type="rss" text="mint - markets" title="mint - markets" xmlUrl="https://www.livemint.com/rss/markets" />
+      <outline type="rss" text="Mint Newsletters" title="Mint Newsletters" xmlUrl="https://mintnl.substack.com/feed" />
+    </outline>
+    <outline text="Industry Real Estate" title="Industry Real Estate">
+      <outline type="rss" text="Real Estate BusinessLine" title="Real Estate BusinessLine" xmlUrl="https://www.thehindubusinessline.com/news/real-estate/feeder/default.rss" />
+      <outline type="rss" text="Real Estate ET" title="Real Estate ET" xmlUrl="https://economictimes.indiatimes.com/markets/digital-real-estate/rssfeeds/121976660.cms?from=mdr" />
+      <outline type="rss" text="Real Estate ET" title="Real Estate ET" xmlUrl="https://realty.economictimes.indiatimes.com/rss/recentstories" />
+      <outline type="rss" text="Real Estate ET Now" title="Real Estate ET Now" xmlUrl="https://www.etnownews.com/feeds/gns-etn-real-estate.xml" />
+    </outline>
+    <outline text="Rediff" title="Rediff">
+      <outline type="rss" text="rediff money" title="rediff money" xmlUrl="https://m.rediff.com/rss/moneyrss.xml" />
+      <outline type="rss" text="rediff: Business Commodities" title="rediff: Business Commodities" xmlUrl="https://m.rediff.com/rss/commodrss.xml" />
+    </outline>
+    <outline text="Substack" title="Substack">
+      <outline type="rss" text="Alpha Ideas" title="Alpha Ideas" xmlUrl="https://alphaideas.in/feed/" />
+      <outline type="rss" text="Filter Coffee ☕" title="Filter Coffee ☕" xmlUrl="https://filtercoffee.substack.com/feed" />
+      <outline type="rss" text="HV Investing Premium" title="HV Investing Premium" xmlUrl="https://hvinvesting.substack.com/feed" />
+      <outline type="rss" text="Indiafintech" title="Indiafintech" xmlUrl="https://indiafintech.substack.com/feed" />
+      <outline type="rss" text="Indian BFSI Space" title="Indian BFSI Space" xmlUrl="https://digitaltrust.substack.com/feed" />
+      <outline type="rss" text="Insights with SOIC" title="Insights with SOIC" xmlUrl="https://soic.substack.com/feed" />
+      <outline type="rss" text="Market Bites by Filter Coffee" title="Market Bites by Filter Coffee" xmlUrl="https://marketbites.substack.com/feed" />
+      <outline type="rss" text="Nine One Capital" title="Nine One Capital" xmlUrl="https://91capital.substack.com/feed" />
+      <outline type="rss" text="Niti Shastra" title="Niti Shastra" xmlUrl="https://nitishastra.substack.com/feed" />
+      <outline type="rss" text="Quest for Value" title="Quest for Value" xmlUrl="https://kiraninvestsandlearns.wordpress.com/feed/" />
+      <outline type="rss" text="Tanay’s Newsletter" title="Tanay’s Newsletter" xmlUrl="https://www.tanayj.com/feed" />
+      <outline type="rss" text="WealthWise" title="WealthWise" xmlUrl="https://wealthwisedca.substack.com/feed" />
+      <outline type="rss" text="Zen Nivesh" title="Zen Nivesh" xmlUrl="https://zennivesh.substack.com/feed" />
+    </outline>
+    <outline text="Economy" title="Economy">
+      <outline type="rss" text="Economy ET" title="Economy ET" xmlUrl="https://www.etnownews.com/feeds/gns-etn-economy.xml" />
+      <outline type="rss" text="Economy Hindu" title="Economy Hindu" xmlUrl="https://www.thehindu.com/business/Economy/feeder/default.rss" />
+      <outline type="rss" text="Economy | The Indian Express" title="Economy | The Indian Express" xmlUrl="https://indianexpress.com/section/business/economy/feed/" />
+      <outline type="rss" text="IBTimes.co.in : Economy" title="IBTimes.co.in : Economy" xmlUrl="https://www.ibtimes.co.in/rss/economy" />
+    </outline>
+    <outline text="Research" title="Research">
+      <outline type="rss" text="All Things Supply Chain" title="All Things Supply Chain" xmlUrl="https://www.allthingssupplychain.com/feed/" />
+      <outline type="rss" text="Economist Research" title="Economist Research" xmlUrl="https://www.economist.com/business/rss.xml" />
+      <outline type="rss" text="Frontline" title="Frontline" xmlUrl="https://frontline.thehindu.com/economy/feeder/default.rss" />
+      <outline type="rss" text="Indian Economy &amp; Business Analysis" title="Indian Economy &amp; Business Analysis" xmlUrl="https://www.indiaeconomyandbusiness.com/feed/" />
+      <outline type="rss" text="Latest Visually News The HinduBusinessLine" title="Latest Visually News The HinduBusinessLine" xmlUrl="https://www.thehindubusinessline.com/data-stories/visually/feeder/default.rss" />
+      <outline type="rss" text="The Big Picture" title="The Big Picture" xmlUrl="https://ritholtz.com/feed/" />
+      <outline type="rss" text="The Economic Transcript" title="The Economic Transcript" xmlUrl="https://tetofficial.com/feed/" />
+    </outline>
+    <outline text="Financial History" title="Financial History">
+      <outline type="rss" text="History Meets Finance" title="History Meets Finance" xmlUrl="https://historymeetsfinance.substack.com/feed" />
+      <outline type="rss" text="Investing in Financial History" title="Investing in Financial History" xmlUrl="https://finhistory.substack.com/feed" />
+    </outline>
+    <outline text="Markets Research Reports" title="Markets Research Reports">
+      <outline type="rss" text='"Prabhudas Lilladher' title='"Prabhudas Lilladher' xmlUrl="https://news.google.com/rss/search?q=Prabhudas+Lilladher+research+report+OR+result+update&amp;hl=en-IN&amp;gl=IN&amp;ceid=IN:en" />
+      <outline type="rss" text="alphastreet.com" title="alphastreet.com" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/17082663501" />
+      <outline type="rss" text="Earnings/Conference calls for NSE and BSE listed companies" title="Earnings/Conference calls for NSE and BSE listed companies" xmlUrl="https://trendlyne.com/feeds/earning-calls-podcast-rss/" />
+      <outline type="rss" text="Hdfc" title="Hdfc" xmlUrl="https://news.google.com/rss/search?q=site:hdfcsec.com+company+update" />
+      <outline type="rss" text="IC Report" title="IC Report" xmlUrl='https://news.google.com/rss/search?q="initiating+coverage"+India+stock+OR+equity+OR+company+OR+brokerage&amp;hl=en-IN&amp;gl=IN&amp;ceid=IN:en' />
+      <outline type="rss" text="Research Reports Motilal Oswal" title="Research Reports Motilal Oswal" xmlUrl="https://news.google.com/rss/search?q=site:motilaloswal.com/site/rreports+filetype:pdf" />
+      <outline type="rss" text="stock insight FE" title="stock insight FE" xmlUrl='https://news.google.com/rss/search?q=site:financialexpress.com/market/+"stock+analysis"+OR+"stock+insight"+OR+"stock+to+buy"&amp;hl=en-IN&amp;gl=IN&amp;ceid=IN:en' />
+      <outline type="rss" text="www.multibagg.ai" title="www.multibagg.ai" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/17082663554" />
+    </outline>
+    <outline text="Industry Banking" title="Industry Banking">
+      <outline type="rss" text="Banking financial express" title="Banking financial express" xmlUrl="https://news.google.com/rss/search?q=banking%20financial%20express&amp;hl=en-US&amp;gl=US&amp;ceid=US:en" />
+      <outline type="rss" text="Banking/Finance-Industry-The Economic Times" title="Banking/Finance-Industry-The Economic Times" xmlUrl="https://economictimes.indiatimes.com/industry/banking/finance/rssfeeds/13358259.cms?from=mdr" />
+      <outline type="rss" text="BFSI  ET" title="BFSI  ET" xmlUrl="https://bfsi.economictimes.indiatimes.com/rss/recentstories" />
+      <outline type="rss" text="The Indian Express" title="The Indian Express" xmlUrl="https://indianexpress.com/section/business/banking-and-finance/feed/" />
+    </outline>
+    <outline text="Industry Commodities" title="Industry Commodities">
+      <outline type="rss" text="Agricultural BL" title="Agricultural BL" xmlUrl="https://www.thehindubusinessline.com/economy/agri-business/feeder/default.rss" />
+      <outline type="rss" text="Agriculture BS" title="Agriculture BS" xmlUrl="https://www.business-standard.com/rss/industry/agriculture-21704.rss" />
+      <outline type="rss" text="Commodities" title="Commodities" xmlUrl="https://www.business-standard.com/rss/markets/commodities-10608.rss" />
+      <outline type="rss" text="Commodities-Markets-The Economic Times" title="Commodities-Markets-The Economic Times" xmlUrl="https://economictimes.indiatimes.com/markets/commodities/rssfeeds/1808152121.cms?from=mdr" />
+      <outline type="rss" text="Commodity BL" title="Commodity BL" xmlUrl="https://www.thehindubusinessline.com/markets/commodities/feeder/default.rss" />
+      <outline type="rss" text="MINING.COM" title="MINING.COM" xmlUrl="https://www.mining.com/feed/" />
+      <outline type="rss" text="Oilprice.com" title="Oilprice.com" xmlUrl="https://oilprice.com/rss/main" />
+      <outline type="rss" text="The Indian Express" title="The Indian Express" xmlUrl="https://indianexpress.com/section/business/commodities/feed/" />
+    </outline>
+    <outline text="Zerodha" title="Zerodha">
+      <outline type="rss" text="Aftermarket Report by Zerodha" title="Aftermarket Report by Zerodha" xmlUrl="https://aftermarketreport.zerodha.com/feed" />
+      <outline type="rss" text="Archive" title="Archive" xmlUrl="https://thedailybrief.zerodha.com/feed" />
+      <outline type="rss" text="In The Money by Zerodha" title="In The Money by Zerodha" xmlUrl="https://inthemoneybyzerodha.substack.com/feed" />
+      <outline type="rss" text="Indiadatahub" title="Indiadatahub" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/05092704442" />
+      <outline type="rss" text="Mind Over Markets" title="Mind Over Markets" xmlUrl="https://zerodhavarsity.substack.com/feed" />
+      <outline type="rss" text="Pulse" title="Pulse" xmlUrl="https://pulse.zerodha.com/feed.xml" />
+      <outline type="rss" text="Subtext by Zerodha" title="Subtext by Zerodha" xmlUrl="https://subtextbyzerodha.substack.com/feed" />
+      <outline type="rss" text="The Chatter" title="The Chatter" xmlUrl="https://thechatter.zerodha.com/feed" />
+      <outline type="rss" text="the daily brief" title="the daily brief" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/12092720049" />
+      <outline type="rss" text="The World, Simplified" title="The World, Simplified" xmlUrl="https://thedailybrief.zerodha.com/feed?sectionId=159093" />
+    </outline>
+    <outline text="Markets Global" title="Markets Global">
+      <outline type="rss" text="Asia Economist" title="Asia Economist" xmlUrl="https://www.economist.com/asia/rss.xml" />
+      <outline type="rss" text="Asia Times" title="Asia Times" xmlUrl="https://asiatimes.com/feed/" />
+      <outline type="rss" text="Bloomberg Markets" title="Bloomberg Markets" xmlUrl="https://www.bloomberg.com/feeds/markets/news.rss" />
+      <outline type="rss" text="China Economist" title="China Economist" xmlUrl="https://www.economist.com/china/rss.xml" />
+      <outline type="rss" text="Economist" title="Economist" xmlUrl="https://www.economist.com/finance-and-economics/rss.xml" />
+      <outline type="rss" text="India FT" title="India FT" xmlUrl="https://www.ft.com/india?format=rss" />
+      <outline type="rss" text="International: Top News And Analysis Cnbc" title="International: Top News And Analysis Cnbc" xmlUrl="https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&amp;id=100727362" />
+    </outline>
+    <outline text="Industry General" title="Industry General">
+      <outline type="rss" text="Business The Hindu" title="Business The Hindu" xmlUrl="https://www.thehindu.com/business/agri-business/feeder/default.rss" />
+      <outline type="rss" text="Economy" title="Economy" xmlUrl="https://www.business-standard.com/rss/economy-102.rss" />
+      <outline type="rss" text="ET Explains-News-The Economic Times" title="ET Explains-News-The Economic Times" xmlUrl="https://economictimes.indiatimes.com/news/et-explains/rssfeeds/64552206.cms?from=mdr" />
+      <outline type="rss" text="IBEF" title="IBEF" xmlUrl="https://www.ibef.org/news/feed" />
+      <outline type="rss" text="Industry News ET" title="Industry News ET" xmlUrl="https://economictimes.indiatimes.com/news/company/rssfeeds/2143429.cms?from=mdr" />
+      <outline type="rss" text="Industry The Hindu" title="Industry The Hindu" xmlUrl="https://www.thehindu.com/business/Industry/feeder/default.rss" />
+      <outline type="rss" text="Moneycontrol Podcast" title="Moneycontrol Podcast" xmlUrl="https://audioboom.com/channels/4937727.rss" />
+    </outline>
+    <outline text="Trade Brains" title="Trade Brains">
+      <outline type="rss" text="Credit Card" title="Credit Card" xmlUrl="https://tradebrains.in/rss/categories/money/credit-card" />
+      <outline type="rss" text="Large-cap" title="Large-cap" xmlUrl="https://tradebrains.in/rss/categories/indian-markets/large-cap" />
+      <outline type="rss" text="Mid-cap" title="Mid-cap" xmlUrl="https://tradebrains.in/rss/categories/indian-markets/mid-cap" />
+      <outline type="rss" text="Recent Orders" title="Recent Orders" xmlUrl="https://tradebrains.in/rss/categories/indian-markets/orders" />
+      <outline type="rss" text="Small-cap" title="Small-cap" xmlUrl="https://tradebrains.in/rss/categories/indian-markets/small-cap" />
+      <outline type="rss" text="Stock Ideas" title="Stock Ideas" xmlUrl="https://tradebrains.in/rss/categories/indian-markets/stock-ideas" />
+      <outline type="rss" text="Trade Brains : Latest Posts" title="Trade Brains : Latest Posts" xmlUrl="https://tradebrains.in/feed" />
+    </outline>
+    <outline text="Industry IT" title="Industry IT">
+      <outline type="rss" text="ET CIO : ETCIO.com" title="ET CIO : ETCIO.com" xmlUrl="https://cio.economictimes.indiatimes.com/rss/business-analytics" />
+      <outline type="rss" text="Latest CIO News | Enterprise IT, Enterprise Technology, Tech Industry News - ET CIO : ETCIO.com" title="Latest CIO News | Enterprise IT, Enterprise Technology, Tech Industry News - ET CIO : ETCIO.com" xmlUrl="https://cio.economictimes.indiatimes.com/rss/lateststories" />
+      <outline type="rss" text="Tech Observer Magazine" title="Tech Observer Magazine" xmlUrl="https://techobserver.in/feed" />
+      <outline type="rss" text="Tech | The Indian Express" title="Tech | The Indian Express" xmlUrl="https://indianexpress.com/section/technology/tech-news-technology/feed/" />
+      <outline type="rss" text="Tech-The Economic Times" title="Tech-The Economic Times" xmlUrl="https://economictimes.indiatimes.com/tech/rssfeeds/13357270.cms?from=mdr" />
+    </outline>
+    <outline text="Industry Automobile" title="Industry Automobile">
+      <outline type="rss" text="Auto" title="Auto" xmlUrl="https://www.business-standard.com/rss/industry/auto-21701.rss" />
+      <outline type="rss" text="Auto-Industry-The Economic Times" title="Auto-Industry-The Economic Times" xmlUrl="https://economictimes.indiatimes.com/industry/auto/rssfeeds/13359412.cms?from=mdr" />
+      <outline type="rss" text="ET Auto" title="ET Auto" xmlUrl="https://auto.economictimes.indiatimes.com/rss/recentstories" />
+      <outline type="rss" text="www.businessworld.in" title="www.businessworld.in" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/30082690865" />
+      <outline type="rss" text="www.financialexpress.com" title="www.financialexpress.com" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/30082690863" />
+    </outline>
+    <outline text="Auto" title="Auto">
+      <outline type="rss" text=" MotorOctane" title=" MotorOctane" xmlUrl="https://motoroctane.com/news/feed" />
+      <outline type="rss" text="Auto ET NOW" title="Auto ET NOW" xmlUrl="https://www.etnownews.com/feeds/gns-etn-auto.xml" />
+      <outline type="rss" text="Auto News in CNBCTV18" title="Auto News in CNBCTV18" xmlUrl="https://www.cnbctv18.com/commonfeeds/v1/cne/rss/auto.xml" />
+      <outline type="rss" text="Auto Team bhp" title="Auto Team bhp" xmlUrl="https://www.team-bhp.com/forum/external.php?type=RSS2" />
+      <outline type="rss" text="Auto Times of India" title="Auto Times of India" xmlUrl="https://timesofindia.indiatimes.com/rssfeeds/74317216.cms" />
+      <outline type="rss" text="Autocar India" title="Autocar India" xmlUrl="https://www.autocarindia.com/rss/all" />
+      <outline type="rss" text="AutoUpdates BL" title="AutoUpdates BL" xmlUrl="https://www.thehindubusinessline.com/specials/auto-focus/feeder/default.rss" />
+      <outline type="rss" text="Bike India" title="Bike India" xmlUrl="https://bikeindia.in/feed/" />
+      <outline type="rss" text="Bike News" title="Bike News" xmlUrl="https://thebikejunction.com/news/feed" />
+      <outline type="rss" text="Bike News | MotorBeam" title="Bike News | MotorBeam" xmlUrl="https://www.motorbeam.com/category/bikes/feed/" />
+      <outline type="rss" text="BikeAdvice" title="BikeAdvice" xmlUrl="https://bikeadvice.in/feed/" />
+      <outline type="rss" text="BikeDekho News" title="BikeDekho News" xmlUrl="https://www.bikedekho.com/rss-feed-generator/news-feed" />
+      <outline type="rss" text="Bikes  Gaadiwaadi" title="Bikes  Gaadiwaadi" xmlUrl="https://gaadiwaadi.com/bikes-news/feed/" />
+      <outline type="rss" text="Car News - ICN Auto Updates" title="Car News - ICN Auto Updates" xmlUrl="https://www.indiacarnews.com/news/feed/" />
+      <outline type="rss" text="Car News | MotorBeam" title="Car News | MotorBeam" xmlUrl="https://www.motorbeam.com/category/cars/feed/" />
+      <outline type="rss" text="RushLane" title="RushLane" xmlUrl="https://www.rushlane.com/feed" />
+    </outline>
+    <outline text="Markets Cnbc Tv 18" title="Markets Cnbc Tv 18">
+      <outline type="rss" text="Business News in CNBCTV18" title="Business News in CNBCTV18" xmlUrl="https://www.cnbctv18.com/commonfeeds/v1/cne/rss/business.xml" />
+      <outline type="rss" text="Economy News in CNBCTV18" title="Economy News in CNBCTV18" xmlUrl="https://www.cnbctv18.com/commonfeeds/v1/cne/rss/economy.xml" />
+      <outline type="rss" text="Energy Cnbc" title="Energy Cnbc" xmlUrl="https://www.cnbc.com/id/19836768/device/rss/rss.html" />
+      <outline type="rss" text="Market News " title="Market News " xmlUrl="https://www.cnbctv18.com/commonfeeds/v1/cne/rss/market.xml" />
+    </outline>
+    <outline text="Markets- Company Updates" title="Markets- Company Updates">
+      <outline type="rss" text="Business India Corporate" title="Business India Corporate" xmlUrl="https://news.google.com/rss/search?q=site:businessindia.co/magazine/corporate-report&amp;hl=en-IN&amp;gl=IN&amp;ceid=IN:en" />
+      <outline type="rss" text="Companies" title="Companies" xmlUrl="https://www.business-standard.com/rss/companies-101.rss" />
+      <outline type="rss" text="Equity PANDIT" title="Equity PANDIT" xmlUrl="https://www.equitypandit.com/category/latest-news/feed" />
+      <outline type="rss" text="ET Now" title="ET Now" xmlUrl="https://www.etnownews.com/feeds/gns-etn-companies.xml" />
+      <outline type="rss" text="IBTimes.co.in : Companies" title="IBTimes.co.in : Companies" xmlUrl="https://www.ibtimes.co.in/rss/companies" />
+      <outline type="rss" text="MoneyWorks4Me - Invest and Grow with Us" title="MoneyWorks4Me - Invest and Grow with Us" xmlUrl="https://www.moneyworks4me.com/company/news/latest-stock-news-rss/company-news" />
+      <outline type="rss" text="The Indian Express" title="The Indian Express" xmlUrl="https://indianexpress.com/section/business/companies/feed/" />
+    </outline>
+    <outline text="Tech" title="Tech">
+      <outline type="rss" text=" HT Tech" title=" HT Tech" xmlUrl="https://tech.hindustantimes.com/rss/mobile" />
+      <outline type="rss" text="Android Authority" title="Android Authority" xmlUrl="https://androidauth.wpenginepowered.com/feed/" />
+      <outline type="rss" text="Android Headlines" title="Android Headlines" xmlUrl="https://www.androidheadlines.com/category/all-news/feed" />
+      <outline type="rss" text="fonearena" title="fonearena" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/15092727235" />
+      <outline type="rss" text="Gadgets 360" title="Gadgets 360" xmlUrl="https://feeds.feedburner.com/gadgets360-latest" />
+      <outline type="rss" text="Gadgets Live Mint" title="Gadgets Live Mint" xmlUrl="https://www.livemint.com/rss/technology" />
+      <outline type="rss" text="Gadgets The Indian Express" title="Gadgets The Indian Express" xmlUrl="https://indianexpress.com/section/technology/gadgets/feed/" />
+      <outline type="rss" text="Gizmochina" title="Gizmochina" xmlUrl="https://www.gizmochina.com/feed/" />
+      <outline type="rss" text="GSMArena.com - Latest articles" title="GSMArena.com - Latest articles" xmlUrl="https://www.gsmarena.com/rss-news-reviews.php3" />
+      <outline type="rss" text="IBTimes.co.in : Technology" title="IBTimes.co.in : Technology" xmlUrl="https://www.ibtimes.co.in/rss/technology" />
+      <outline type="rss" text="Latest News on Mobiles &amp; Tablets | The HinduBusinessLine" title="Latest News on Mobiles &amp; Tablets | The HinduBusinessLine" xmlUrl="https://www.thehindubusinessline.com/info-tech/mobiles-tablets/feeder/default.rss" />
+      <outline type="rss" text="mint - technology" title="mint - technology" xmlUrl="https://www.livemint.com/rss/technology" />
+      <outline type="rss" text="Notebookcheck.net: Notebook Reviews" title="Notebookcheck.net: Notebook Reviews" xmlUrl="https://www.notebookcheck.net/RSS-Feed-Notebook-Reviews.8156.0.html" />
+      <outline type="rss" text="Reviews Archives - Smartprix" title="Reviews Archives - Smartprix" xmlUrl="https://www.smartprix.com/bytes/category/reviews/feed" />
+      <outline type="rss" text="Tech news HT Tech" title="Tech news HT Tech" xmlUrl="https://tech.hindustantimes.com/rss/tech" />
+      <outline type="rss" text="Tech Reviews The Indian Express" title="Tech Reviews The Indian Express" xmlUrl="https://indianexpress.com/section/technology/tech-reviews/feed/" />
+      <outline type="rss" text="TechCrunch" title="TechCrunch" xmlUrl="https://techcrunch.com/feed" />
+      <outline type="rss" text="Techgenyz" title="Techgenyz" xmlUrl="https://techgenyz.com/feed" />
+      <outline type="rss" text="Technology ET NOW" title="Technology ET NOW" xmlUrl="https://www.etnownews.com/feeds/gns-etn-technology.xml" />
+      <outline type="rss" text="TelecomTalk" title="TelecomTalk" xmlUrl="https://telecomtalk.info/feed/" />
+      <outline type="rss" text="The Mobile Indian" title="The Mobile Indian" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/26102813553" />
+      <outline type="rss" text="The Verge" title="The Verge" xmlUrl="https://www.theverge.com/rss/index.xml" />
+      <outline type="rss" text="Trak.in – Indian Business of Tech, Mobile &amp; Startups" title="Trak.in – Indian Business of Tech, Mobile &amp; Startups" xmlUrl="https://trak.in/stories/feed" />
+      <outline type="rss" text="www.91mobiles.com" title="www.91mobiles.com" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/01092696910" />
+      <outline type="rss" text="www.91mobiles.com" title="www.91mobiles.com" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/01092696919" />
+      <outline type="rss" text="XDA" title="XDA" xmlUrl="https://www.xda-developers.com/feed/" />
+      <outline type="rss" text="XimiTime" title="XimiTime" xmlUrl="https://ximitime.com/feed/" />
+    </outline>
+    <outline text="Paper Business Standard" title="Paper Business Standard">
+      <outline type="rss" text="Business Standard" title="Business Standard" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/30082690709" />
+      <outline type="rss" text="Today's Paper" title="Today's Paper" xmlUrl="https://www.business-standard.com/rss/todays-paper.rss" />
+    </outline>
+    <outline text="Industry Energy" title="Industry Energy">
+      <outline type="rss" text="Asia Refining Capacity News EIN" title="Asia Refining Capacity News EIN" xmlUrl="https://oilandgas.einnews.com/rss/adYoBRz2amyVS256" />
+      <outline type="rss" text="Energy-Industry-The Economic Times" title="Energy-Industry-The Economic Times" xmlUrl="https://economictimes.indiatimes.com/industry/energy/rssfeeds/13358350.cms?from=mdr" />
+      <outline type="rss" text="ET Energy" title="ET Energy" xmlUrl="https://manufacturing.economictimes.indiatimes.com/rss/energy" />
+      <outline type="rss" text="India Oil &amp; Gas News Enn" title="India Oil &amp; Gas News Enn" xmlUrl="https://oilandgas.einnews.com/rss/yDy6aGbarnA3I3Za" />
+      <outline type="rss" text="Power Line Magazine" title="Power Line Magazine" xmlUrl="https://powerline.net.in/feed/" />
+      <outline type="rss" text="www.reuters.com" title="www.reuters.com" xmlUrl="https://cdn.mysitemapgenerator.com/shareapi/rss/01092696715" />
+    </outline>
+    <outline text="Industry Fmcg" title="Industry Fmcg">
+      <outline type="rss" text="Cons. Products-Industry-The Economic Times" title="Cons. Products-Industry-The Economic Times" xmlUrl="https://economictimes.indiatimes.com/industry/cons-products/rssfeeds/13358759.cms?from=mdr" />
+      <outline type="rss" text="ET Fmcg" title="ET Fmcg" xmlUrl="https://manufacturing.economictimes.indiatimes.com/rss/fmcg" />
+      <outline type="rss" text="ET Fmcg Beverages" title="ET Fmcg Beverages" xmlUrl="https://manufacturing.economictimes.indiatimes.com/rss/food-beverages" />
+      <outline type="rss" text="Google" title="Google" xmlUrl="https://news.google.com/rss/search?q=fmcg+industry+news&amp;hl=en-US&amp;gl=US&amp;ceid=US:en" />
+      <outline type="rss" text="Mobiles: ET Retail" title="Mobiles: ET Retail" xmlUrl="https://retail.economictimes.indiatimes.com/rss/consumer-durables-and-information-technology/mobiles" />
+      <outline type="rss" text="Retail News : ET Retail" title="Retail News : ET Retail" xmlUrl="https://retail.economictimes.indiatimes.com/rss/food-entertainment/personal-care-pet-supplies-liquor" />
+      <outline type="rss" text="Retail: ETRetail.com" title="Retail: ETRetail.com" xmlUrl="https://retail.economictimes.indiatimes.com/rss/industry" />
+    </outline>
+  </body>
+</opml>
