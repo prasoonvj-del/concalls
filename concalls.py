@@ -633,19 +633,39 @@ def classify(lib, pool):
     if not todo:
         return
     say(f"\nSorting {len(todo)} companies into sectors (one-off, takes a minute) ...")
-    lookup = {s.lower(): s for s in SECTORS}
     for i in range(0, len(todo), 100):
         batch = todo[i:i + 100]
-        text, _ = pool.ask(CLASSIFY_PROMPT.format(sectors="\n".join(SECTORS),
-                                                  rows="\n".join(f"{c}|{n}" for c, n in batch)),
-                           label=f"sectors {i + 1}-{i + len(batch)}")
+        got = {}
+        for attempt in range(2):
+            text, _ = pool.ask(CLASSIFY_PROMPT.format(sectors="\n".join(SECTORS),
+                                                      rows="\n".join(f"{c}|{n}" for c, n in batch)),
+                               label=f"sectors {i + 1}-{i + len(batch)}")
+            got = parse_sectors(text, {c for c, _ in batch})
+            if len(got) >= 0.6 * len(batch):
+                break
+            say(f"    couldn't read the AI's answer for this batch ({len(got)}/{len(batch)}) - asking again")
+        if len(got) < 0.6 * len(batch):
+            say("    still unreadable - these companies will be sorted on the next run")
+            continue  # left unsorted, so they're retried - never filed under a default sector
         for code, _ in batch:
-            lib["sectors"][code] = "Services & Others"
-        for line in text.splitlines():
-            m = re.match(r"^[\s*-]*([0-9A-Za-z]+)\s*\|\s*(.+?)\s*$", line)
-            if m and m.group(1) in lib["sectors"]:
-                lib["sectors"][m.group(1)] = lookup.get(m.group(2).lower(), "Services & Others")
+            lib["sectors"][code] = got.get(code, "Services & Others")
         save_lib(lib)
+
+
+def parse_sectors(text, codes):
+    """Reads '<code>|<sector>' lines, tolerating markdown, tables, colons and near-miss sector names."""
+    lookup = {s.lower(): s for s in SECTORS}
+    got = {}
+    for line in text.splitlines():
+        line = line.replace("`", "").replace("*", "").strip(" -|")
+        m = re.match(r"^(\d{5,6})\s*(?:\|[^|]*?\|)?\s*[|:–-]\s*(.+?)\s*\|?\s*$", line)
+        if not m or m.group(1) not in codes:
+            continue
+        name = m.group(2).strip(" .|").lower()
+        sec = lookup.get(name) or next((v for k, v in lookup.items() if k in name or name in k), None)
+        if sec:
+            got[m.group(1)] = sec
+    return got
 
 
 def sector_of(lib, call):
@@ -663,10 +683,21 @@ def _num_key(intpart, dec):
     return f"{k}.{d}" if d else k
 
 
+def transcript_numbers(text):
+    """Every number in a transcript, however it's written: 'Rs.9,197', 'INR9,197', '9, 197' (PDF spacing)."""
+    text = re.sub(r"(?<=\d),\s+(?=\d{2,3}\b)", ",", text)
+    text = re.sub(r"(?<=\d)\.\s+(?=\d)", ".", text)
+    out = set()
+    for m in re.finditer(r"\d[\d,]*(?:\.\d+)?", text):
+        whole, _, dec = m.group(0).rstrip(",").partition(".")
+        out.add(_num_key(whole, dec))
+    return out
+
+
 def unverified_numbers(summary, transcript):
     """Numbers in the summary that don't appear anywhere in the transcript.
     These are either calculated by the AI (e.g. a growth % it worked out) or misread - worth a check."""
-    have = {_num_key(m.group(1), m.group(2)) for m in NUM_RE.finditer(transcript)}
+    have = transcript_numbers(transcript)
     body = re.sub(r"\*\*Quarter:\*\*.*", "", summary)  # quarter labels aren't figures
     out = []
     for m in NUM_RE.finditer(body):
@@ -821,7 +852,7 @@ def summarise(calls, lib, pool, compare=True, limit=None, stats=None):
         plan = plan[:max(0, limit)]
     need_prev = [p for _, p in plan if p and not p.get("summary") and not p.get("skip")]
     redo = [c for c, _ in plan if c.get("summary")]
-    say(f"\n{len(calls)} concalls for {target}: {len(calls) - len(plan)} already done, {len(plan)} to do"
+    say(f"\n{len(calls)} concalls for {target}: {len(plan)} to do now"
         + (f" (incl. {len(redo)} re-done to add the last-quarter comparison)" if redo else "") + ".")
     if need_prev:
         say(f"Plus {len(need_prev)} previous-quarter calls to summarise first, for the comparison.")

@@ -54,7 +54,9 @@ def step_concalls(conf):
     except C.AIError as e:
         say(f"AI not available: {e}")
         return
+    repair_once(lib)
     C.classify(lib, pool)
+    recheck_figures(lib)
     groups = {}
     for c in C.latest_call_each(list(lib["calls"].values())):
         groups.setdefault(C.sector_of(lib, c), []).append(c)
@@ -67,7 +69,8 @@ def step_concalls(conf):
         target = max((C.filing_quarter(c) for c in calls), key=C.quarter_key)
         return sum(1 for c in calls if C.filing_quarter(c) == target and not c.get("summary") and not c.get("skip"))
 
-    order = sorted(wanted, key=lambda s: -pending(s))
+    # real sectors first; the catch-all bucket last
+    order = sorted(wanted, key=lambda s: (s == "Services & Others", -pending(s)))
     budget = conf["limit"]
     say(f"Up to {budget} new summaries this run. Pending by sector: "
         + ", ".join(f"{s} {pending(s)}" for s in order if pending(s)) or "none")
@@ -87,6 +90,44 @@ def step_concalls(conf):
             say("Stopping concalls for today (AI limit or repeated failures).")
             break
         time.sleep(pool.pause)
+
+
+def repair_once(lib):
+    """Fixes from the first cloud run: re-sort companies that a failed AI batch dumped into
+    'Services & Others', and re-check figures with the improved checker."""
+    if lib.get("repair_v2"):
+        return
+    n = sum(1 for v in lib["sectors"].values() if v == "Services & Others")
+    lib["sectors"] = {k: v for k, v in lib["sectors"].items() if v != "Services & Others"}
+    lib["overviews"] = {k: v for k, v in lib["overviews"].items() if not k.startswith("Services & Others|")}
+    for c in lib["calls"].values():
+        c.pop("unverified", None)
+    lib["repair_v2"] = True
+    C.save_lib(lib)
+    say(f"One-time repair: re-sorting {n} companies, re-checking figures in existing summaries.")
+
+
+def recheck_figures(lib):
+    """Re-runs the figure check on summaries that don't have one (re-downloads transcripts as needed)."""
+    todo = [c for c in lib["calls"].values() if c.get("summary") and c.get("unverified") is None]
+    if not todo:
+        return
+    say(f"Re-checking figures in {len(todo)} summaries ...")
+    for c in todo:
+        f = C.here(c["summary"])
+        text, problem = C.get_text(c)
+        if problem or not f.exists():
+            continue
+        source = text
+        if c.get("compared"):
+            prev = C.find_prev(lib, c)
+            if prev:
+                ptext, _ = C.get_text(prev)
+                source += "\n" + (ptext or "")
+        summary = f.read_text(encoding="utf-8").split("\n---\n")[0]
+        c["unverified"] = C.unverified_numbers(summary, source)
+    C.save_lib(lib)
+    say("  done.")
 
 
 def main():

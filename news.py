@@ -139,7 +139,36 @@ def fetch(url):
                 return out.stdout, None
     except Exception as e:
         err = err or type(e).__name__
+    if err.startswith("HTTP 403") or err.startswith("HTTP 429"):
+        relayed = via_relay(url)  # some sites block cloud servers but not this relay
+        if relayed:
+            return relayed, None
     return None, err or "no content"
+
+
+def via_relay(url):
+    """Fetches a feed through the free rss2json service and turns it back into RSS."""
+    try:
+        r = requests.get("https://api.rss2json.com/v1/api.json", params={"rss_url": url}, timeout=30)
+        js = r.json()
+        if js.get("status") != "ok" or not js.get("items"):
+            return None
+    except Exception:
+        return None
+    from xml.sax.saxutils import escape
+    from email.utils import format_datetime
+    items = []
+    for it in js["items"]:
+        when = ""
+        try:
+            d = dt.datetime.strptime(it.get("pubDate", ""), "%Y-%m-%d %H:%M:%S").replace(tzinfo=dt.timezone.utc)
+            when = f"<pubDate>{format_datetime(d)}</pubDate>"
+        except ValueError:
+            pass
+        items.append(f"<item><title>{escape(it.get('title', ''))}</title><link>{escape(it.get('link', ''))}</link>"
+                     f"<description>{escape(clean(it.get('description', ''), 400))}</description>{when}</item>")
+    return ("<?xml version='1.0'?><rss version='2.0'><channel><title>relay</title>" + "".join(items) +
+            "</channel></rss>").encode()
 
 
 def clean(text, limit=None):
