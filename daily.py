@@ -131,7 +131,12 @@ def recheck_figures(lib):
 
 
 def main():
+    import sys
     conf = settings()
+    if "--news-only" in sys.argv:
+        conf["concalls"] = False
+    if "--concalls-only" in sys.argv:
+        conf["news"] = False
     started = time.time()
     for name, enabled, fn in (("news", conf["news"], step_news),
                               ("concalls", conf["concalls"], lambda: step_concalls(conf))):

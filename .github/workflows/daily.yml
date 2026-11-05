@@ -1,8 +1,10 @@
 name: Daily update
 
 on:
-  schedule:
-    - cron: "40 23 * * *"   # 05:10 IST every day (GitHub may start it up to ~30 min late)
+  schedule:   # times are UTC; GitHub may start a run 10-30 minutes late
+    - cron: "40 23 * * *"            # 05:10 IST  full update (news + concalls)
+    - cron: "40 13 * * *"            # 19:10 IST  full update (concalls filed during the day)
+    - cron: "40 1,4,7,10,16 * * *"   # 07:10, 10:10, 13:10, 16:10, 22:10 IST  news refresh
   workflow_dispatch:         # "Run workflow" button for a manual refresh
   push:
     paths: ["run-now.txt"]   # editing this file also starts a run
@@ -41,7 +43,8 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           mkdir -p data
-          python daily.py 2>&1 | tee data/last_run.log
+          if [ "${{ github.event.schedule }}" = "40 1,4,7,10,16 * * *" ]; then MODE=--news-only; else MODE=; fi
+          python daily.py $MODE 2>&1 | tee data/last_run.log
 
       - name: Save today's data in the repository
         if: always()

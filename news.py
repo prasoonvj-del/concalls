@@ -286,7 +286,7 @@ def group(articles):
     for i, s in enumerate(stories, 1):
         items = s["items"]
         lead = items[0]
-        out.append({"id": i, "title": lead["title"],
+        out.append({"id": i, "key": re.sub(r"\W+", "", items[-1]["title"].lower())[:120], "title": lead["title"],
                     "desc": max((x["desc"] for x in items), key=len),
                     "when": max(x["when"] for x in items),
                     "folder": lead["folder"],
@@ -355,9 +355,18 @@ def tag(stories, pool):
             s["sentiment"] = sent if sent in "+-=" and sent else "="
 
 
-def explain_top(stories, pool, n=12):
-    """Context / why it matters / what to watch for the day's most important stories."""
+def explain_top(stories, pool, n=12, cache=None):
+    """Context / why it matters / what to watch for the day's most important stories.
+    Explanations are remembered, so a later run only explains newly important stories."""
     top = sorted(stories, key=lambda s: (-s["importance"], -s["outlets"], -s["when"].timestamp()))[:n]
+    if cache is not None:
+        known = cache.setdefault("explain", {})
+        fresh = [s for s in top if s["key"] not in known]
+        if fresh:
+            for e in explain_top(fresh, pool, n=len(fresh)):
+                s = next(x for x in fresh if x["id"] == e["id"])
+                known[s["key"]] = {k: e[k] for k in ("context", "why", "watch")}
+        return [dict(known[s["key"]], id=s["id"]) for s in top if s["key"] in known]
     if not top:
         return []
     lines = [story_line(s) for s in top]
@@ -432,6 +441,25 @@ def newer_export(opml):
         say(f"Using your latest FeedFlow export: {exports[-1].name}")
 
 
+CACHE_FILE = C.DATA / "news_cache.json"
+
+
+def load_cache():
+    c = json.loads(CACHE_FILE.read_text(encoding="utf-8")) if CACHE_FILE.exists() else {}
+    for k in ("ids", "tags", "explain", "sections", "seen"):
+        c.setdefault(k, {})
+    c.setdefault("next_id", 1)
+    return c
+
+
+def save_cache(c, now):
+    cutoff = (now - dt.timedelta(days=3)).isoformat()
+    old = {k for k, v in c["seen"].items() if v < cutoff}
+    for part in ("ids", "tags", "explain", "seen"):
+        c[part] = {k: v for k, v in c[part].items() if k not in old}
+    CACHE_FILE.write_text(json.dumps(c, ensure_ascii=False), encoding="utf-8")
+
+
 def build(conf=None, log_failed=True):
     """Builds today's brief. Returns the saved brief dict, or None."""
     conf = conf or settings()
@@ -458,8 +486,29 @@ def build(conf=None, log_failed=True):
         say(f"  PROBLEM: {e}")
         return None
 
-    say("\nSorting stories by sector, company, importance and sentiment ...")
-    tag(stories, pool)
+    cache = load_cache()
+    now_utc = dt.datetime.now(dt.timezone.utc)
+    used = set()
+    for s in stories:  # stable ids, so links and remembered write-ups stay valid between runs
+        sid = cache["ids"].get(s["key"])
+        if sid is None or sid in used:
+            sid = cache["next_id"]
+            cache["next_id"] += 1
+            cache["ids"][s["key"]] = sid
+        s["id"] = sid
+        used.add(sid)
+        cache["seen"][s["key"]] = now_utc.isoformat()
+    fresh = [s for s in stories if s["key"] not in cache["tags"]]
+    for s in stories:
+        if s["key"] in cache["tags"]:
+            s.update(cache["tags"][s["key"]])
+    say(f"\nSorting stories by sector, company, importance and sentiment ({len(fresh)} new, "
+        f"{len(stories) - len(fresh)} remembered from earlier runs) ...")
+    if fresh:
+        tag(fresh, pool)
+        for s in fresh:
+            cache["tags"][s["key"]] = {k: s[k] for k in ("category", "companies", "importance", "sentiment")}
+    save_cache(cache, now_utc)
     relevant = [s for s in stories if s["category"] != "Not market-relevant"]
     by_cat = {}
     for s in relevant:
@@ -472,7 +521,7 @@ def build(conf=None, log_failed=True):
 
     say("\nExplaining the most important stories ...")
     try:
-        top = explain_top(relevant, pool)
+        top = explain_top(relevant, pool, cache=cache)
     except C.AIError as e:
         say(f"    failed: {e}")
         top = []
@@ -482,10 +531,19 @@ def build(conf=None, log_failed=True):
     todo = [c for c in cats if len(by_cat[c]) >= conf["min_stories"]]
     say(f"\nWriting {len(todo)} sector briefs ...")
     for i, c in enumerate(todo, 1):
-        say(f"[{i}/{len(todo)}] {c} ({len(by_cat[c])} stories)")
+        keys = [s["key"] for s in by_cat[c]]
+        prev = cache["sections"].get(c)
+        new = len(set(keys) - set(prev["keys"])) if prev else len(keys)
+        if prev and new < max(2, 0.2 * len(keys)):
+            sections[c] = prev["text"]  # little has changed - keep the earlier write-up
+            say(f"[{i}/{len(todo)}] {c}: {new} new stor{'y' if new == 1 else 'ies'} - keeping the earlier write-up")
+            continue
+        say(f"[{i}/{len(todo)}] {c} ({len(by_cat[c])} stories, {new} new)")
         head = SECTION_PROMPT.format(cat=c, n=len(by_cat[c][:250]), hours=conf["hours"])
         try:
             sections[c] = ask_fitted(pool, head, [story_line(s) for s in by_cat[c][:250]], label=c)
+            cache["sections"][c] = {"keys": keys, "text": sections[c]}
+            save_cache(cache, now_utc)
         except C.QuotaOver as e:
             say(f"\n{e}")
             break
