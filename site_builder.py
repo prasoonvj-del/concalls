@@ -117,5 +117,7 @@ def open_site(anchor=""):
 
 
 if __name__ == "__main__":
-    build()
-    open_site()
+    import sys
+    build(quiet="--quiet" in sys.argv)
+    if "--no-open" not in sys.argv:
+        open_site()

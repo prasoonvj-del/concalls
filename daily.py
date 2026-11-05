@@ -39,6 +39,8 @@ def settings():
             c.get("compare_with_last_quarter", "watchlist").strip().lower(),
             c.get("compare_with_last_quarter", "watchlist").strip().lower()),
         "backfill": int(c.get("metrics_backfill_per_run", "60") or 60),
+        # stop starting new concall work after this many minutes, so the site always publishes promptly
+        "minutes": int(c.get("max_concall_minutes", "30") or 30),
     }
 
 
@@ -93,12 +95,16 @@ def step_concalls(conf):
     recheck_figures(lib)
     queue, is_watch = plan_concalls(lib, conf)
     budget = conf["limit"]
+    deadline = time.time() + conf["minutes"] * 60
     say(f"\n{len(queue)} companies have a call without a summary. Doing up to {budget} AI summaries this run "
         f"(watchlist first, then sectors in turn).")
     touched, fails, done = set(), 0, 0
     for c in queue:
         if budget <= 0:
             say("\nReached this run's limit - the rest continue on the next run.")
+            break
+        if time.time() > deadline:
+            say(f"\nTime limit ({conf['minutes']} min) reached - the rest continue on the next run.")
             break
         compare = conf["compare"] == "all" or (conf["compare"] == "watchlist" and is_watch(c))
         prev = C.find_prev(lib, c)
@@ -131,7 +137,8 @@ def step_concalls(conf):
             C.overview(sector, lib, pool)
         except C.AIError as e:
             say(f"    overview failed: {e}")
-    backfill_metrics(lib, pool, conf["backfill"])
+    if time.time() < deadline:
+        backfill_metrics(lib, pool, conf["backfill"], deadline)
 
 
 METRICS_PROMPT = """For each company summary below, copy the key figures into a metrics block. Use ONLY numbers
@@ -148,13 +155,16 @@ SUMMARIES:
 """
 
 
-def backfill_metrics(lib, pool, limit):
+def backfill_metrics(lib, pool, limit, deadline=None):
     """Adds peer-comparison figures to summaries written before metrics existed (3 per request)."""
     todo = [c for c in lib["calls"].values() if c.get("summary") and "metrics" not in c][:limit]
     if not todo:
         return
     say(f"\nAdding peer-comparison figures to {len(todo)} earlier summaries ...")
     for i in range(0, len(todo), 3):
+        if deadline and time.time() > deadline:
+            say("    time limit reached - continuing next run")
+            break
         batch = todo[i:i + 3]
         body = ""
         for c in batch:

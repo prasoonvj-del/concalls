@@ -21,7 +21,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 100
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -45,6 +45,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build news brief, concall summaries and website
+        timeout-minutes: 75
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
@@ -69,11 +70,18 @@ jobs:
           git commit -qm "Data as of $(date -u '+%F %H:%M') UTC"
           git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:data
 
+      - name: Make sure the website is built (even if the step above failed or ran out of time)
+        if: always()
+        run: python site_builder.py --quiet --no-open
+
       - uses: actions/configure-pages@v5
+        if: always()
 
       - uses: actions/upload-pages-artifact@v3
+        if: always()
         with:
           path: public
 
       - id: deploy
+        if: always()
         uses: actions/deploy-pages@v4
