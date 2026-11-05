@@ -139,11 +139,18 @@ def fetch(url):
                 return out.stdout, None
     except Exception as e:
         err = err or type(e).__name__
-    if err.startswith("HTTP 403") or err.startswith("HTTP 429"):
-        relayed = via_relay(url)  # some sites block cloud servers but not this relay
-        if relayed:
-            return relayed, None
     return None, err or "no content"
+
+
+def via_jina(url):
+    """Second relay: the Jina reader returns the feed's original XML."""
+    try:
+        r = requests.get("https://r.jina.ai/" + url, headers={"X-Return-Format": "text"}, timeout=45)
+        if r.status_code == 200 and "<item" in r.text:
+            return r.content
+    except Exception:
+        pass
+    return None
 
 
 def via_relay(url):
@@ -232,6 +239,36 @@ def collect(feeds, hours):
                 if since <= a["when"] <= now + dt.timedelta(hours=2):
                     articles.append(a)
     say("")
+    blocked = [f for f in failed if f["error"].startswith(("HTTP 403", "HTTP 429", "HTTP 503"))]
+    if blocked:
+        say(f"  {len(blocked)} feeds block cloud servers - retrying them one at a time through relays ...")
+        by_name = {(f["name"], f["folder"]): f for f in feeds}
+        rescued = 0
+        for fb in blocked:
+            feed = by_name.get((fb["name"], fb["folder"]))
+            if not feed:
+                continue
+            content = via_relay(feed["url"]) or via_jina(feed["url"])
+            time.sleep(1.5)  # free relays refuse bursts
+            if not content:
+                continue
+            try:
+                items = parse(content, feed)
+            except Exception:
+                continue
+            if not items:
+                continue
+            failed.remove(fb)
+            rescued += 1
+            for a in items:
+                key = a["link"] or a["title"]
+                if a["when"] is None:
+                    first = seen.get(key)
+                    a["when"] = dt.datetime.fromisoformat(first) if first else now
+                seen.setdefault(key, a["when"].isoformat())
+                if since <= a["when"] <= now + dt.timedelta(hours=2):
+                    articles.append(a)
+        say(f"  rescued {rescued} of {len(blocked)}")
     cutoff = (now - dt.timedelta(days=10)).isoformat()
     seen = {k: v for k, v in seen.items() if v >= cutoff}
     C.DATA.mkdir(parents=True, exist_ok=True)
