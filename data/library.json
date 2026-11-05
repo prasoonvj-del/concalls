@@ -558,7 +558,13 @@
    "company": "HDFC Asset Management Company Ltd",
    "date": "2026-07-17",
    "quarter": "Q1 FY27",
-   "pdf": "69974142-160a-4d8c-8c66-28d1f0769c77.pdf"
+   "pdf": "69974142-160a-4d8c-8c66-28d1f0769c77.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/69974142-160a-4d8c-8c66-28d1f0769c77.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/HDFC Asset Management Company Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "507685_36342956-3182-4962-a695-068bbafdb263": {
    "id": "507685_36342956-3182-4962-a695-068bbafdb263",
@@ -582,7 +588,13 @@
    "company": "ICICI Prudential Asset Management Company Ltd",
    "date": "2026-07-16",
    "quarter": "Q1 FY27",
-   "pdf": "315ae9c4-8f45-456c-a289-89e9fac12d73.pdf"
+   "pdf": "315ae9c4-8f45-456c-a289-89e9fac12d73.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/315ae9c4-8f45-456c-a289-89e9fac12d73.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/ICICI Prudential Asset Management Company Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "532309_cb6b27f6-bc5a-4b2c-8c38-b86f670e35a0": {
    "id": "532309_cb6b27f6-bc5a-4b2c-8c38-b86f670e35a0",
@@ -646,7 +658,13 @@
    "company": "Anand Rathi Wealth Ltd",
    "date": "2026-07-15",
    "quarter": "Q1 FY27",
-   "pdf": "5305fb5f-10d4-4698-8963-61940f23e4a2.pdf"
+   "pdf": "5305fb5f-10d4-4698-8963-61940f23e4a2.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/5305fb5f-10d4-4698-8963-61940f23e4a2.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Anand Rathi Wealth Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "542726_0c7c99e2-b516-4077-b9ff-61349aab22ef": {
    "id": "542726_0c7c99e2-b516-4077-b9ff-61349aab22ef",
@@ -734,7 +752,13 @@
    "company": "Aditya Birla Sun Life AMC Ltd",
    "date": "2026-07-24",
    "quarter": "Q1 FY27",
-   "pdf": "8d970154-ac8a-4d7a-9649-c5528e9316d7.pdf"
+   "pdf": "8d970154-ac8a-4d7a-9649-c5528e9316d7.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/8d970154-ac8a-4d7a-9649-c5528e9316d7.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Aditya Birla Sun Life AMC Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "532648_1688180c-726c-45ca-be60-c83be7582308": {
    "id": "532648_1688180c-726c-45ca-be60-c83be7582308",
@@ -750,7 +774,13 @@
    "company": "Can Fin Homes Ltd",
    "date": "2026-07-24",
    "quarter": "Q1 FY27",
-   "pdf": "0278463d-c481-468e-9e82-09f4e4b229ca.pdf"
+   "pdf": "0278463d-c481-468e-9e82-09f4e4b229ca.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/0278463d-c481-468e-9e82-09f4e4b229ca.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Can Fin Homes Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "532762_94835795-c073-4d0d-8373-b8e45971e71e": {
    "id": "532762_94835795-c073-4d0d-8373-b8e45971e71e",
@@ -838,7 +868,13 @@
    "company": "Nippon Life India Asset Management Ltd",
    "date": "2026-07-23",
    "quarter": "Q1 FY27",
-   "pdf": "fccd9721-84d6-4f06-9129-145f6f33711c.pdf"
+   "pdf": "fccd9721-84d6-4f06-9129-145f6f33711c.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/fccd9721-84d6-4f06-9129-145f6f33711c.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Nippon Life India Asset Management Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "503806_7d7e0b81-e6c9-4281-98ed-0f5fe2a478bd": {
    "id": "503806_7d7e0b81-e6c9-4281-98ed-0f5fe2a478bd",
@@ -854,7 +890,13 @@
    "company": "5paisa Capital Ltd",
    "date": "2026-07-23",
    "quarter": "Q1 FY27",
-   "pdf": "6f77039e-2f3c-4642-aabd-7b0d7836abac.pdf"
+   "pdf": "6f77039e-2f3c-4642-aabd-7b0d7836abac.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/6f77039e-2f3c-4642-aabd-7b0d7836abac.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/5paisa Capital Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "532885_889293e7-c22c-410d-89d0-4e0ce1829562": {
    "id": "532885_889293e7-c22c-410d-89d0-4e0ce1829562",
@@ -934,7 +976,15 @@
    "company": "Jio Financial Services Ltd",
    "date": "2026-07-22",
    "quarter": "Q1 FY27",
-   "pdf": "c18cc26c-af73-4c98-bb2f-500c896112ce.pdf"
+   "pdf": "c18cc26c-af73-4c98-bb2f-500c896112ce.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/c18cc26c-af73-4c98-bb2f-500c896112ce.pdf",
+   "tone": "Positive",
+   "unverified": [
+    "60"
+   ],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Jio Financial Services Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "544597_99ab65aa-7908-484e-a23a-0e3a9260b9dd": {
    "id": "544597_99ab65aa-7908-484e-a23a-0e3a9260b9dd",
@@ -1006,7 +1056,13 @@
    "company": "360 ONE WAM LTD",
    "date": "2026-07-21",
    "quarter": "Q1 FY27",
-   "pdf": "e810b8db-b7a9-48d4-9d4b-c2c00741af56.pdf"
+   "pdf": "e810b8db-b7a9-48d4-9d4b-c2c00741af56.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/e810b8db-b7a9-48d4-9d4b-c2c00741af56.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/360 ONE WAM LTD - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "544027_a4844af4-4100-4bfa-938b-6132151f4379": {
    "id": "544027_a4844af4-4100-4bfa-938b-6132151f4379",
@@ -1014,7 +1070,13 @@
    "company": "Fedbank Financial Services Ltd",
    "date": "2026-07-21",
    "quarter": "Q1 FY27",
-   "pdf": "a4844af4-4100-4bfa-938b-6132151f4379.pdf"
+   "pdf": "a4844af4-4100-4bfa-938b-6132151f4379.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/a4844af4-4100-4bfa-938b-6132151f4379.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Fedbank Financial Services Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "543321_b475c500-9103-4493-9e3b-9da3210f0f9a": {
    "id": "543321_b475c500-9103-4493-9e3b-9da3210f0f9a",
@@ -1046,7 +1108,13 @@
    "company": "Angel One Ltd",
    "date": "2026-07-21",
    "quarter": "Q1 FY27",
-   "pdf": "588c652a-a3ec-47c2-8c98-a9e45e2e9e92.pdf"
+   "pdf": "588c652a-a3ec-47c2-8c98-a9e45e2e9e92.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/588c652a-a3ec-47c2-8c98-a9e45e2e9e92.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Angel One Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "540900_69bdf65a-6ba7-46f8-8713-5dfdf65237fe": {
    "id": "540900_69bdf65a-6ba7-46f8-8713-5dfdf65237fe",
@@ -1086,7 +1154,13 @@
    "company": "L&T Finance Ltd",
    "date": "2026-07-20",
    "quarter": "Q1 FY27",
-   "pdf": "45a426fa-4107-46c0-a820-debcc3161104.pdf"
+   "pdf": "45a426fa-4107-46c0-a820-debcc3161104.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/45a426fa-4107-46c0-a820-debcc3161104.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/L&T Finance Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "500878_07a09a82-cb90-47e5-8dee-d683ce6e7ed4": {
    "id": "500878_07a09a82-cb90-47e5-8dee-d683ce6e7ed4",
@@ -1102,7 +1176,15 @@
    "company": "Anand Rathi Share And Stock Brokers Ltd",
    "date": "2026-07-20",
    "quarter": "Q1 FY27",
-   "pdf": "7fb8c715-337a-474f-9fe9-f9030f1aba5a.pdf"
+   "pdf": "7fb8c715-337a-474f-9fe9-f9030f1aba5a.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/7fb8c715-337a-474f-9fe9-f9030f1aba5a.pdf",
+   "tone": "Positive",
+   "unverified": [
+    "19"
+   ],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Anand Rathi Share And Stock Brokers Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "533151_25615cc4-caaa-470c-b777-6e79c47001f9": {
    "id": "533151_25615cc4-caaa-470c-b777-6e79c47001f9",
@@ -1126,7 +1208,13 @@
    "company": "HDB Financial Services Ltd",
    "date": "2026-07-20",
    "quarter": "Q1 FY27",
-   "pdf": "58dc0434-953e-42a0-a36e-f431d38ed53f.pdf"
+   "pdf": "58dc0434-953e-42a0-a36e-f431d38ed53f.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/58dc0434-953e-42a0-a36e-f431d38ed53f.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/HDB Financial Services Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "540716_de0f98ca-2ee9-4ffa-bb27-71051d79e9be": {
    "id": "540716_de0f98ca-2ee9-4ffa-bb27-71051d79e9be",
@@ -1230,7 +1318,13 @@
    "company": "KFin Technologies Ltd",
    "date": "2026-07-31",
    "quarter": "Q1 FY27",
-   "pdf": "41a3ca96-1c84-46c9-a004-8a384facdd01.pdf"
+   "pdf": "41a3ca96-1c84-46c9-a004-8a384facdd01.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/41a3ca96-1c84-46c9-a004-8a384facdd01.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/KFin Technologies Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "540750_dc327ed0-8c29-4b9f-9334-114e92200e5b": {
    "id": "540750_dc327ed0-8c29-4b9f-9334-114e92200e5b",
@@ -1350,7 +1444,13 @@
    "company": "Five-Star Business Finance Ltd",
    "date": "2026-07-31",
    "quarter": "Q1 FY27",
-   "pdf": "c5d4e073-3d10-488a-b973-89b3422e009d.pdf"
+   "pdf": "c5d4e073-3d10-488a-b973-89b3422e009d.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/c5d4e073-3d10-488a-b973-89b3422e009d.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Five-Star Business Finance Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "544533_df8bd899-b6f3-4200-bf1e-d0ccc622eda6": {
    "id": "544533_df8bd899-b6f3-4200-bf1e-d0ccc622eda6",
@@ -1606,7 +1706,13 @@
    "company": "Aye Finance Ltd",
    "date": "2026-07-30",
    "quarter": "Q1 FY27",
-   "pdf": "f877f945-eeff-4028-a507-ae0dabecde93.pdf"
+   "pdf": "f877f945-eeff-4028-a507-ae0dabecde93.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/f877f945-eeff-4028-a507-ae0dabecde93.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Aye Finance Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "543252_cece8c93-50ff-4ad8-bbc9-693dfb1f6969": {
    "id": "543252_cece8c93-50ff-4ad8-bbc9-693dfb1f6969",
@@ -1654,7 +1760,13 @@
    "company": "IIFL Capital Services Ltd",
    "date": "2026-07-30",
    "quarter": "Q1 FY27",
-   "pdf": "cb02956c-8748-4a8a-9fd2-3676c6e86684.pdf"
+   "pdf": "cb02956c-8748-4a8a-9fd2-3676c6e86684.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/cb02956c-8748-4a8a-9fd2-3676c6e86684.pdf",
+   "tone": "Mixed",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/IIFL Capital Services Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "543300_ba4be72b-164f-4dd9-b6ae-ff475176e5bc": {
    "id": "543300_ba4be72b-164f-4dd9-b6ae-ff475176e5bc",
@@ -1670,7 +1782,16 @@
    "company": "Manba Finance Ltd",
    "date": "2026-07-30",
    "quarter": "Q1 FY27",
-   "pdf": "40cf2193-9b2f-4c84-bdf7-2a345d6b7b8f.pdf"
+   "pdf": "40cf2193-9b2f-4c84-bdf7-2a345d6b7b8f.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/40cf2193-9b2f-4c84-bdf7-2a345d6b7b8f.pdf",
+   "tone": "Positive",
+   "unverified": [
+    "29",
+    "24"
+   ],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Manba Finance Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "533080_0b3f449c-95b8-45c2-a7b7-759828a6dc60": {
    "id": "533080_0b3f449c-95b8-45c2-a7b7-759828a6dc60",
@@ -1689,30 +1810,10 @@
    "pdf": "5f8bf29a-4dc3-45f2-b4e6-26ef45340714.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/5f8bf29a-4dc3-45f2-b4e6-26ef45340714.pdf",
    "tone": "Positive",
-   "unverified": [
-    "1,203.59",
-    "196.69",
-    "129.02",
-    "116.87",
-    "963",
-    "1,073",
-    "180",
-    "125",
-    "140",
-    "550",
-    "600",
-    "50",
-    "3,300",
-    "3,800",
-    "12",
-    "1,268",
-    "517",
-    "751",
-    "200"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/CCL Products (India) Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532505_3457c3c2-115c-4d5c-8491-aa563f40baf4": {
    "id": "532505_3457c3c2-115c-4d5c-8491-aa563f40baf4",
@@ -1747,27 +1848,10 @@
    "pdf": "043015c9-c21f-4abf-a752-b0336ea387e5.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/043015c9-c21f-4abf-a752-b0336ea387e5.pdf",
    "tone": "Positive",
-   "unverified": [
-    "17,550",
-    "17,936",
-    "19,322",
-    "6,983",
-    "8,369",
-    "4,867",
-    "47,643",
-    "58,381",
-    "1.8",
-    "1,386",
-    "25,000",
-    "33,000",
-    "35,000",
-    "9,513",
-    "5.93",
-    "7.04"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Adani Power Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "533263_387cc4ac-0bd8-4719-a767-dcb67c62f48d": {
    "id": "533263_387cc4ac-0bd8-4719-a767-dcb67c62f48d",
@@ -1831,7 +1915,13 @@
    "company": "Geojit Financial Services Ltd",
    "date": "2026-07-29",
    "quarter": "Q1 FY27",
-   "pdf": "8884fd78-80da-4491-ac7e-3cd6dd2d17e6.pdf"
+   "pdf": "8884fd78-80da-4491-ac7e-3cd6dd2d17e6.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/8884fd78-80da-4491-ac7e-3cd6dd2d17e6.pdf",
+   "tone": "Mixed",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Geojit Financial Services Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "532285_0312264d-545d-4dba-aa74-ca53b6e6683d": {
    "id": "532285_0312264d-545d-4dba-aa74-ca53b6e6683d",
@@ -1850,12 +1940,12 @@
    "pdf": "ca4b81f2-828e-4b40-a603-86b99a30e47b.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/ca4b81f2-828e-4b40-a603-86b99a30e47b.pdf",
    "tone": "Positive",
-   "unverified": [
-    "1.07"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Canara Bank - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": [
+    "1.07"
+   ]
   },
   "542484_861d573c-4d02-42d4-9327-42961c0fb79b": {
    "id": "542484_861d573c-4d02-42d4-9327-42961c0fb79b",
@@ -1871,7 +1961,13 @@
    "company": "CreditAccess Grameen Ltd",
    "date": "2026-07-29",
    "quarter": "Q1 FY27",
-   "pdf": "20638c58-388a-4ef2-a609-1d5b07810693.pdf"
+   "pdf": "20638c58-388a-4ef2-a609-1d5b07810693.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/20638c58-388a-4ef2-a609-1d5b07810693.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/CreditAccess Grameen Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "505714_19da11a4-33e4-4a9e-a3a5-24a29f90756a": {
    "id": "505714_19da11a4-33e4-4a9e-a3a5-24a29f90756a",
@@ -1978,16 +2074,10 @@
    "pdf": "ece9e8e4-fd46-4288-bbe1-95b133b2de75.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/ece9e8e4-fd46-4288-bbe1-95b133b2de75.pdf",
    "tone": "Positive",
-   "unverified": [
-    "796",
-    "1.58",
-    "798",
-    "4,500",
-    "1,000"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/AU Small Finance Bank Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "542066_0e2db754-d704-481c-a2b7-866ec8a6a6a9": {
    "id": "542066_0e2db754-d704-481c-a2b7-866ec8a6a6a9",
@@ -1998,13 +2088,10 @@
    "pdf": "0e2db754-d704-481c-a2b7-866ec8a6a6a9.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/0e2db754-d704-481c-a2b7-866ec8a6a6a9.pdf",
    "tone": "Mixed",
-   "unverified": [
-    "1,908",
-    "281"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Adani Total Gas Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "544802_ee30ef6d-c222-42ab-b7f2-bf608af29a63": {
    "id": "544802_ee30ef6d-c222-42ab-b7f2-bf608af29a63",
@@ -2047,25 +2134,10 @@
    "pdf": "fe97c4c1-571f-4e47-bc3c-0980da36d7bb.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/fe97c4c1-571f-4e47-bc3c-0980da36d7bb.pdf",
    "tone": "Positive",
-   "unverified": [
-    "329.7",
-    "190.9",
-    "113.1",
-    "74.9",
-    "314",
-    "292.7",
-    "37",
-    "1,000",
-    "150",
-    "56",
-    "15",
-    "41",
-    "1.8",
-    "11"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Acutaas Chemicals Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "500335_a5480cc7-bca7-48ac-b3d1-f2bb924e2b68": {
    "id": "500335_a5480cc7-bca7-48ac-b3d1-f2bb924e2b68",
@@ -2108,10 +2180,10 @@
    "pdf": "b2c10cf2-4f35-48df-bb4e-c21bc4835df6.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/b2c10cf2-4f35-48df-bb4e-c21bc4835df6.pdf",
    "tone": "Mixed",
-   "unverified": [],
    "compared": false,
    "summary": "summaries/Services & Others/Bansal Wire Industries Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532636_da9db390-1649-4bb4-b208-6b910a11f035": {
    "id": "532636_da9db390-1649-4bb4-b208-6b910a11f035",
@@ -2119,7 +2191,13 @@
    "company": "IIFL Finance Ltd",
    "date": "2026-07-28",
    "quarter": "Q1 FY27",
-   "pdf": "da9db390-1649-4bb4-b208-6b910a11f035.pdf"
+   "pdf": "da9db390-1649-4bb4-b208-6b910a11f035.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/da9db390-1649-4bb4-b208-6b910a11f035.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/IIFL Finance Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "542216_751b7baa-60c5-4607-9812-ac137672c385": {
    "id": "542216_751b7baa-60c5-4607-9812-ac137672c385",
@@ -2170,10 +2248,10 @@
    "pdf": "2d48a7bc-072f-4714-ad6d-04717ba36bf9.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/2d48a7bc-072f-4714-ad6d-04717ba36bf9.pdf",
    "tone": "Positive",
-   "unverified": [],
    "compared": false,
    "summary": "summaries/Services & Others/BlueStone Jewellery and Lifestyle Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532375_74b7a9f9-860c-4b02-9021-2b56a47499f0": {
    "id": "532375_74b7a9f9-860c-4b02-9021-2b56a47499f0",
@@ -2336,10 +2414,10 @@
    "pdf": "2e694612-000f-4811-bb9c-dc8124300de0.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/2e694612-000f-4811-bb9c-dc8124300de0.pdf",
    "tone": "Cautious",
-   "unverified": [],
    "compared": false,
    "summary": "summaries/Services & Others/Bandhan Bank Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "539289_e693c668-2b9c-4ab3-bdbd-fd0d9b983b43": {
    "id": "539289_e693c668-2b9c-4ab3-bdbd-fd0d9b983b43",
@@ -2350,13 +2428,12 @@
    "pdf": "e693c668-2b9c-4ab3-bdbd-fd0d9b983b43.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/e693c668-2b9c-4ab3-bdbd-fd0d9b983b43.pdf",
    "tone": "Positive",
-   "unverified": [
-    "0.05",
-    "531"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Aurum PropTech Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": [
+    "531"
+   ]
   },
   "526797_dcdf3466-c10f-43b4-9b2d-fc732ce287eb": {
    "id": "526797_dcdf3466-c10f-43b4-9b2d-fc732ce287eb",
@@ -2388,7 +2465,13 @@
    "company": "Mahindra & Mahindra Financial Services Ltd",
    "date": "2026-07-27",
    "quarter": "Q1 FY27",
-   "pdf": "55dcbc68-20f3-4956-83fe-7fb1897185a4.pdf"
+   "pdf": "55dcbc68-20f3-4956-83fe-7fb1897185a4.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/55dcbc68-20f3-4956-83fe-7fb1897185a4.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Mahindra & Mahindra Financial Services Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "500355_0041cf35-96de-412a-a26b-93ffc1b0fed0": {
    "id": "500355_0041cf35-96de-412a-a26b-93ffc1b0fed0",
@@ -2415,17 +2498,10 @@
    "pdf": "a036a014-e0e9-4194-9a9e-9d44134da589.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/a036a014-e0e9-4194-9a9e-9d44134da589.pdf",
    "tone": "Mixed",
-   "unverified": [
-    "486",
-    "789",
-    "9,494",
-    "1,050",
-    "600",
-    "3,260"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Cipla Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "541988_73de4c1e-0f68-40fb-9952-c6612e7077ac": {
    "id": "541988_73de4c1e-0f68-40fb-9952-c6612e7077ac",
@@ -2436,15 +2512,10 @@
    "pdf": "73de4c1e-0f68-40fb-9952-c6612e7077ac.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/73de4c1e-0f68-40fb-9952-c6612e7077ac.pdf",
    "tone": "Positive",
-   "unverified": [
-    "16.1",
-    "14.74",
-    "18.8",
-    "4.85"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/AAVAS Financiers Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532977_8490aae2-16b7-41b1-a0a3-de3e86380cf9": {
    "id": "532977_8490aae2-16b7-41b1-a0a3-de3e86380cf9",
@@ -2455,24 +2526,12 @@
    "pdf": "8490aae2-16b7-41b1-a0a3-de3e86380cf9.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/8490aae2-16b7-41b1-a0a3-de3e86380cf9.pdf",
    "tone": "Positive",
-   "unverified": [
-    "17,244",
-    "3,596",
-    "3,000",
-    "21,689",
-    "3,226",
-    "2,300",
-    "21,000",
-    "7,32,000",
-    "20,000",
-    "94.4",
-    "90.6",
-    "10,000",
-    "15,000"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Bajaj Auto Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": [
+    "7,32,000"
+   ]
   },
   "539872_bc82d87f-d30e-4e76-9648-69802ea6eb80": {
    "id": "539872_bc82d87f-d30e-4e76-9648-69802ea6eb80",
@@ -2483,28 +2542,10 @@
    "pdf": "bc82d87f-d30e-4e76-9648-69802ea6eb80.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/bc82d87f-d30e-4e76-9648-69802ea6eb80.pdf",
    "tone": "Positive",
-   "unverified": [
-    "165.6",
-    "148.8",
-    "153.1",
-    "80.4",
-    "29.6",
-    "13.9",
-    "92.3",
-    "50.1",
-    "23.3",
-    "900",
-    "1,000",
-    "200",
-    "12",
-    "40",
-    "50",
-    "533",
-    "31"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Bajaj Healthcare Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "511218_498dc529-b121-4ea2-a2c5-46f9937b9706": {
    "id": "511218_498dc529-b121-4ea2-a2c5-46f9937b9706",
@@ -2560,7 +2601,13 @@
    "company": "One 97 Communications Ltd",
    "date": "2026-07-27",
    "quarter": "Q1 FY27",
-   "pdf": "98c94d54-c284-4e83-83b3-fc6e41943d16.pdf"
+   "pdf": "98c94d54-c284-4e83-83b3-fc6e41943d16.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/98c94d54-c284-4e83-83b3-fc6e41943d16.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/One 97 Communications Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "540768_72c3460d-5670-4119-8e37-821af7fcecb4": {
    "id": "540768_72c3460d-5670-4119-8e37-821af7fcecb4",
@@ -3370,7 +3417,13 @@
    "company": "National Securities Depository Ltd",
    "date": "2026-08-05",
    "quarter": "Q1 FY27",
-   "pdf": "b1254ef0-9cb0-4149-96f4-cb52825dc547.pdf"
+   "pdf": "b1254ef0-9cb0-4149-96f4-cb52825dc547.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/b1254ef0-9cb0-4149-96f4-cb52825dc547.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/National Securities Depository Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "544685_ac7a4482-da1b-4ff4-b481-c87d828a602d": {
    "id": "544685_ac7a4482-da1b-4ff4-b481-c87d828a602d",
@@ -3565,21 +3618,10 @@
    "pdf": "53865f49-af5a-448f-a55d-c0e4374466c0.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/53865f49-af5a-448f-a55d-c0e4374466c0.pdf",
    "tone": "Positive",
-   "unverified": [
-    "954",
-    "831",
-    "235",
-    "226",
-    "6,000",
-    "15,000",
-    "20,000",
-    "11.60",
-    "25,000",
-    "3,000"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/ACME Solar Holdings Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "539400_1f174720-c026-4ded-b0e4-e62d2a627e21": {
    "id": "539400_1f174720-c026-4ded-b0e4-e62d2a627e21",
@@ -3614,24 +3656,10 @@
    "pdf": "a9338519-b657-4364-8c1b-c5a22e74e3cf.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/a9338519-b657-4364-8c1b-c5a22e74e3cf.pdf",
    "tone": "Positive",
-   "unverified": [
-    "215",
-    "148",
-    "361",
-    "473",
-    "350",
-    "67",
-    "660",
-    "500",
-    "160",
-    "1,900",
-    "14,332",
-    "2,340",
-    "414"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Aequs Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532400_b613c7fd-5e14-4d82-b90a-d633a695c06d": {
    "id": "532400_b613c7fd-5e14-4d82-b90a-d633a695c06d",
@@ -3642,16 +3670,12 @@
    "pdf": "b613c7fd-5e14-4d82-b90a-d633a695c06d.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/b613c7fd-5e14-4d82-b90a-d633a695c06d.pdf",
    "tone": "Mixed",
-   "unverified": [
-    "1,379.4",
-    "161",
-    "5.72",
-    "2,878.6",
-    "25"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Birlasoft Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": [
+    "25"
+   ]
   },
   "532884_03ee4ce8-6ca8-4179-aeed-812b780d23b3": {
    "id": "532884_03ee4ce8-6ca8-4179-aeed-812b780d23b3",
@@ -3686,21 +3710,10 @@
    "pdf": "01000808-c7e4-4bb3-a518-d4714cb08639.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/01000808-c7e4-4bb3-a518-d4714cb08639.pdf",
    "tone": "Positive",
-   "unverified": [
-    "1.496",
-    "19,509",
-    "715",
-    "8,918",
-    "450",
-    "465",
-    "410",
-    "425",
-    "600",
-    "2,300"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Bajaj Housing Finance Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "500520_f451beeb-32aa-45da-8e1a-417884693047": {
    "id": "500520_f451beeb-32aa-45da-8e1a-417884693047",
@@ -3756,7 +3769,13 @@
    "company": "OnEMI Technology Solutions Ltd",
    "date": "2026-08-04",
    "quarter": "Q1 FY27",
-   "pdf": "2124da45-8e3a-47f6-913c-fb86834d4a54.pdf"
+   "pdf": "2124da45-8e3a-47f6-913c-fb86834d4a54.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/2124da45-8e3a-47f6-913c-fb86834d4a54.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/OnEMI Technology Solutions Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "543573_13ead359-db88-472c-948c-9941361e182e": {
    "id": "543573_13ead359-db88-472c-948c-9941361e182e",
@@ -3788,7 +3807,13 @@
    "company": "Home First Finance Company India Ltd",
    "date": "2026-08-04",
    "quarter": "Q1 FY27",
-   "pdf": "e4712579-7ee0-4fe5-95cd-6a12ab813f7a.pdf"
+   "pdf": "e4712579-7ee0-4fe5-95cd-6a12ab813f7a.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/e4712579-7ee0-4fe5-95cd-6a12ab813f7a.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Home First Finance Company India Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "543330_c7a1294d-6107-4290-ad64-15bbc3dc32d4": {
    "id": "543330_c7a1294d-6107-4290-ad64-15bbc3dc32d4",
@@ -3847,15 +3872,10 @@
    "pdf": "d73f41e4-020e-486c-96db-5f73c6e756e5.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/d73f41e4-020e-486c-96db-5f73c6e756e5.pdf",
    "tone": "Positive",
-   "unverified": [
-    "78",
-    "146",
-    "92.97",
-    "764"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Best Agrolife Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "544718_64b63e63-087a-4617-ae00-ab399872bb49": {
    "id": "544718_64b63e63-087a-4617-ae00-ab399872bb49",
@@ -3906,10 +3926,10 @@
    "pdf": "9aa9f8c8-96dc-4a7f-9784-b4c7e892a75d.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/9aa9f8c8-96dc-4a7f-9784-b4c7e892a75d.pdf",
    "tone": "Positive",
-   "unverified": [],
    "compared": false,
    "summary": "summaries/Services & Others/AWL Agri Business Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "539658_3b840320-741d-488e-afd0-a69c79e93745": {
    "id": "539658_3b840320-741d-488e-afd0-a69c79e93745",
@@ -4040,19 +4060,10 @@
    "pdf": "0f108762-8405-46bc-8ad5-511c59f05447.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/0f108762-8405-46bc-8ad5-511c59f05447.pdf",
    "tone": "Positive",
-   "unverified": [
-    "9,500",
-    "1,589",
-    "4,241",
-    "660",
-    "72,000",
-    "110",
-    "130",
-    "6,500"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/ACC Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "500425_5c004e2f-7b01-40fd-a1d1-5f25630a34a0": {
    "id": "500425_5c004e2f-7b01-40fd-a1d1-5f25630a34a0",
@@ -4063,23 +4074,10 @@
    "pdf": "5c004e2f-7b01-40fd-a1d1-5f25630a34a0.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/5c004e2f-7b01-40fd-a1d1-5f25630a34a0.pdf",
    "tone": "Positive",
-   "unverified": [
-    "9,500",
-    "1,589",
-    "911",
-    "4,241",
-    "660",
-    "5.9",
-    "4.9",
-    "6,500",
-    "110",
-    "130",
-    "1,500",
-    "1,600"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Ambuja Cements Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "517146_848079ce-6107-4e4a-90f5-ea7cdd31a528": {
    "id": "517146_848079ce-6107-4e4a-90f5-ea7cdd31a528",
@@ -4186,12 +4184,12 @@
    "pdf": "1784b805-4c21-4543-9987-a1990514d689.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/1784b805-4c21-4543-9987-a1990514d689.pdf",
    "tone": "Positive",
-   "unverified": [
-    "65"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Black Buck Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": [
+    "65"
+   ]
   },
   "532331_4238fdcf-26e1-4131-8a9a-e4035093f86a": {
    "id": "532331_4238fdcf-26e1-4131-8a9a-e4035093f86a",
@@ -4282,12 +4280,12 @@
    "date": "2026-08-03",
    "quarter": "Q1 FY27",
    "pdf": "6e0d5627-2b8b-4bf1-a7ce-9d0160833a0f.pdf",
-   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/6e0d5627-2b8b-4bf1-a7ce-9d0160833a0f.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/6e0d5627-2b8b-4bf1-a7ce-9d0160833a0f.pdf",
    "tone": "Positive",
-   "unverified": [],
    "compared": false,
    "summary": "summaries/Services & Others/Asian Paints Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532668_9972280f-0f8c-423c-9898-db2152996440": {
    "id": "532668_9972280f-0f8c-423c-9898-db2152996440",
@@ -4298,13 +4296,12 @@
    "pdf": "9972280f-0f8c-423c-9898-db2152996440.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/9972280f-0f8c-423c-9898-db2152996440.pdf",
    "tone": "Mixed",
-   "unverified": [
-    "200",
-    "10.5"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Aurionpro Solutions Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": [
+    "10.5"
+   ]
   },
   "540595_93df39a6-32f4-4865-9614-b25298f2f9f0": {
    "id": "540595_93df39a6-32f4-4865-9614-b25298f2f9f0",
@@ -4545,19 +4542,12 @@
    "date": "2026-08-14",
    "quarter": "Q1 FY27",
    "pdf": "50a3522d-32bf-4160-a454-c572e55b2afc.pdf",
-   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/50a3522d-32bf-4160-a454-c572e55b2afc.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/50a3522d-32bf-4160-a454-c572e55b2afc.pdf",
    "tone": "Positive",
-   "unverified": [
-    "35.40",
-    "25.78",
-    "11.72",
-    "8.19",
-    "2.46",
-    "25"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Advit Jewels Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "544012_01f15fa2-17cc-468c-9e3f-7b4c76bccaff": {
    "id": "544012_01f15fa2-17cc-468c-9e3f-7b4c76bccaff",
@@ -5685,7 +5675,13 @@
    "company": "PB Fintech Ltd",
    "date": "2026-08-11",
    "quarter": "Q1 FY27",
-   "pdf": "63fbf6a2-bffb-47fb-9bb6-2555dc8b8873.pdf"
+   "pdf": "63fbf6a2-bffb-47fb-9bb6-2555dc8b8873.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/63fbf6a2-bffb-47fb-9bb6-2555dc8b8873.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/PB Fintech Ltd - Q1 FY27.md",
+   "model": "gemini-3.6-flash"
   },
   "531642_1ecca3e5-6e6d-4336-b971-96ce26535328": {
    "id": "531642_1ecca3e5-6e6d-4336-b971-96ce26535328",
@@ -6072,27 +6068,10 @@
    "pdf": "79339d93-3a2f-49ab-8391-0f7acc03990f.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachHis/79339d93-3a2f-49ab-8391-0f7acc03990f.pdf",
    "tone": "Positive",
-   "unverified": [
-    "156",
-    "251",
-    "28",
-    "48",
-    "54",
-    "1,224",
-    "1,704",
-    "480",
-    "72.53",
-    "1,550",
-    "3,500",
-    "4,000",
-    "11,000",
-    "12,000",
-    "85",
-    "2,500"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Apollo Micro Systems Ltd - Q1 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "543984_2318561a-e1f8-4503-92ba-b659eab674da": {
    "id": "543984_2318561a-e1f8-4503-92ba-b659eab674da",
@@ -9223,10 +9202,10 @@
    "pdf": "3e9b3cde-11d2-4345-9cdb-a79c27758fe1.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/3e9b3cde-11d2-4345-9cdb-a79c27758fe1.pdf",
    "tone": "Positive",
-   "unverified": [],
    "compared": true,
    "summary": "summaries/Services & Others/Canara Bank - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "511196_a77ba4cc-9f08-48fb-9b12-57b7d783f6a8": {
    "id": "511196_a77ba4cc-9f08-48fb-9b12-57b7d783f6a8",
@@ -9234,7 +9213,13 @@
    "company": "Can Fin Homes Ltd",
    "date": "2026-10-17",
    "quarter": "Q2 FY27",
-   "pdf": "a77ba4cc-9f08-48fb-9b12-57b7d783f6a8.pdf"
+   "pdf": "a77ba4cc-9f08-48fb-9b12-57b7d783f6a8.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/a77ba4cc-9f08-48fb-9b12-57b7d783f6a8.pdf",
+   "tone": "Mixed",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Can Fin Homes Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "500469_8668907c-f945-4a4f-91ea-56bf8236396c": {
    "id": "500469_8668907c-f945-4a4f-91ea-56bf8236396c",
@@ -9250,7 +9235,13 @@
    "company": "ICICI Prudential Asset Management Company Ltd",
    "date": "2026-10-16",
    "quarter": "Q2 FY27",
-   "pdf": "7fbaad8b-503d-49d6-b4db-6457d8cac09b.pdf"
+   "pdf": "7fbaad8b-503d-49d6-b4db-6457d8cac09b.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/7fbaad8b-503d-49d6-b4db-6457d8cac09b.pdf",
+   "tone": "Mixed",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/ICICI Prudential Asset Management Company Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "544603_af9d191d-a154-41aa-be1c-2ebd99bedaea": {
    "id": "544603_af9d191d-a154-41aa-be1c-2ebd99bedaea",
@@ -9261,20 +9252,10 @@
    "pdf": "af9d191d-a154-41aa-be1c-2ebd99bedaea.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/af9d191d-a154-41aa-be1c-2ebd99bedaea.pdf",
    "tone": "Positive",
-   "unverified": [
-    "600",
-    "700",
-    "13",
-    "169",
-    "182",
-    "400",
-    "500",
-    "125",
-    "300"
-   ],
    "compared": false,
    "summary": "summaries/Services & Others/Billionbrains Garage Ventures Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532505_1a1a280e-1eae-4304-9189-81732fc997af": {
    "id": "532505_1a1a280e-1eae-4304-9189-81732fc997af",
@@ -9298,7 +9279,13 @@
    "company": "Anand Rathi Wealth Ltd",
    "date": "2026-10-16",
    "quarter": "Q2 FY27",
-   "pdf": "6c787fb6-ff52-4e8a-8394-ce1a45673491.pdf"
+   "pdf": "6c787fb6-ff52-4e8a-8394-ce1a45673491.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/6c787fb6-ff52-4e8a-8394-ce1a45673491.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Anand Rathi Wealth Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "532281_ccce0001-ff5d-4875-b1e5-5c558669f49c": {
    "id": "532281_ccce0001-ff5d-4875-b1e5-5c558669f49c",
@@ -9353,8 +9340,14 @@
    "code": "544921",
    "company": "Asset Reconstruction Company (India) Ltd",
    "date": "2026-10-13",
-   "quarter": "Q2 FY27",
-   "pdf": "4e82ed1d-c7c9-479b-8241-13b857fcb353.pdf"
+   "quarter": "Q1 FY27",
+   "pdf": "4e82ed1d-c7c9-479b-8241-13b857fcb353.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/4e82ed1d-c7c9-479b-8241-13b857fcb353.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Asset Reconstruction Company (India) Ltd - Q1 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "544913_feeb0817-21cb-46a3-8614-6e1130bd8ebd": {
    "id": "544913_feeb0817-21cb-46a3-8614-6e1130bd8ebd",
@@ -9397,17 +9390,10 @@
    "pdf": "a98ca148-4a70-4d2d-917f-0aec7395cc41.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/a98ca148-4a70-4d2d-917f-0aec7395cc41.pdf",
    "tone": "Positive",
-   "unverified": [
-    "500",
-    "1.58",
-    "19,900",
-    "980",
-    "1,428",
-    "2,600"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/Bajaj Housing Finance Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532541_dd9c29aa-e1ce-489c-836f-0b26481de997": {
    "id": "532541_dd9c29aa-e1ce-489c-836f-0b26481de997",
@@ -9511,7 +9497,16 @@
    "company": "5paisa Capital Ltd",
    "date": "2026-10-23",
    "quarter": "Q2 FY27",
-   "pdf": "faa4a1dd-58b1-499e-aa52-58ddbd598e36.pdf"
+   "pdf": "faa4a1dd-58b1-499e-aa52-58ddbd598e36.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/faa4a1dd-58b1-499e-aa52-58ddbd598e36.pdf",
+   "tone": "Cautious",
+   "unverified": [
+    "175",
+    "6.2"
+   ],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/5paisa Capital Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "542760_0fe52d08-1fa3-4314-90b2-a8e376e066e3": {
    "id": "542760_0fe52d08-1fa3-4314-90b2-a8e376e066e3",
@@ -9538,15 +9533,10 @@
    "pdf": "fcacbb26-8407-4c75-825c-dfe52fc06153.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/fcacbb26-8407-4c75-825c-dfe52fc06153.pdf",
    "tone": "Positive",
-   "unverified": [
-    "120",
-    "100",
-    "150",
-    "88.5"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/Aurum PropTech Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "541301_5aa71859-8e2a-4127-8a54-19ce646422f8": {
    "id": "541301_5aa71859-8e2a-4127-8a54-19ce646422f8",
@@ -9594,7 +9584,13 @@
    "company": "Fedbank Financial Services Ltd",
    "date": "2026-10-22",
    "quarter": "Q2 FY27",
-   "pdf": "3c391fe6-defc-47c0-8d38-2f05c83bc805.pdf"
+   "pdf": "3c391fe6-defc-47c0-8d38-2f05c83bc805.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/3c391fe6-defc-47c0-8d38-2f05c83bc805.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Fedbank Financial Services Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "532636_28303edf-8ba0-48e6-89b8-9294d83da25a": {
    "id": "532636_28303edf-8ba0-48e6-89b8-9294d83da25a",
@@ -9602,7 +9598,13 @@
    "company": "IIFL Finance Ltd",
    "date": "2026-10-22",
    "quarter": "Q2 FY27",
-   "pdf": "28303edf-8ba0-48e6-89b8-9294d83da25a.pdf"
+   "pdf": "28303edf-8ba0-48e6-89b8-9294d83da25a.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28303edf-8ba0-48e6-89b8-9294d83da25a.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/IIFL Finance Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "544408_c0aa6b07-e48b-4b7c-8829-04de690b248e": {
    "id": "544408_c0aa6b07-e48b-4b7c-8829-04de690b248e",
@@ -9642,7 +9644,13 @@
    "company": "Indian Railway Finance Corporation Ltd",
    "date": "2026-10-22",
    "quarter": "Q2 FY27",
-   "pdf": "f20da4c3-73b8-4fb1-964b-02d00ff4bc33.pdf"
+   "pdf": "f20da4c3-73b8-4fb1-964b-02d00ff4bc33.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/f20da4c3-73b8-4fb1-964b-02d00ff4bc33.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": false,
+   "summary": "summaries/NBFC & Financial Services/Indian Railway Finance Corporation Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "542904_141d704c-229d-488c-91c0-99314213dbc2": {
    "id": "542904_141d704c-229d-488c-91c0-99314213dbc2",
@@ -9682,7 +9690,13 @@
    "company": "Jio Financial Services Ltd",
    "date": "2026-10-22",
    "quarter": "Q2 FY27",
-   "pdf": "07ce63e3-07d3-4b0b-988b-53f339356094.pdf"
+   "pdf": "07ce63e3-07d3-4b0b-988b-53f339356094.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/07ce63e3-07d3-4b0b-988b-53f339356094.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Jio Financial Services Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "540005_26917075-8e44-4188-bc41-9454cdf8ac19": {
    "id": "540005_26917075-8e44-4188-bc41-9454cdf8ac19",
@@ -9722,7 +9736,13 @@
    "company": "360 ONE WAM LTD",
    "date": "2026-10-21",
    "quarter": "Q2 FY27",
-   "pdf": "8f2076b5-bfcf-41d6-a215-abae55aacba1.pdf"
+   "pdf": "8f2076b5-bfcf-41d6-a215-abae55aacba1.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8f2076b5-bfcf-41d6-a215-abae55aacba1.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/360 ONE WAM LTD - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "519600_1f0dfb24-06d3-446d-a231-bd2ba868221c": {
    "id": "519600_1f0dfb24-06d3-446d-a231-bd2ba868221c",
@@ -9733,31 +9753,12 @@
    "pdf": "1f0dfb24-06d3-446d-a231-bd2ba868221c.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1f0dfb24-06d3-446d-a231-bd2ba868221c.pdf",
    "tone": "Positive",
-   "unverified": [
-    "742",
-    "963",
-    "1,215.99",
-    "217.3",
-    "150.86",
-    "130",
-    "210",
-    "140",
-    "1,192",
-    "135",
-    "2,419.58",
-    "414",
-    "246.96",
-    "1,200",
-    "800",
-    "550",
-    "600",
-    "3,400",
-    "3,800",
-    "100"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/CCL Products (India) Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": [
+    "21"
+   ]
   },
   "544608_b1c38891-a017-4c01-835c-bb87d6119844": {
    "id": "544608_b1c38891-a017-4c01-835c-bb87d6119844",
@@ -9773,7 +9774,13 @@
    "company": "Anand Rathi Share And Stock Brokers Ltd",
    "date": "2026-10-21",
    "quarter": "Q2 FY27",
-   "pdf": "b41569e9-1f61-4fea-904f-9409dc62251f.pdf"
+   "pdf": "b41569e9-1f61-4fea-904f-9409dc62251f.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/b41569e9-1f61-4fea-904f-9409dc62251f.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Anand Rathi Share And Stock Brokers Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "533151_b4bb7257-63d0-4b07-ac9c-17c0cb21e6d7": {
    "id": "533151_b4bb7257-63d0-4b07-ac9c-17c0cb21e6d7",
@@ -9813,7 +9820,13 @@
    "company": "HDFC Asset Management Company Ltd",
    "date": "2026-10-21",
    "quarter": "Q2 FY27",
-   "pdf": "5b6cfc41-d069-497f-a473-433a667fab8b.pdf"
+   "pdf": "5b6cfc41-d069-497f-a473-433a667fab8b.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/5b6cfc41-d069-497f-a473-433a667fab8b.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/HDFC Asset Management Company Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "543235_26db0e05-b08b-4c36-8d44-5fa600164fe0": {
    "id": "543235_26db0e05-b08b-4c36-8d44-5fa600164fe0",
@@ -9821,7 +9834,13 @@
    "company": "Angel One Ltd",
    "date": "2026-10-21",
    "quarter": "Q2 FY27",
-   "pdf": "26db0e05-b08b-4c36-8d44-5fa600164fe0.pdf"
+   "pdf": "26db0e05-b08b-4c36-8d44-5fa600164fe0.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/26db0e05-b08b-4c36-8d44-5fa600164fe0.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Angel One Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "533229_b439531b-bd03-4416-a0bb-8ada71ee3847": {
    "id": "533229_b439531b-bd03-4416-a0bb-8ada71ee3847",
@@ -9845,7 +9864,13 @@
    "company": "HDB Financial Services Ltd",
    "date": "2026-10-20",
    "quarter": "Q2 FY27",
-   "pdf": "9156af89-9b47-4561-b4e5-a85d1385032b.pdf"
+   "pdf": "9156af89-9b47-4561-b4e5-a85d1385032b.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/9156af89-9b47-4561-b4e5-a85d1385032b.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/HDB Financial Services Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "544469_8ca3730f-3f81-4343-bf6e-7e9ec5bc3b86": {
    "id": "544469_8ca3730f-3f81-4343-bf6e-7e9ec5bc3b86",
@@ -9981,7 +10006,13 @@
    "company": "Manba Finance Ltd",
    "date": "2026-10-31",
    "quarter": "Q2 FY27",
-   "pdf": "c06d47d6-5ccc-48c9-a62d-39a6fcd988e3.pdf"
+   "pdf": "c06d47d6-5ccc-48c9-a62d-39a6fcd988e3.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/c06d47d6-5ccc-48c9-a62d-39a6fcd988e3.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Manba Finance Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "543412_74a210fa-a6c6-4bfd-955d-c778a6f8b4e4": {
    "id": "543412_74a210fa-a6c6-4bfd-955d-c778a6f8b4e4",
@@ -10032,27 +10063,14 @@
    "pdf": "d4ca5bf0-08eb-4662-bb1d-cc35b6b77f60.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/d4ca5bf0-08eb-4662-bb1d-cc35b6b77f60.pdf",
    "tone": "Positive",
-   "unverified": [
-    "1,970",
-    "7,019",
-    "17,528",
-    "19,951",
-    "2,422",
-    "6,321",
-    "18.5",
-    "8,743",
-    "45.7",
-    "61,860",
-    "53,556",
-    "45,846",
-    "45,022",
-    "10,229",
-    "760",
-    "6,000"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/Adani Power Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": [
+    "1,970",
+    "18.5",
+    "45.7"
+   ]
   },
   "500247_fddce9e1-fcbe-43b3-9249-90434c2ce360": {
    "id": "500247_fddce9e1-fcbe-43b3-9249-90434c2ce360",
@@ -10084,7 +10102,15 @@
    "company": "One 97 Communications Ltd",
    "date": "2026-10-30",
    "quarter": "Q2 FY27",
-   "pdf": "46af905c-f73e-4409-8f53-a486e2b6157e.pdf"
+   "pdf": "46af905c-f73e-4409-8f53-a486e2b6157e.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/46af905c-f73e-4409-8f53-a486e2b6157e.pdf",
+   "tone": "Positive",
+   "unverified": [
+    "700"
+   ],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/One 97 Communications Ltd - Q2 FY27.md",
+   "model": "gemini-3.6-flash"
   },
   "500040_8de7eff4-dba9-4a5e-b57e-2d666d97fa2e": {
    "id": "500040_8de7eff4-dba9-4a5e-b57e-2d666d97fa2e",
@@ -10151,14 +10177,10 @@
    "pdf": "b3ecbdbf-929d-4e28-9598-94a0069417b4.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/b3ecbdbf-929d-4e28-9598-94a0069417b4.pdf",
    "tone": "Positive",
-   "unverified": [
-    "878",
-    "9,823",
-    "3,382"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/Cipla Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "543280_5ef30142-90be-44d0-a05a-0d8edab3cb28": {
    "id": "543280_5ef30142-90be-44d0-a05a-0d8edab3cb28",
@@ -10225,10 +10247,10 @@
    "pdf": "b3de6cfb-cd1f-431f-a0f2-b1f138d6e2e3.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/b3de6cfb-cd1f-431f-a0f2-b1f138d6e2e3.pdf",
    "tone": "Positive",
-   "unverified": [],
    "compared": true,
    "summary": "summaries/Services & Others/BlueStone Jewellery and Lifestyle Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "544397_570f59c3-1d52-4e35-9d26-1ffe097d258b": {
    "id": "544397_570f59c3-1d52-4e35-9d26-1ffe097d258b",
@@ -10284,7 +10306,13 @@
    "company": "Five-Star Business Finance Ltd",
    "date": "2026-10-30",
    "quarter": "Q2 FY27",
-   "pdf": "84b252b8-1092-495d-9068-738ad0c82821.pdf"
+   "pdf": "84b252b8-1092-495d-9068-738ad0c82821.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/84b252b8-1092-495d-9068-738ad0c82821.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Five-Star Business Finance Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "542066_55c5378d-2a07-456f-8b49-cb85b3634d69": {
    "id": "542066_55c5378d-2a07-456f-8b49-cb85b3634d69",
@@ -10295,14 +10323,10 @@
    "pdf": "55c5378d-2a07-456f-8b49-cb85b3634d69.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/55c5378d-2a07-456f-8b49-cb85b3634d69.pdf",
    "tone": "Positive",
-   "unverified": [
-    "2,102",
-    "340",
-    "167"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/Adani Total Gas Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532156_beea995a-4bf1-4eb8-8bd1-9da3bda6f055": {
    "id": "532156_beea995a-4bf1-4eb8-8bd1-9da3bda6f055",
@@ -10350,7 +10374,13 @@
    "company": "Aye Finance Ltd",
    "date": "2026-10-29",
    "quarter": "Q2 FY27",
-   "pdf": "5a812cc1-88a7-412d-a5a8-e7855b767dbf.pdf"
+   "pdf": "5a812cc1-88a7-412d-a5a8-e7855b767dbf.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/5a812cc1-88a7-412d-a5a8-e7855b767dbf.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Aye Finance Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "544903_a54aec84-642d-42fd-a076-cf6699e6df02": {
    "id": "544903_a54aec84-642d-42fd-a076-cf6699e6df02",
@@ -10385,24 +10415,10 @@
    "pdf": "a3f68bd5-2efe-4e47-8fff-910a087690a6.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/a3f68bd5-2efe-4e47-8fff-910a087690a6.pdf",
    "tone": "Mixed",
-   "unverified": [
-    "6,500",
-    "4,091",
-    "8,046",
-    "3,514",
-    "577",
-    "245",
-    "401",
-    "361",
-    "1,597",
-    "660",
-    "289",
-    "1,710",
-    "1,576"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/Aequs Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "500365_795974a4-5af0-40dd-b354-da8db8150e94": {
    "id": "500365_795974a4-5af0-40dd-b354-da8db8150e94",
@@ -10597,16 +10613,12 @@
    "pdf": "b3b7a2ee-2ce1-4a32-a15b-a3ab98e6659e.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/b3b7a2ee-2ce1-4a32-a15b-a3ab98e6659e.pdf",
    "tone": "Positive",
-   "unverified": [
-    "858",
-    "1.71",
-    "72",
-    "1,480",
-    "359"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/AU Small Finance Bank Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": [
+    "1.71"
+   ]
   },
   "544311_7a71af2e-a92d-4323-8ea1-89a4f1110e29": {
    "id": "544311_7a71af2e-a92d-4323-8ea1-89a4f1110e29",
@@ -10641,10 +10653,10 @@
    "pdf": "f41cab9d-1f3a-4fc1-af0a-d4b961891205.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/f41cab9d-1f3a-4fc1-af0a-d4b961891205.pdf",
    "tone": "Positive",
-   "unverified": [],
    "compared": true,
    "summary": "summaries/Services & Others/Bansal Wire Industries Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "500209_7982fc61-7765-4981-ab3d-6aec36ba2137": {
    "id": "500209_7982fc61-7765-4981-ab3d-6aec36ba2137",
@@ -10806,7 +10818,13 @@
    "company": "Aditya Birla Sun Life AMC Ltd",
    "date": "2026-10-27",
    "quarter": "Q2 FY27",
-   "pdf": "873ca612-441e-4971-a638-c264005e3f8a.pdf"
+   "pdf": "873ca612-441e-4971-a638-c264005e3f8a.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/873ca612-441e-4971-a638-c264005e3f8a.pdf",
+   "tone": "Mixed",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Aditya Birla Sun Life AMC Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "543931_6e356f60-b881-432c-9aff-d89eb427ce47": {
    "id": "543931_6e356f60-b881-432c-9aff-d89eb427ce47",
@@ -10854,7 +10872,13 @@
    "company": "Mahindra & Mahindra Financial Services Ltd",
    "date": "2026-10-27",
    "quarter": "Q2 FY27",
-   "pdf": "67225874-a234-4d91-b15c-05c9c9038abe.pdf"
+   "pdf": "67225874-a234-4d91-b15c-05c9c9038abe.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/67225874-a234-4d91-b15c-05c9c9038abe.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Mahindra & Mahindra Financial Services Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "532993_88d1fe9e-7c12-4c63-9e0e-5feaab7a788b": {
    "id": "532993_88d1fe9e-7c12-4c63-9e0e-5feaab7a788b",
@@ -10873,21 +10897,10 @@
    "pdf": "b57f9cca-4555-4202-b9ec-c250248e9a5f.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/b57f9cca-4555-4202-b9ec-c250248e9a5f.pdf",
    "tone": "Positive",
-   "unverified": [
-    "175.9",
-    "341.5",
-    "85.4",
-    "32.1",
-    "27.8",
-    "900",
-    "1,000",
-    "200",
-    "65",
-    "557"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/Bajaj Healthcare Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532726_4ee596fe-f4bc-4648-a30b-9e105a64d499": {
    "id": "532726_4ee596fe-f4bc-4648-a30b-9e105a64d499",
@@ -10903,7 +10916,13 @@
    "company": "Nippon Life India Asset Management Ltd",
    "date": "2026-10-27",
    "quarter": "Q2 FY27",
-   "pdf": "5ad7adc3-6e3d-4251-8915-8890fa3490fa.pdf"
+   "pdf": "5ad7adc3-6e3d-4251-8915-8890fa3490fa.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/5ad7adc3-6e3d-4251-8915-8890fa3490fa.pdf",
+   "tone": "Mixed",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Nippon Life India Asset Management Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "543252_f9816059-5eef-45b9-932d-a4f9a35b8cf6": {
    "id": "543252_f9816059-5eef-45b9-932d-a4f9a35b8cf6",
@@ -10983,7 +11002,13 @@
    "company": "L&T Finance Ltd",
    "date": "2026-10-26",
    "quarter": "Q2 FY27",
-   "pdf": "beee00f0-3cc9-4229-a0ca-ee527e60220d.pdf"
+   "pdf": "beee00f0-3cc9-4229-a0ca-ee527e60220d.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/beee00f0-3cc9-4229-a0ca-ee527e60220d.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/L&T Finance Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "540879_8b1bcd3d-4667-4ecb-9904-9dd0646e04c5": {
    "id": "540879_8b1bcd3d-4667-4ecb-9904-9dd0646e04c5",
@@ -11039,7 +11064,13 @@
    "company": "CreditAccess Grameen Ltd",
    "date": "2026-10-26",
    "quarter": "Q2 FY27",
-   "pdf": "4eacadb3-416d-45e9-909a-ab2904fdb667.pdf"
+   "pdf": "4eacadb3-416d-45e9-909a-ab2904fdb667.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/4eacadb3-416d-45e9-909a-ab2904fdb667.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/CreditAccess Grameen Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "544310_ce9c57c4-5b51-4add-b905-499fb935a1dc": {
    "id": "544310_ce9c57c4-5b51-4add-b905-499fb935a1dc",
@@ -11138,19 +11169,10 @@
    "pdf": "e1f315d2-a186-4d50-ac18-bedcab957c6b.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/e1f315d2-a186-4d50-ac18-bedcab957c6b.pdf",
    "tone": "Positive",
-   "unverified": [
-    "59.1",
-    "94.5",
-    "16.4",
-    "12.76",
-    "169",
-    "65",
-    "35",
-    "27.7"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/Advit Jewels Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532668_a519c15a-5d35-435e-a72d-49fce49f8d68": {
    "id": "532668_a519c15a-5d35-435e-a72d-49fce49f8d68",
@@ -11161,10 +11183,10 @@
    "pdf": "a519c15a-5d35-435e-a72d-49fce49f8d68.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/a519c15a-5d35-435e-a72d-49fce49f8d68.pdf",
    "tone": "Positive",
-   "unverified": [],
    "compared": true,
    "summary": "summaries/Services & Others/Aurionpro Solutions Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "538567_ab10d487-1b9e-43c5-ab0b-a7d10c841ae0": {
    "id": "538567_ab10d487-1b9e-43c5-ab0b-a7d10c841ae0",
@@ -11271,10 +11293,10 @@
    "pdf": "72ea092e-ea31-456f-b8a2-86b3ba88ccec.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/72ea092e-ea31-456f-b8a2-86b3ba88ccec.pdf",
    "tone": "Positive",
-   "unverified": [],
    "compared": true,
    "summary": "summaries/Services & Others/Black Buck Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "543287_551f2921-f89a-4bb4-922b-db9c29e81f8f": {
    "id": "543287_551f2921-f89a-4bb4-922b-db9c29e81f8f",
@@ -11346,7 +11368,13 @@
    "company": "PB Fintech Ltd",
    "date": "2026-11-04",
    "quarter": "Q2 FY27",
-   "pdf": "5dcba7ff-7f7c-428e-8975-a5621e71d692.pdf"
+   "pdf": "5dcba7ff-7f7c-428e-8975-a5621e71d692.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/5dcba7ff-7f7c-428e-8975-a5621e71d692.pdf",
+   "tone": "Cautious",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/PB Fintech Ltd - Q2 FY27.md",
+   "model": "gemini-3.5-flash-lite"
   },
   "532652_2ae41d47-cb24-40d7-91db-dbcdcb9f2f2e": {
    "id": "532652_2ae41d47-cb24-40d7-91db-dbcdcb9f2f2e",
@@ -11389,21 +11417,10 @@
    "pdf": "9066a2cf-2bd6-4caf-a8d1-64109a77349f.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/9066a2cf-2bd6-4caf-a8d1-64109a77349f.pdf",
    "tone": "Positive",
-   "unverified": [
-    "1,007",
-    "874",
-    "269",
-    "28,462",
-    "11,466",
-    "15,000",
-    "1,600",
-    "1,500",
-    "6,500",
-    "2,800"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/ACME Solar Holdings Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532424_5db595e6-fee1-4e18-98f3-2b4ff43a7728": {
    "id": "532424_5db595e6-fee1-4e18-98f3-2b4ff43a7728",
@@ -11518,10 +11535,10 @@
    "pdf": "6b9dc1de-e6e2-44ac-be5e-116709872a89.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/6b9dc1de-e6e2-44ac-be5e-116709872a89.pdf",
    "tone": "Positive",
-   "unverified": [],
    "compared": true,
    "summary": "summaries/Services & Others/Best Agrolife Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "544962_9359def6-1f0b-4963-994a-ee384463e5b9": {
    "id": "544962_9359def6-1f0b-4963-994a-ee384463e5b9",
@@ -11585,7 +11602,16 @@
    "company": "National Securities Depository Ltd",
    "date": "2026-11-04",
    "quarter": "Q2 FY27",
-   "pdf": "9398da12-be49-49e5-940c-e1ea6c57b4e6.pdf"
+   "pdf": "9398da12-be49-49e5-940c-e1ea6c57b4e6.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/9398da12-be49-49e5-940c-e1ea6c57b4e6.pdf",
+   "tone": "Positive",
+   "unverified": [
+    "61.3",
+    "63,000"
+   ],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/National Securities Depository Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "530965_e3d986a6-f166-4fd4-88c0-364c4e746d0d": {
    "id": "530965_e3d986a6-f166-4fd4-88c0-364c4e746d0d",
@@ -11601,7 +11627,13 @@
    "company": "IIFL Capital Services Ltd",
    "date": "2026-11-04",
    "quarter": "Q2 FY27",
-   "pdf": "449d3575-9a3c-4c5b-ad63-82e1c3424164.pdf"
+   "pdf": "449d3575-9a3c-4c5b-ad63-82e1c3424164.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/449d3575-9a3c-4c5b-ad63-82e1c3424164.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/IIFL Capital Services Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "543748_76bad7c0-d749-4375-bdc0-9ab978273597": {
    "id": "543748_76bad7c0-d749-4375-bdc0-9ab978273597",
@@ -11628,15 +11660,12 @@
    "pdf": "c2af3076-540a-490f-b467-5b73ddbaf80d.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/c2af3076-540a-490f-b467-5b73ddbaf80d.pdf",
    "tone": "Positive",
-   "unverified": [
-    "1,416.2",
-    "215.3",
-    "159.6",
-    "33"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/Birlasoft Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": [
+    "33"
+   ]
   },
   "530655_7338fa5a-d081-4758-bea1-8cfc606728a9": {
    "id": "530655_7338fa5a-d081-4758-bea1-8cfc606728a9",
@@ -11708,7 +11737,13 @@
    "company": "OnEMI Technology Solutions Ltd",
    "date": "2026-11-04",
    "quarter": "Q2 FY27",
-   "pdf": "7d943964-58c9-49da-a2a0-dbb3ed7501ee.pdf"
+   "pdf": "7d943964-58c9-49da-a2a0-dbb3ed7501ee.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/7d943964-58c9-49da-a2a0-dbb3ed7501ee.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/OnEMI Technology Solutions Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "505790_2716d187-24a9-44f6-b3b9-69607de00d33": {
    "id": "505790_2716d187-24a9-44f6-b3b9-69607de00d33",
@@ -11801,10 +11836,10 @@
    "pdf": "0c68a567-ac8b-4b7d-b3f9-13cdb199f643.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/0c68a567-ac8b-4b7d-b3f9-13cdb199f643.pdf",
    "tone": "Positive",
-   "unverified": [],
    "compared": true,
    "summary": "summaries/Services & Others/Bandhan Bank Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "544525_1b9b1b76-b844-4c15-98fe-589d242aa507": {
    "id": "544525_1b9b1b76-b844-4c15-98fe-589d242aa507",
@@ -11852,7 +11887,13 @@
    "company": "KFin Technologies Ltd",
    "date": "2026-11-03",
    "quarter": "Q2 FY27",
-   "pdf": "c4d03bf1-11d1-4073-98e0-33eff7d6300d.pdf"
+   "pdf": "c4d03bf1-11d1-4073-98e0-33eff7d6300d.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/c4d03bf1-11d1-4073-98e0-33eff7d6300d.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/KFin Technologies Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "544140_26e41ec1-0ab7-4c2c-b963-6d8cc3d35245": {
    "id": "544140_26e41ec1-0ab7-4c2c-b963-6d8cc3d35245",
@@ -11871,20 +11912,12 @@
    "pdf": "9b209839-a497-4cd0-af3c-71067373297d.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/9b209839-a497-4cd0-af3c-71067373297d.pdf",
    "tone": "Mixed",
-   "unverified": [
-    "85,000",
-    "22,202",
-    "623",
-    "239",
-    "2,216",
-    "4,100",
-    "4,300",
-    "2,200",
-    "1.5"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/AWL Agri Business Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": [
+    "1.5"
+   ]
   },
   "500820_ee7e6efe-1f9b-4b5e-bff7-1da18902ffeb": {
    "id": "500820_ee7e6efe-1f9b-4b5e-bff7-1da18902ffeb",
@@ -11895,10 +11928,10 @@
    "pdf": "ee7e6efe-1f9b-4b5e-bff7-1da18902ffeb.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/ee7e6efe-1f9b-4b5e-bff7-1da18902ffeb.pdf",
    "tone": "Mixed",
-   "unverified": [],
    "compared": true,
    "summary": "summaries/Services & Others/Asian Paints Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "532689_6017050a-2410-4f19-9794-aeb78a688443": {
    "id": "532689_6017050a-2410-4f19-9794-aeb78a688443",
@@ -11999,30 +12032,10 @@
    "pdf": "03fe3ccd-7fde-4279-8fb0-5c28c1832d6c.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/03fe3ccd-7fde-4279-8fb0-5c28c1832d6c.pdf",
    "tone": "Mixed",
-   "unverified": [
-    "14,500",
-    "9,197",
-    "1,271",
-    "770",
-    "236",
-    "72,238",
-    "1,070",
-    "4.8",
-    "4.3",
-    "1.87",
-    "1.66",
-    "4,410",
-    "4,182",
-    "6,500",
-    "7,000",
-    "3,500",
-    "7,500",
-    "136",
-    "2.85"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/ACC Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "507789_324b6fa4-9e83-426d-b43b-edb1e68d60f4": {
    "id": "507789_324b6fa4-9e83-426d-b43b-edb1e68d60f4",
@@ -12041,26 +12054,10 @@
    "pdf": "acb4e2c5-851b-4dd7-a1d8-eb2c6e958f78.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/acb4e2c5-851b-4dd7-a1d8-eb2c6e958f78.pdf",
    "tone": "Positive",
-   "unverified": [
-    "6,500",
-    "7,000",
-    "9,197",
-    "1,271",
-    "770",
-    "236",
-    "4,410",
-    "4,182",
-    "1.87",
-    "1.66",
-    "136",
-    "7,500",
-    "72,238",
-    "1,070",
-    "2.85"
-   ],
    "compared": true,
    "summary": "summaries/Services & Others/Ambuja Cements Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "544274_1385f490-37cb-43b5-bd01-3ce27ded1ba9": {
    "id": "544274_1385f490-37cb-43b5-bd01-3ce27ded1ba9",
@@ -12204,7 +12201,13 @@
    "company": "Home First Finance Company India Ltd",
    "date": "2026-11-03",
    "quarter": "Q2 FY27",
-   "pdf": "1c06972d-3923-49ec-86ae-1f49d1fb2f7e.pdf"
+   "pdf": "1c06972d-3923-49ec-86ae-1f49d1fb2f7e.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1c06972d-3923-49ec-86ae-1f49d1fb2f7e.pdf",
+   "tone": "Positive",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Home First Finance Company India Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "500182_51972112-9d4c-4f21-a92e-1097aa174ad5": {
    "id": "500182_51972112-9d4c-4f21-a92e-1097aa174ad5",
@@ -12407,10 +12410,10 @@
    "pdf": "1ec819ec-0f78-49c7-941a-0dbf3e72979e.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1ec819ec-0f78-49c7-941a-0dbf3e72979e.pdf",
    "tone": "Positive",
-   "unverified": [],
    "compared": true,
    "summary": "summaries/Services & Others/Acutaas Chemicals Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "500510_d8a69245-c1f1-4bc3-a7c9-9dbc5795aae8": {
    "id": "500510_d8a69245-c1f1-4bc3-a7c9-9dbc5795aae8",
@@ -12458,7 +12461,13 @@
    "company": "Geojit Financial Services Ltd",
    "date": "2026-11-02",
    "quarter": "Q2 FY27",
-   "pdf": "1c78e5cf-4998-4eff-8535-0eea57e17123.pdf"
+   "pdf": "1c78e5cf-4998-4eff-8535-0eea57e17123.pdf",
+   "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1c78e5cf-4998-4eff-8535-0eea57e17123.pdf",
+   "tone": "Mixed",
+   "unverified": [],
+   "compared": true,
+   "summary": "summaries/NBFC & Financial Services/Geojit Financial Services Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite"
   },
   "544423_a22438dc-3277-45d4-bf4a-63229980d793": {
    "id": "544423_a22438dc-3277-45d4-bf4a-63229980d793",
@@ -12501,20 +12510,14 @@
    "pdf": "c7171a79-5c93-47e1-b324-9056d5abea0e.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/c7171a79-5c93-47e1-b324-9056d5abea0e.pdf",
    "tone": "Positive",
+   "compared": true,
+   "summary": "summaries/Services & Others/Bajaj Auto Ltd - Q2 FY27.md",
+   "model": "gemini-3.1-flash-lite",
    "unverified": [
-    "20,000",
-    "4,172",
-    "3,354",
-    "4,000",
-    "5,500",
-    "21,000",
     "6.25",
     "7.75",
     "7.5"
-   ],
-   "compared": true,
-   "summary": "summaries/Services & Others/Bajaj Auto Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   ]
   },
   "532531_308573ed-5a67-4a3e-b976-5897163f1c6a": {
    "id": "532531_308573ed-5a67-4a3e-b976-5897163f1c6a",
@@ -12669,10 +12672,10 @@
    "pdf": "f64547ca-1209-4be7-9f38-5795096dc080.pdf",
    "pdf_url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/f64547ca-1209-4be7-9f38-5795096dc080.pdf",
    "tone": "Positive",
-   "unverified": [],
    "compared": true,
    "summary": "summaries/Services & Others/AAVAS Financiers Ltd - Q2 FY27.md",
-   "model": "gemini-3.1-flash-lite"
+   "model": "gemini-3.1-flash-lite",
+   "unverified": []
   },
   "530075_f2fadb5e-a161-4a51-9f53-9f4a1fcd027e": {
    "id": "530075_f2fadb5e-a161-4a51-9f53-9f4a1fcd027e",
@@ -12705,21 +12708,66 @@
    "date": "2026-11-02",
    "quarter": "Q2 FY27",
    "pdf": "9c470058-9159-4dbd-a1d8-7a930d7d7680.pdf"
+  },
+  "570004_a01e6b24-c187-4d9e-a7e9-ddf6003ad1bb": {
+   "id": "570004_a01e6b24-c187-4d9e-a7e9-ddf6003ad1bb",
+   "code": "570004",
+   "company": "Jain Irrigation Systems Ltd_DVR",
+   "date": "2026-11-05",
+   "quarter": "Q2 FY27",
+   "pdf": "a01e6b24-c187-4d9e-a7e9-ddf6003ad1bb.pdf"
+  },
+  "500219_a01e6b24-c187-4d9e-a7e9-ddf6003ad1bb": {
+   "id": "500219_a01e6b24-c187-4d9e-a7e9-ddf6003ad1bb",
+   "code": "500219",
+   "company": "Jain Irrigation Systems Ltd",
+   "date": "2026-11-05",
+   "quarter": "Q2 FY27",
+   "pdf": "a01e6b24-c187-4d9e-a7e9-ddf6003ad1bb.pdf"
+  },
+  "532983_c6530f0b-ec50-4d85-9606-aae75f3ba5bf": {
+   "id": "532983_c6530f0b-ec50-4d85-9606-aae75f3ba5bf",
+   "code": "532983",
+   "company": "RPG Life Sciences Ltd",
+   "date": "2026-11-05",
+   "quarter": "Q2 FY27",
+   "pdf": "c6530f0b-ec50-4d85-9606-aae75f3ba5bf.pdf"
+  },
+  "500067_5739eb40-9265-45c2-a015-d74bd830312f": {
+   "id": "500067_5739eb40-9265-45c2-a015-d74bd830312f",
+   "code": "500067",
+   "company": "Blue Star Ltd",
+   "date": "2026-11-05",
+   "quarter": "Q2 FY27",
+   "pdf": "5739eb40-9265-45c2-a015-d74bd830312f.pdf"
+  },
+  "540699_995a3a71-4a1e-4c1f-a29a-6c6747e4ca10": {
+   "id": "540699_995a3a71-4a1e-4c1f-a29a-6c6747e4ca10",
+   "code": "540699",
+   "company": "Dixon Technologies (India) Ltd",
+   "date": "2026-11-05",
+   "quarter": "Q2 FY27",
+   "pdf": "995a3a71-4a1e-4c1f-a29a-6c6747e4ca10.pdf"
+  },
+  "544319_bb774638-dfa1-4f95-a8dd-8b33be2e3eaf": {
+   "id": "544319_bb774638-dfa1-4f95-a8dd-8b33be2e3eaf",
+   "code": "544319",
+   "company": "Senores Pharmaceuticals Ltd",
+   "date": "2026-11-05",
+   "quarter": "Q2 FY27",
+   "pdf": "bb774638-dfa1-4f95-a8dd-8b33be2e3eaf.pdf"
   }
  },
  "sectors": {
-  "544399": "Services & Others",
   "539730": "Pharma & Healthcare Products",
   "543782": "Capital Goods & Engineering",
   "543767": "Media & Entertainment",
   "544668": "IT & Software",
-  "532859": "Services & Others",
   "544487": "Retail & E-commerce",
   "532300": "Pharma & Healthcare Products",
   "539607": "IT & Software",
   "544117": "Media & Entertainment",
   "544741": "Electrical & Electronics",
-  "544434": "Services & Others",
   "544612": "Auto Components",
   "532356": "Agri & Sugar",
   "533470": "Cement & Building Materials",
@@ -12735,9 +12783,7 @@
   "540755": "Insurance",
   "543413": "Capital Goods & Engineering",
   "523301": "Paper & Packaging",
-  "544495": "Services & Others",
   "544476": "Hospitals & Diagnostics",
-  "544547": "Services & Others",
   "527001": "Metals & Mining",
   "537259": "Telecom",
   "500043": "Retail & E-commerce",
@@ -12752,10 +12798,8 @@
   "533259": "Hospitals & Diagnostics",
   "520073": "Auto Components",
   "544224": "Logistics & Shipping",
-  "544541": "Services & Others",
   "544511": "Capital Goods & Engineering",
   "512573": "Agri & Sugar",
-  "544698": "Services & Others",
   "540358": "Electrical & Electronics",
   "500003": "Logistics & Shipping",
   "544407": "Logistics & Shipping",
@@ -12779,7 +12823,6 @@
   "507685": "IT & Software",
   "500408": "IT & Software",
   "544658": "NBFC & Financial Services",
-  "540005": "Services & Others",
   "532525": "Banks",
   "532281": "IT & Software",
   "532540": "IT & Software",
@@ -12845,17 +12888,14 @@
   "540716": "Insurance",
   "540115": "IT & Software",
   "543463": "Textiles & Apparel",
-  "544515": "Services & Others",
   "542665": "Chemicals",
   "532210": "Banks",
   "500113": "Metals & Mining",
-  "508989": "Services & Others",
   "543945": "IT & Software",
   "531431": "Capital Goods & Engineering",
   "538882": "NBFC & Financial Services",
   "500400": "Power & Utilities",
   "543720": "NBFC & Financial Services",
-  "540750": "Services & Others",
   "543263": "NBFC & Financial Services",
   "517506": "Consumer Durables",
   "544806": "IT & Software",
@@ -12870,7 +12910,6 @@
   "543635": "Pharma & Healthcare Products",
   "500280": "Textiles & Apparel",
   "543663": "NBFC & Financial Services",
-  "544533": "Services & Others",
   "539437": "Banks",
   "500252": "Capital Goods & Engineering",
   "544292": "Pharma & Healthcare Products",
@@ -12884,7 +12923,6 @@
   "543972": "Capital Goods & Engineering",
   "533282": "Metals & Mining",
   "543066": "NBFC & Financial Services",
-  "543952": "Services & Others",
   "540719": "Insurance",
   "532149": "Banks",
   "544179": "Insurance",
@@ -12896,7 +12934,6 @@
   "534976": "Retail & E-commerce",
   "532175": "IT & Software",
   "502090": "Cement & Building Materials",
-  "544667": "Services & Others",
   "543287": "Real Estate",
   "544699": "NBFC & Financial Services",
   "543252": "Chemicals",
@@ -12908,106 +12945,6 @@
   "543300": "Auto Components",
   "544262": "NBFC & Financial Services",
   "533080": "Paper & Packaging",
-  "519600": "Services & Others",
-  "532505": "Services & Others",
-  "507526": "Services & Others",
-  "540222": "Services & Others",
-  "533096": "Services & Others",
-  "533263": "Services & Others",
-  "543279": "Services & Others",
-  "526367": "Services & Others",
-  "522295": "Services & Others",
-  "543228": "Services & Others",
-  "500183": "Services & Others",
-  "532285": "Services & Others",
-  "532483": "Services & Others",
-  "542484": "Services & Others",
-  "541770": "Services & Others",
-  "505714": "Services & Others",
-  "532440": "Services & Others",
-  "543320": "Services & Others",
-  "500104": "Services & Others",
-  "541540": "Services & Others",
-  "532541": "Services & Others",
-  "534392": "Services & Others",
-  "532726": "Services & Others",
-  "544632": "Services & Others",
-  "500209": "Services & Others",
-  "540611": "Services & Others",
-  "542066": "Services & Others",
-  "544802": "Services & Others",
-  "512179": "Services & Others",
-  "505790": "Services & Others",
-  "532374": "Services & Others",
-  "543349": "Services & Others",
-  "500335": "Services & Others",
-  "500800": "Services & Others",
-  "544161": "Services & Others",
-  "523704": "Services & Others",
-  "544209": "Services & Others",
-  "532636": "Services & Others",
-  "542216": "Services & Others",
-  "544029": "Services & Others",
-  "509631": "Services & Others",
-  "500188": "Services & Others",
-  "541301": "Services & Others",
-  "544484": "Services & Others",
-  "532375": "Services & Others",
-  "540366": "Services & Others",
-  "544803": "Services & Others",
-  "532343": "Services & Others",
-  "500049": "Services & Others",
-  "526299": "Services & Others",
-  "533088": "Services & Others",
-  "544307": "Services & Others",
-  "531279": "Services & Others",
-  "538685": "Services & Others",
-  "542904": "Services & Others",
-  "543238": "Services & Others",
-  "544282": "Services & Others",
-  "544700": "Services & Others",
-  "519602": "Services & Others",
-  "543271": "Services & Others",
-  "533148": "Services & Others",
-  "532187": "Services & Others",
-  "541153": "Services & Others",
-  "539289": "Services & Others",
-  "526797": "Services & Others",
-  "533273": "Services & Others",
-  "505872": "Services & Others",
-  "532720": "Services & Others",
-  "500355": "Services & Others",
-  "526951": "Services & Others",
-  "500087": "Services & Others",
-  "541988": "Services & Others",
-  "532977": "Services & Others",
-  "539872": "Services & Others",
-  "544311": "Services & Others",
-  "540175": "Services & Others",
-  "539871": "Services & Others",
-  "500304": "Services & Others",
-  "500365": "Services & Others",
-  "543396": "Services & Others",
-  "540768": "Services & Others",
-  "544449": "Services & Others",
-  "500850": "Services & Others",
-  "544045": "Services & Others",
-  "540879": "Services & Others",
-  "543308": "Services & Others",
-  "544502": "Services & Others",
-  "526612": "Services & Others",
-  "544469": "Services & Others",
-  "544645": "Services & Others",
-  "544430": "Services & Others",
-  "514211": "Services & Others",
-  "543425": "Services & Others",
-  "539221": "Services & Others",
-  "544322": "Services & Others",
-  "543278": "Services & Others",
-  "524348": "Services & Others",
-  "544419": "Services & Others",
-  "544131": "Services & Others",
-  "540203": "Services & Others",
   "544403": "Textiles & Apparel",
   "539957": "Oil & Gas",
   "530073": "Logistics & Shipping",
@@ -13016,7 +12953,6 @@
   "544350": "Hospitals & Diagnostics",
   "543384": "Retail & E-commerce",
   "544397": "Automobiles",
-  "544439": "Services & Others",
   "524208": "Chemicals",
   "543942": "Banks",
   "543498": "Auto Components",
@@ -13027,7 +12963,6 @@
   "532348": "IT & Software",
   "523796": "Hotels & Travel",
   "530965": "Oil & Gas",
-  "544021": "Services & Others",
   "543657": "Chemicals",
   "532868": "Real Estate",
   "543960": "Pharma & Healthcare Products",
@@ -13064,14 +12999,12 @@
   "500470": "Metals & Mining",
   "500411": "Capital Goods & Engineering",
   "544314": "Textiles & Apparel",
-  "543638": "Services & Others",
   "544540": "Construction & Infrastructure",
   "532548": "Cement & Building Materials",
   "500387": "Cement & Building Materials",
   "532488": "Pharma & Healthcare Products",
   "500645": "Fertilisers & Agrochemicals",
   "543248": "Hotels & Travel",
-  "543996": "Services & Others",
   "526227": "Textiles & Apparel",
   "500086": "Auto Components",
   "544172": "IT & Software",
@@ -13079,7 +13012,6 @@
   "543318": "Chemicals",
   "504067": "IT & Software",
   "532156": "Retail & E-commerce",
-  "512599": "Services & Others",
   "503811": "Textiles & Apparel",
   "543918": "Textiles & Apparel",
   "541336": "NBFC & Financial Services",
@@ -13087,7 +13019,6 @@
   "506618": "Fertilisers & Agrochemicals",
   "533274": "Real Estate",
   "540699": "Consumer Durables",
-  "544467": "Services & Others",
   "544685": "Logistics & Shipping",
   "532953": "Consumer Durables",
   "543265": "Telecom",
@@ -13108,106 +13039,6 @@
   "532497": "FMCG & Food",
   "523694": "Chemicals",
   "543412": "Insurance",
-  "544455": "Services & Others",
-  "544781": "Services & Others",
-  "544283": "Services & Others",
-  "539400": "Services & Others",
-  "542651": "Services & Others",
-  "500295": "Services & Others",
-  "544634": "Services & Others",
-  "532400": "Services & Others",
-  "532884": "Services & Others",
-  "532155": "Services & Others",
-  "540180": "Services & Others",
-  "544252": "Services & Others",
-  "500520": "Services & Others",
-  "544780": "Services & Others",
-  "512008": "Services & Others",
-  "544784": "Services & Others",
-  "519183": "Services & Others",
-  "544754": "Services & Others",
-  "543573": "Services & Others",
-  "500696": "Services & Others",
-  "544176": "Services & Others",
-  "543259": "Services & Others",
-  "543330": "Services & Others",
-  "544256": "Services & Others",
-  "540293": "Services & Others",
-  "543276": "Services & Others",
-  "509496": "Services & Others",
-  "507789": "Services & Others",
-  "539660": "Services & Others",
-  "544718": "Services & Others",
-  "505533": "Services & Others",
-  "543331": "Services & Others",
-  "539141": "Services & Others",
-  "543458": "Services & Others",
-  "539658": "Services & Others",
-  "543524": "Services & Others",
-  "500078": "Services & Others",
-  "505200": "Services & Others",
-  "539450": "Services & Others",
-  "532667": "Services & Others",
-  "544545": "Services & Others",
-  "500405": "Services & Others",
-  "543904": "Services & Others",
-  "507205": "Services & Others",
-  "532612": "Services & Others",
-  "540596": "Services & Others",
-  "535754": "Services & Others",
-  "534816": "Services & Others",
-  "500410": "Services & Others",
-  "500425": "Services & Others",
-  "517146": "Services & Others",
-  "509930": "Services & Others",
-  "544501": "Services & Others",
-  "503100": "Services & Others",
-  "531761": "Services & Others",
-  "539404": "Services & Others",
-  "500510": "Services & Others",
-  "544286": "Services & Others",
-  "530117": "Services & Others",
-  "544558": "Services & Others",
-  "531209": "Services & Others",
-  "543288": "Services & Others",
-  "544288": "Services & Others",
-  "532331": "Services & Others",
-  "544574": "Services & Others",
-  "500770": "Services & Others",
-  "543981": "Services & Others",
-  "539978": "Services & Others",
-  "506854": "Services & Others",
-  "544319": "Services & Others",
-  "544606": "Services & Others",
-  "502986": "Services & Others",
-  "500096": "Services & Others",
-  "500820": "Services & Others",
-  "532668": "Services & Others",
-  "540595": "Services & Others",
-  "532832": "Services & Others",
-  "512529": "Services & Others",
-  "542857": "Services & Others",
-  "506879": "Services & Others",
-  "543931": "Services & Others",
-  "541233": "Services & Others",
-  "544642": "Services & Others",
-  "513375": "Services & Others",
-  "543923": "Services & Others",
-  "543336": "Services & Others",
-  "532898": "Services & Others",
-  "544367": "Services & Others",
-  "513228": "Services & Others",
-  "532926": "Services & Others",
-  "503101": "Services & Others",
-  "544067": "Services & Others",
-  "522287": "Services & Others",
-  "544833": "Services & Others",
-  "532934": "Services & Others",
-  "544744": "Services & Others",
-  "538730": "Services & Others",
-  "544664": "Services & Others",
-  "544223": "Services & Others",
-  "544567": "Services & Others",
   "522004": "Capital Goods & Engineering",
   "517168": "Auto Components",
   "524091": "Consumer Durables",
@@ -13216,7 +13047,6 @@
   "544599": "Auto Components",
   "543957": "Textiles & Apparel",
   "500330": "Textiles & Apparel",
-  "544396": "Services & Others",
   "544081": "Capital Goods & Engineering",
   "522275": "Power & Utilities",
   "532714": "Construction & Infrastructure",
@@ -13296,7 +13126,6 @@
   "539083": "Power & Utilities",
   "543667": "Power & Utilities",
   "500331": "Chemicals",
-  "540673": "Services & Others",
   "501455": "Automobiles",
   "500128": "Metals & Mining",
   "506222": "Chemicals",
@@ -13324,8 +13153,6 @@
   "540743": "Fertilisers & Agrochemicals",
   "544306": "Pharma & Healthcare Products",
   "543489": "Logistics & Shipping",
-  "543324": "Services & Others",
-  "534091": "Services & Others",
   "544321": "Hotels & Travel",
   "532662": "Media & Entertainment",
   "533217": "Media & Entertainment",
@@ -13334,7 +13161,6 @@
   "532457": "Agri & Sugar",
   "500238": "Consumer Durables",
   "544055": "NBFC & Financial Services",
-  "509675": "Services & Others",
   "536974": "Plastics & Pipes",
   "500265": "Metals & Mining",
   "544198": "Capital Goods & Engineering",
@@ -13359,7 +13185,6 @@
   "538268": "Hotels & Travel",
   "500655": "Plastics & Pipes",
   "500480": "Auto Components",
-  "500877": "Services & Others",
   "543417": "IT & Software",
   "532782": "Textiles & Apparel",
   "543626": "Retail & E-commerce",
@@ -13404,7 +13229,6 @@
   "544644": "Pharma & Healthcare Products",
   "538836": "Textiles & Apparel",
   "532922": "NBFC & Financial Services",
-  "540403": "Services & Others",
   "500165": "Chemicals",
   "500185": "Construction & Infrastructure",
   "500730": "Chemicals",
@@ -13482,7 +13306,6 @@
   "504973": "NBFC & Financial Services",
   "544602": "Logistics & Shipping",
   "539523": "Pharma & Healthcare Products",
-  "544459": "Services & Others",
   "532305": "Pharma & Healthcare Products",
   "543389": "Chemicals",
   "542669": "Metals & Mining",
@@ -13497,11 +13320,9 @@
   "500201": "Chemicals",
   "522074": "Capital Goods & Engineering",
   "532942": "Construction & Infrastructure",
-  "544609": "Services & Others",
   "544587": "Metals & Mining",
   "533155": "FMCG & Food",
   "500040": "Real Estate",
-  "542597": "Services & Others",
   "534139": "Electrical & Electronics",
   "532699": "Hotels & Travel",
   "544491": "Chemicals",
@@ -13521,17 +13342,14 @@
   "532891": "Real Estate",
   "543992": "Hotels & Travel",
   "544014": "FMCG & Food",
-  "539300": "Services & Others",
   "543419": "Real Estate",
   "540797": "Hospitals & Diagnostics",
-  "543591": "Services & Others",
   "532915": "NBFC & Financial Services",
   "544709": "Hospitals & Diagnostics",
   "524742": "Pharma & Healthcare Products",
   "532899": "Agri & Sugar",
   "543714": "Retail & E-commerce",
   "544572": "Auto Components",
-  "532754": "Services & Others",
   "513023": "Metals & Mining",
   "508954": "NBFC & Financial Services",
   "543482": "Consumer Durables",
@@ -13545,7 +13363,6 @@
   "523676": "Consumer Durables",
   "531201": "Electrical & Electronics",
   "542812": "Chemicals",
-  "543223": "Services & Others",
   "544167": "Capital Goods & Engineering",
   "532804": "Capital Goods & Engineering",
   "544339": "Hospitals & Diagnostics",
@@ -13592,10 +13409,8 @@
   "532178": "Capital Goods & Engineering",
   "532822": "Telecom",
   "544513": "Real Estate",
-  "540704": "Services & Others",
   "543969": "Plastics & Pipes",
   "544239": "Logistics & Shipping",
-  "540073": "Services & Others",
   "543954": "Logistics & Shipping",
   "500144": "Electrical & Electronics",
   "534076": "Cement & Building Materials",
@@ -13624,11 +13439,9 @@
   "543652": "NBFC & Financial Services",
   "533655": "Capital Goods & Engineering",
   "543528": "Plastics & Pipes",
-  "543254": "Services & Others",
   "501423": "Plastics & Pipes",
   "500300": "Cement & Building Materials",
   "539336": "Power & Utilities",
-  "543514": "Services & Others",
   "500840": "Hotels & Travel",
   "531213": "NBFC & Financial Services",
   "532834": "Chemicals",
@@ -13642,7 +13455,6 @@
   "532937": "Paper & Packaging",
   "543929": "FMCG & Food",
   "543214": "Auto Components",
-  "544557": "Services & Others",
   "544733": "Fertilisers & Agrochemicals",
   "543399": "Pharma & Healthcare Products",
   "512068": "Metals & Mining",
@@ -13667,7 +13479,6 @@
   "544122": "Pharma & Healthcare Products",
   "531548": "Cement & Building Materials",
   "530305": "Agri & Sugar",
-  "544315": "Services & Others",
   "532851": "Fertilisers & Agrochemicals",
   "543245": "Pharma & Healthcare Products",
   "531120": "Construction & Infrastructure",
@@ -13689,7 +13500,6 @@
   "500249": "Capital Goods & Engineering",
   "533169": "Construction & Infrastructure",
   "543212": "Consumer Durables",
-  "541302": "Services & Others",
   "506687": "Chemicals",
   "544838": "IT & Software",
   "540078": "Plastics & Pipes",
@@ -13721,11 +13531,8 @@
   "544519": "Construction & Infrastructure",
   "544898": "IT & Software",
   "544889": "Pharma & Healthcare Products",
-  "544914": "Services & Others",
-  "544915": "Services & Others",
   "544901": "Retail & E-commerce",
   "544912": "Chemicals",
-  "544603": "Services & Others",
   "544583": "Insurance",
   "544911": "Electrical & Electronics",
   "544921": "NBFC & Financial Services",
@@ -13762,7 +13569,6 @@
   "544962": "Retail & E-commerce",
   "544458": "Consumer Durables",
   "544023": "Metals & Mining",
-  "544735": "Services & Others",
   "544631": "Consumer Durables",
   "532921": "Logistics & Shipping",
   "511147": "NBFC & Financial Services",
@@ -13773,40 +13579,290 @@
   "541096": "Pharma & Healthcare Products",
   "530759": "Auto Components",
   "543420": "Logistics & Shipping",
-  "530075": "Oil & Gas"
+  "530075": "Oil & Gas",
+  "544399": "Services & Others",
+  "532859": "Services & Others",
+  "544434": "Services & Others",
+  "544495": "Services & Others",
+  "544547": "Services & Others",
+  "544541": "Services & Others",
+  "544698": "Services & Others",
+  "540005": "Services & Others",
+  "544515": "Services & Others",
+  "508989": "Services & Others",
+  "540750": "Power & Utilities",
+  "544533": "Services & Others",
+  "543952": "Services & Others",
+  "544667": "Services & Others",
+  "519600": "FMCG & Food",
+  "532505": "Banks",
+  "507526": "FMCG & Food",
+  "540222": "Pharma & Healthcare Products",
+  "533096": "Power & Utilities",
+  "533263": "Power & Utilities",
+  "543279": "Banks",
+  "526367": "Real Estate",
+  "522295": "Services & Others",
+  "543228": "Telecom",
+  "500183": "Telecom",
+  "532285": "NBFC & Financial Services",
+  "532483": "Banks",
+  "542484": "Textiles & Apparel",
+  "541770": "NBFC & Financial Services",
+  "505714": "Auto Components",
+  "532440": "Services & Others",
+  "543320": "Services & Others",
+  "500104": "Oil & Gas",
+  "541540": "Pharma & Healthcare Products",
+  "532541": "IT & Software",
+  "534392": "Metals & Mining",
+  "532726": "Metals & Mining",
+  "544632": "Retail & E-commerce",
+  "500209": "IT & Software",
+  "540611": "Banks",
+  "542066": "Oil & Gas",
+  "544802": "Hotels & Travel",
+  "512179": "Real Estate",
+  "505790": "Auto Components",
+  "532374": "Services & Others",
+  "543349": "Chemicals",
+  "500335": "Cement & Building Materials",
+  "500800": "FMCG & Food",
+  "544161": "Consumer Durables",
+  "523704": "IT & Software",
+  "544209": "Metals & Mining",
+  "532636": "NBFC & Financial Services",
+  "542216": "Cement & Building Materials",
+  "544029": "Oil & Gas",
+  "509631": "Metals & Mining",
+  "500188": "Metals & Mining",
+  "541301": "Electrical & Electronics",
+  "544484": "Consumer Durables",
+  "532375": "Media & Entertainment",
+  "540366": "Media & Entertainment",
+  "544803": "Consumer Durables",
+  "532343": "Automobiles",
+  "500049": "Defence & Aerospace",
+  "526299": "IT & Software",
+  "533088": "Hotels & Travel",
+  "544307": "Retail & E-commerce",
+  "531279": "Services & Others",
+  "538685": "Media & Entertainment",
+  "542904": "Banks",
+  "543238": "NBFC & Financial Services",
+  "544282": "Services & Others",
+  "544700": "IT & Software",
+  "519602": "IT & Software",
+  "543271": "Chemicals",
+  "533148": "Power & Utilities",
+  "532187": "Banks",
+  "541153": "Banks",
+  "539289": "Real Estate",
+  "526797": "Cement & Building Materials",
+  "533273": "Real Estate",
+  "505872": "Capital Goods & Engineering",
+  "532720": "NBFC & Financial Services",
+  "500355": "Fertilisers & Agrochemicals",
+  "526951": "Cement & Building Materials",
+  "500087": "Pharma & Healthcare Products",
+  "541988": "NBFC & Financial Services",
+  "532977": "Automobiles",
+  "539872": "Pharma & Healthcare Products",
+  "544311": "Services & Others",
+  "540175": "NBFC & Financial Services",
+  "539871": "Hospitals & Diagnostics",
+  "500304": "Services & Others",
+  "500365": "Metals & Mining",
+  "543396": "NBFC & Financial Services",
+  "540768": "Logistics & Shipping",
+  "544449": "Pharma & Healthcare Products",
+  "500850": "Hotels & Travel",
+  "544045": "Consumer Durables",
+  "540879": "Defence & Aerospace",
+  "543308": "Hospitals & Diagnostics",
+  "544502": "Pharma & Healthcare Products",
+  "526612": "Logistics & Shipping",
+  "544469": "Real Estate",
+  "544645": "Hospitals & Diagnostics",
+  "544430": "Metals & Mining",
+  "514211": "Textiles & Apparel",
+  "543425": "IT & Software",
+  "539221": "Textiles & Apparel",
+  "544322": "Defence & Aerospace",
+  "543278": "Consumer Durables",
+  "524348": "Pharma & Healthcare Products",
+  "544419": "Construction & Infrastructure",
+  "544131": "Hospitals & Diagnostics",
+  "540203": "Consumer Durables",
+  "544439": "Services & Others",
+  "544021": "IT & Software",
+  "543638": "IT & Software",
+  "543996": "Services & Others",
+  "512599": "Services & Others",
+  "544467": "NBFC & Financial Services",
+  "544455": "Electrical & Electronics",
+  "544781": "Power & Utilities",
+  "544283": "Power & Utilities",
+  "539400": "Textiles & Apparel",
+  "542651": "IT & Software",
+  "500295": "Metals & Mining",
+  "544634": "Defence & Aerospace",
+  "532400": "IT & Software",
+  "532884": "Services & Others",
+  "532155": "Oil & Gas",
+  "540180": "FMCG & Food",
+  "544252": "NBFC & Financial Services",
+  "500520": "Automobiles",
+  "544780": "Metals & Mining",
+  "512008": "Real Estate",
+  "544784": "Metals & Mining",
+  "519183": "FMCG & Food",
+  "544754": "NBFC & Financial Services",
+  "543573": "Electrical & Electronics",
+  "500696": "FMCG & Food",
+  "544176": "NBFC & Financial Services",
+  "543259": "NBFC & Financial Services",
+  "543330": "Hotels & Travel",
+  "544256": "Consumer Durables",
+  "540293": "Auto Components",
+  "543276": "Auto Components",
+  "509496": "Construction & Infrastructure",
+  "507789": "Pharma & Healthcare Products",
+  "539660": "Chemicals",
+  "544718": "Consumer Durables",
+  "505533": "FMCG & Food",
+  "543331": "Chemicals",
+  "539141": "Media & Entertainment",
+  "543458": "Agri & Sugar",
+  "539658": "Services & Others",
+  "543524": "Hospitals & Diagnostics",
+  "500078": "Chemicals",
+  "505200": "Automobiles",
+  "539450": "Chemicals",
+  "532667": "Power & Utilities",
+  "544545": "Agri & Sugar",
+  "500405": "Chemicals",
+  "543904": "Pharma & Healthcare Products",
+  "507205": "FMCG & Food",
+  "532612": "Pharma & Healthcare Products",
+  "540596": "Pharma & Healthcare Products",
+  "535754": "Cement & Building Materials",
+  "534816": "Telecom",
+  "500410": "Cement & Building Materials",
+  "500425": "Cement & Building Materials",
+  "517146": "Metals & Mining",
+  "509930": "Plastics & Pipes",
+  "544501": "Services & Others",
+  "503100": "Real Estate",
+  "531761": "Plastics & Pipes",
+  "539404": "NBFC & Financial Services",
+  "500510": "Capital Goods & Engineering",
+  "544286": "Insurance",
+  "530117": "Chemicals",
+  "544558": "Capital Goods & Engineering",
+  "531209": "IT & Software",
+  "543288": "Oil & Gas",
+  "544288": "Logistics & Shipping",
+  "532331": "Pharma & Healthcare Products",
+  "544574": "NBFC & Financial Services",
+  "500770": "Chemicals",
+  "543981": "Electrical & Electronics",
+  "539978": "Services & Others",
+  "506854": "Chemicals",
+  "544319": "Pharma & Healthcare Products",
+  "544606": "IT & Software",
+  "502986": "Textiles & Apparel",
+  "500096": "FMCG & Food",
+  "500820": "Chemicals",
+  "532668": "IT & Software",
+  "540595": "Telecom",
+  "532832": "Real Estate",
+  "512529": "Pharma & Healthcare Products",
+  "542857": "Cement & Building Materials",
+  "506879": "Pharma & Healthcare Products",
+  "543931": "IT & Software",
+  "541233": "Hotels & Travel",
+  "544642": "Consumer Durables",
+  "513375": "Capital Goods & Engineering",
+  "543923": "Electrical & Electronics",
+  "543336": "Chemicals",
+  "532898": "Power & Utilities",
+  "544367": "Electrical & Electronics",
+  "513228": "Capital Goods & Engineering",
+  "532926": "FMCG & Food",
+  "503101": "Real Estate",
+  "544067": "Pharma & Healthcare Products",
+  "522287": "Construction & Infrastructure",
+  "544833": "Logistics & Shipping",
+  "532934": "Auto Components",
+  "544744": "Power & Utilities",
+  "538730": "Textiles & Apparel",
+  "544664": "Capital Goods & Engineering",
+  "544223": "Construction & Infrastructure",
+  "544567": "IT & Software",
+  "544396": "NBFC & Financial Services",
+  "540673": "Services & Others",
+  "543324": "Services & Others",
+  "534091": "NBFC & Financial Services",
+  "509675": "Services & Others",
+  "500877": "Auto Components",
+  "540403": "Services & Others",
+  "544459": "Services & Others",
+  "544609": "Services & Others",
+  "542597": "Services & Others",
+  "539300": "Services & Others",
+  "543591": "Services & Others",
+  "532754": "Services & Others",
+  "543223": "Services & Others",
+  "540704": "Services & Others",
+  "540073": "Services & Others",
+  "543254": "Services & Others",
+  "543514": "Services & Others",
+  "544557": "Services & Others",
+  "544315": "Services & Others",
+  "541302": "Services & Others",
+  "544914": "Services & Others",
+  "544915": "Services & Others",
+  "544603": "Services & Others",
+  "544735": "Services & Others",
+  "532983": "Pharma & Healthcare Products"
  },
  "overviews": {
-  "Services & Others|Q2 FY27": {
-   "sector": "Services & Others",
+  "NBFC & Financial Services|Q2 FY27": {
+   "sector": "NBFC & Financial Services",
    "quarter": "Q2 FY27",
    "companies": [
+    "360 ONE WAM LTD",
+    "5paisa Capital Ltd",
     "AAVAS Financiers Ltd",
-    "ACC Ltd",
-    "ACME Solar Holdings Ltd",
-    "AU Small Finance Bank Ltd",
-    "AWL Agri Business Ltd",
-    "Acutaas Chemicals Ltd",
-    "Adani Power Ltd",
-    "Adani Total Gas Ltd",
-    "Advit Jewels Ltd",
-    "Aequs Ltd",
-    "Ambuja Cements Ltd",
-    "Asian Paints Ltd",
-    "Aurionpro Solutions Ltd",
-    "Aurum PropTech Ltd",
-    "Bajaj Auto Ltd",
-    "Bajaj Healthcare Ltd",
+    "Aditya Birla Sun Life AMC Ltd",
+    "Anand Rathi Share And Stock Brokers Ltd",
+    "Anand Rathi Wealth Ltd",
+    "Angel One Ltd",
+    "Aye Finance Ltd",
     "Bajaj Housing Finance Ltd",
-    "Bandhan Bank Ltd",
-    "Bansal Wire Industries Ltd",
-    "Best Agrolife Ltd",
-    "Billionbrains Garage Ventures Ltd",
-    "Birlasoft Ltd",
-    "Black Buck Ltd",
-    "BlueStone Jewellery and Lifestyle Ltd",
-    "CCL Products (India) Ltd",
-    "Canara Bank",
-    "Cipla Ltd"
+    "Can Fin Homes Ltd",
+    "CreditAccess Grameen Ltd",
+    "Fedbank Financial Services Ltd",
+    "Five-Star Business Finance Ltd",
+    "Geojit Financial Services Ltd",
+    "HDB Financial Services Ltd",
+    "HDFC Asset Management Company Ltd",
+    "Home First Finance Company India Ltd",
+    "ICICI Prudential Asset Management Company Ltd",
+    "IIFL Capital Services Ltd",
+    "IIFL Finance Ltd",
+    "Indian Railway Finance Corporation Ltd",
+    "Jio Financial Services Ltd",
+    "KFin Technologies Ltd",
+    "L&T Finance Ltd",
+    "Mahindra & Mahindra Financial Services Ltd",
+    "Manba Finance Ltd",
+    "National Securities Depository Ltd",
+    "Nippon Life India Asset Management Ltd",
+    "OnEMI Technology Solutions Ltd",
+    "One 97 Communications Ltd",
+    "PB Fintech Ltd"
    ],
    "compared": [
     true,
@@ -13835,9 +13891,14 @@
     true,
     true,
     true,
+    true,
+    true,
+    true,
+    true,
     true
    ],
-   "file": "summaries/Services & Others/_SECTOR OVERVIEW - Q2 FY27.md"
+   "file": "summaries/NBFC & Financial Services/_SECTOR OVERVIEW - Q2 FY27.md"
   }
- }
+ },
+ "repair_v2": true
 }
