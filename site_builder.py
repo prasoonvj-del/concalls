@@ -89,6 +89,10 @@ def build(quiet=False):
     (data / "concalls.js").write_text(_js("DESK_CONCALLS", None, cc), encoding="utf-8")
     pres = json.loads(C.PRES_FILE.read_text(encoding="utf-8")) if C.PRES_FILE.exists() else []
     (data / "presentations.js").write_text(_js("DESK_PRES", None, pres), encoding="utf-8")
+    import trackers as TK
+    track = {"trackers": TK.load(TK.TRACK_FILE, {}), "markets": TK.load(TK.MARKET_FILE, {"series": []}),
+             "weekly": TK.load(TK.WEEKLY_FILE, {"reviews": []})}
+    (data / "trackers.js").write_text(_js("DESK_TRACK", None, track), encoding="utf-8")
     tabs = []
     if files:
         tabs = [t["name"] for t in json.loads(files[-1].read_text(encoding="utf-8")).get("tabs", []) if t.get("stories")]
@@ -105,6 +109,7 @@ def build(quiet=False):
     js = (PUBLIC / "app.js").read_text(encoding="utf-8")
     js = js.replace('"data/brief-" + date + ".js"', '"data/brief-" + date + ".js?v=' + stamp + '"')
     js = js.replace('loadScript("data/concalls.js")', 'loadScript("data/concalls.js?v=' + stamp + '")')
+    js = js.replace('loadScript("data/trackers.js")', 'loadScript("data/trackers.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/presentations.js")', 'loadScript("data/presentations.js?v=' + stamp + '")')
     (PUBLIC / "app.js").write_text(js, encoding="utf-8")
     if not quiet:

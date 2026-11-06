@@ -557,10 +557,10 @@ def bse():
     return _sess
 
 
-def bse_query(frm, to, subcategory):
+def bse_query(frm, to, subcategory, cat=None):
     rows, page = [], 1
     while page <= 300:
-        params = {"pageno": page, "strCat": "Company Update" if subcategory != "-1" else "-1",
+        params = {"pageno": page, "strCat": cat or ("Company Update" if subcategory != "-1" else "-1"),
                   "strPrevDate": frm.strftime("%Y%m%d"), "strToDate": to.strftime("%Y%m%d"),
                   "strScrip": "", "strSearch": "P", "strType": "C", "subcategory": subcategory}
         for attempt in range(4):

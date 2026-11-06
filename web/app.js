@@ -128,7 +128,7 @@
         if (r.neg) el("text", { x: mid - 6 - r.neg * sc, y: by + barH - 3, "text-anchor": "end", class: "val" }, g, r.neg);
         if (r.pos) el("text", { x: mid + 6 + r.pos * sc, y: by + barH - 3, class: "val" }, g, r.pos);
         const hit = el("rect", { x: 0, y, width: W, height: rowH, class: "hit" }, g);
-        const html = `<b>${esc(r.label)}</b><br>${plural(r.total, "story")}<br>` +
+        const html = r.tip || `<b>${esc(r.label)}</b><br>${plural(r.total, "story")}<br>` +
           `<span class="sw" style="background:${cssv("--pos")}"></span>${r.pos} positive<br>` +
           `<span class="sw" style="background:${cssv("--neg")}"></span>${r.neg} negative<br>` +
           `<span class="sw" style="background:${cssv("--neu")}"></span>${r.neu} neutral<br><span class="m">Tap to open the sector</span>`;
@@ -271,9 +271,9 @@
       const yt = el("text", { x: 12, y: (T + H - B) / 2, "text-anchor": "middle", transform: `rotate(-90 12 ${(T + H - B) / 2})` }, s, yl);
       yt.setAttribute("class", "val");
       pts.forEach((p) => {
-        const dot = el("circle", { cx: X(p.x), cy: Y(p.y), r: 5, fill: cssv("--s1"), stroke: cssv("--surface"), "stroke-width": 2, style: "cursor:pointer" }, s);
+        const dot = el("circle", { cx: X(p.x), cy: Y(p.y), r: 5, fill: p.color || cssv("--s1"), stroke: cssv("--surface"), "stroke-width": 2, style: "cursor:pointer" }, s);
         const hit = el("circle", { cx: X(p.x), cy: Y(p.y), r: 12, fill: "transparent", style: "cursor:pointer" }, s);
-        const html = `<b>${esc(p.label)}</b><br>${esc(xl)}: ${p.x}<br>${esc(yl)}: ${p.y}<br><span class="m">Tap to open</span>`;
+        const html = `<b>${esc(p.label)}</b><br>${esc(xl)}: ${p.x}<br>${esc(yl)}: ${p.y}${p.note ? "<br>" + p.note : ""}<br><span class="m">Tap to open</span>`;
         hit.addEventListener("mousemove", (e) => { dot.setAttribute("r", 7); showTip(html, e); });
         hit.addEventListener("mouseleave", () => { dot.setAttribute("r", 5); hideTip(); });
         hit.addEventListener("click", () => { hideTip(); p.onclick && p.onclick(); });
@@ -299,11 +299,11 @@
         el("rect", { x: 0, y, width: W, height: rowH - 2, rx: 6, class: "hl", fill: "transparent" }, g);
         el("text", { x: labW - 10, y: by + barH - 3, "text-anchor": "end", class: "lab" }, g, trunc(r.label, narrow ? 16 : 26));
         const end = zero + r.value * sc;
-        el("path", { d: barPath(zero, end, by, barH), fill: cssv("--s1") }, g);
+        el("path", { d: barPath(zero, end, by, barH), fill: r.color || cssv("--s1") }, g);
         el("text", { x: r.value >= 0 ? end + 5 : end - 5, y: by + barH - 3, "text-anchor": r.value >= 0 ? "start" : "end", class: "val" }, g,
           (Math.round(r.value * 10) / 10) + (r.flag ? " ⚠" : ""));
         const hit = el("rect", { x: 0, y, width: W, height: rowH, class: "hit" }, g);
-        const html = `<b>${esc(r.label)}</b><br>${Math.round(r.value * 100) / 100} ${esc(unit)}${r.flag ? "<br>⚠ not stated word-for-word in the transcript (likely calculated)" : ""}`;
+        const html = `<b>${esc(r.label)}</b><br>${Math.round(r.value * 100) / 100} ${esc(unit)}${r.note ? "<br>" + r.note : ""}${r.flag ? "<br>⚠ not stated word-for-word in the transcript (likely calculated)" : ""}`;
         hit.addEventListener("mousemove", (e) => showTip(html, e));
         hit.addEventListener("mouseleave", hideTip);
         hit.addEventListener("click", () => { hideTip(); r.onclick && r.onclick(); });
@@ -311,6 +311,75 @@
       h.appendChild(s);
     });
   }
+
+  /** Lines on a free (non-zero) scale, e.g. prices rebased to 100. */
+  function indexChart(host, xs, series, unit) {
+    mount(host, (h, W) => {
+      const H = 260, L = 44, R = 14, T = 10, B = 26;
+      const s = svg(W, H);
+      const all = series.flatMap((se) => se.values.filter((v) => v != null));
+      let lo = Math.min(...all), hi = Math.max(...all);
+      const padv = (hi - lo) * 0.08 || 1; lo -= padv; hi += padv;
+      const x = (i) => L + (xs.length === 1 ? (W - L - R) / 2 : (i * (W - L - R)) / (xs.length - 1));
+      const y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+      for (let k = 0; k <= 4; k++) {
+        const v = lo + ((hi - lo) * k) / 4, yy = y(v);
+        el("line", { x1: L, x2: W - R, y1: yy, y2: yy, class: "gridl" }, s);
+        el("text", { x: L - 6, y: yy + 4, "text-anchor": "end" }, s, Math.round(v));
+      }
+      if (lo < 100 && hi > 100 && unit === "index") el("line", { x1: L, x2: W - R, y1: y(100), y2: y(100), class: "axis" }, s);
+      const every = Math.ceil(xs.length / Math.max(2, Math.floor((W - L - R) / 70)));
+      xs.forEach((d, i) => {
+        if (i % every === 0 || i === xs.length - 1)
+          el("text", { x: x(i), y: H - 6, "text-anchor": "middle" }, s, d.slice(8) + "/" + d.slice(5, 7));
+      });
+      series.forEach((se) => {
+        let path = "", pen = false;
+        se.values.forEach((v, i) => {
+          if (v == null) { pen = false; return; }
+          path += (pen ? "L" : "M") + x(i).toFixed(1) + "," + y(v).toFixed(1); pen = true;
+        });
+        el("path", { d: path, fill: "none", stroke: se.color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, s);
+        let li = se.values.length - 1; while (li > 0 && se.values[li] == null) li--;
+        el("circle", { cx: x(li), cy: y(se.values[li]), r: 4, fill: se.color, stroke: cssv("--surface"), "stroke-width": 2 }, s);
+      });
+      const cross = el("line", { x1: 0, x2: 0, y1: T, y2: H - B, stroke: cssv("--text-2"), "stroke-width": 1, "stroke-dasharray": "3 3", visibility: "hidden" }, s);
+      const ov = el("rect", { x: L, y: T, width: W - L - R, height: H - T - B, fill: "transparent" }, s);
+      const at = (e) => {
+        const r = s.getBoundingClientRect();
+        const px = ((e.clientX - r.left) / r.width) * W;
+        return Math.max(0, Math.min(xs.length - 1, Math.round(((px - L) / (W - L - R)) * (xs.length - 1))));
+      };
+      ov.addEventListener("mousemove", (e) => {
+        const i = at(e);
+        cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
+        const rows = series.map((se) => [se, se.values[i]]).filter((r) => r[1] != null).sort((a, b) => b[1] - a[1]);
+        showTip(`<b>${esc(xs[i])}</b><br>` + rows.map(([se, v]) =>
+          `<span class="sw" style="background:${se.color}"></span>${esc(se.name)}: ${Math.round(v * 10) / 10}${se.raw ? " <span class='m'>(" + se.raw[i] + ")</span>" : ""}`).join("<br>"), e);
+      });
+      ov.addEventListener("mouseleave", () => { cross.setAttribute("visibility", "hidden"); hideTip(); });
+      h.appendChild(s);
+    });
+  }
+  /** Tiny inline trend line for tiles. */
+  function spark(vals, color, w = 110, h = 30) {
+    const v = vals.filter((x) => x != null);
+    if (v.length < 2) return "";
+    const lo = Math.min(...v), hi = Math.max(...v), d = hi - lo || 1;
+    const pts = v.map((x, i) => `${((i / (v.length - 1)) * (w - 4) + 2).toFixed(1)},${(h - 3 - ((x - lo) / d) * (h - 6)).toFixed(1)}`).join(" ");
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+  }
+  const pct = (v) => (v == null ? "–" : (v > 0 ? "+" : "") + (Math.round(v * 10) / 10) + "%");
+  const pctCls = (v) => (v == null ? "m" : v >= 0 ? "up" : "dn");
+  const PAL = ["--s1", "--s2", "--s3", "--s4", "--s5"];
+  async function getTrack() {
+    if (!window.DESK_TRACK) {
+      try { await loadScript("data/trackers.js"); } catch (e) { window.DESK_TRACK = { trackers: {}, markets: { series: [] }, weekly: { reviews: [] } }; }
+    }
+    return window.DESK_TRACK;
+  }
+  const median = (a) => { const b = a.slice().sort((p, q) => p - q), m = b.length >> 1; return b.length ? (b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2) : null; };
+  const isWatch = (name) => watchlist().some((w) => sameCo(name, w) || String(name).toLowerCase().includes(w.toLowerCase()));
   const legend = (items) => `<div class="legend">${items.map(([n, c]) => `<span><i style="background:${c}"></i>${esc(n)}</span>`).join("")}</div>`;
 
   /* ------------------------------------------------------------ story popover */
@@ -518,6 +587,8 @@
     const items = (mentions[key] || []).sort((a, c) => (a.s.when < c.s.when ? 1 : -1))
       .filter((x) => { const k = x.s.title.toLowerCase().replace(/\W+/g, ""); if (seenT.has(k)) return false; seenT.add(k); return true; });
     const call = cc.calls.filter((c) => sameCo(c.company, name)).sort((a, c) => (a.date < c.date ? 1 : -1))[0];
+    const TK = (await getTrack()).trackers || {};
+    const tk = ["results", "orders", "calls"].map((k) => (TK[k] || []).filter((r) => sameCo(r.company, name)));
     const decks = (await getPres()).filter((d) => sameCo(d.company, name) || (call && d.code === call.code)).slice(0, 5);
     const p = items.filter((x) => x.s.sent === "+").length, n = items.filter((x) => x.s.sent === "-").length;
     view.innerHTML = `<h1>${esc(key)}</h1><div class="sub"><a href="#companies">All companies</a> · ${plural(items.length, "story")} in the last ${plural(briefs.length, "brief")} · ${p}▲ ${n}▼</div>
@@ -531,6 +602,11 @@
           ${call.checks.length ? `<div class="warn">Highlighted figures weren't found word-for-word in the transcript - check them in the PDF.</div>` : ""}
           ${keyFigures(call)}${call.html}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p>` : `<div class="m">No concall summary for this company yet.</div>`}</div>
       </div>
+      ${tk.some((x) => x.length) ? `<div class="card"><h2>From the trackers</h2><ul class="list">
+        ${tk[0].map((r) => `<li><div class="t">Results ${esc(r.quarter)}: revenue ${r.revenue == null ? "–" : "Rs " + fmtM(r.revenue) + " cr"} (<span class="${pctCls(r.rev_yoy)}">${pct(r.rev_yoy)}</span>), net profit ${r.profit == null ? "–" : "Rs " + fmtM(r.profit) + " cr"} (<span class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</span>)${r.read ? " · " + esc(r.read) : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
+        ${tk[1].map((r) => `<li><div class="t">Order: ${r.value == null ? "" : "Rs " + fmtM(r.value) + " cr "}${esc(r.client ? "from " + r.client : "")} ${esc(r.what)}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
+        ${tk[2].map((r) => `<li><div class="t">${esc(r.broker)}: ${esc(r.rating)}${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}${r.action ? " (" + esc(r.action) + ")" : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
+      </ul></div>` : ""}
       ${decks.length ? `<div class="card"><h2>Investor presentations</h2><ul class="list">${decks.map((d) => `<li>
         <div class="t"><a href="${esc(d.pdf)}" target="_blank" rel="noopener">${esc(d.title || "Investor presentation")}</a></div>
         <div class="src">${when(d.when)} · PDF on BSE</div></li>`).join("")}</ul></div>` : ""}`;
@@ -722,6 +798,191 @@
     $("#tq").oninput = draw; draw();
   }
 
+  /* ------------------------------------------------------------ markets */
+  async function pageMarkets() {
+    const D = await getTrack();
+    const M = (D.markets && D.markets.series) || [], T = D.trackers || {}, WK = (D.weekly && D.weekly.reviews) || [];
+    const PER = { "1W": 7, "1M": 30, "3M": 91, "6M": 182, "1Y": 366 };
+    let per = store.get("mkper", "3M"); if (!PER[per]) per = "3M";
+    const known = new Set(M.map((x) => x.sym));
+    let sel = store.get("mksel", ["^NSEI", "BZ=F", "CT=F", "INR=X"]).filter((x) => known.has(x));
+    const lastDate = M.reduce((a, x) => (x.pts.length && x.pts[x.pts.length - 1][0] > a ? x.pts[x.pts.length - 1][0] : a), "");
+    const startOf = () => { const d = new Date(lastDate || Date.now()); d.setDate(d.getDate() - PER[per]); return d.toISOString().slice(0, 10); };
+    const baseAt = (se, from) => { let b = se.pts[0]; for (const p of se.pts) { if (p[0] <= from) b = p; else break; } return b; };
+    const chg = (se, from) => { const b = baseAt(se, from), l = se.pts[se.pts.length - 1]; return b && l && b[1] ? (l[1] / b[1] - 1) * 100 : null; };
+    const day = (se) => { const n = se.pts.length; return n > 1 ? (se.pts[n - 1][1] / se.pts[n - 2][1] - 1) * 100 : null; };
+    const fmtP = (v) => (Math.abs(v) >= 1000 ? fmt(Math.round(v)) : Math.abs(v) >= 10 ? (Math.round(v * 10) / 10).toLocaleString("en-IN") : (Math.round(v * 100) / 100).toString());
+    const today = new Date().toISOString().slice(0, 10);
+    const groups = [...new Set(M.map((x) => x.group))];
+
+    const ahead = new Date(); ahead.setDate(ahead.getDate() + 14);
+    const aheadS = ahead.toISOString().slice(0, 10);
+    const ev = (T.events || []).filter((e) => e.when >= today && e.when <= aheadS);
+    const cal = (T.calendar || []).filter((e) => e.when >= today && e.when <= aheadS);
+    const daysA = [...new Set(ev.map((e) => e.when).concat(cal.map((e) => e.when)))].sort();
+
+    view.innerHTML = `<h1>Markets</h1>
+      <div class="sub">Indices, commodities, the rupee and yields${D.markets && D.markets.updated ? " · prices as of " + esc(D.markets.updated.replace("T", " ")) : ""} · tap any tile to add it to the comparison</div>
+      <div class="filters seg" id="per">${Object.keys(PER).map((k) => `<button class="${k === per ? "on" : ""}" data-p="${k}">${k}</button>`).join("")}</div>
+      ${M.length ? `<div class="card"><h2>Compare <span class="m">rebased to 100 at the start of the period</span></h2><div id="mleg"></div><div id="mc"></div></div>
+      <div class="card"><h2>Indian sector indices <span class="m">change over ${per} · tap to see that sector's peers</span></h2><div id="ms"></div></div>
+      ${groups.filter((g) => g !== "India indices").map((g) => `<div class="card"><h2>${esc(g)}</h2><div class="tiles mk" data-g="${esc(g)}"></div></div>`).join("")}
+      <div class="card"><h2>India indices</h2><div class="tiles mk" data-g="India indices"></div></div>` : `<div class="card m">Prices haven't been collected yet - they arrive with the next update.</div>`}
+      <div class="card"><h2>Week ahead <span class="m">next two weeks: results board meetings (BSE) and dated events from the news</span></h2>
+        ${cal.length ? `<div id="calc"></div>` : ""}
+        ${daysA.length ? daysA.map((d) => {
+          const e1 = ev.filter((e) => e.when === d), c1 = cal.filter((e) => e.when === d).sort((a, b) => isWatch(b.company) - isWatch(a.company) || a.company.localeCompare(b.company));
+          const nice = new Date(d + "T00:00").toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" });
+          return `<div class="wa"><div class="wd">${nice}</div><div>
+            ${e1.map((e) => `<div>• ${esc(e.what)} <a class="m" href="${esc(e.link)}" target="_blank" rel="noopener">source</a></div>`).join("")}
+            ${c1.length ? `<details><summary>${plural(c1.length, "company")} ${c1.length === 1 ? "reports" : "report"} results${c1.some((c) => isWatch(c.company)) ? " · ★ watchlist" : ""}</summary>
+              <div class="m">${c1.map((c) => `${isWatch(c.company) ? "★ " : ""}<a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a>${c.sector ? " (" + esc(c.sector) + ")" : ""}`).join(" · ")}</div></details>` : ""}
+          </div></div>`;
+        }).join("") : `<div class="m">Nothing dated yet - the calendar fills as companies file board-meeting notices and the news mentions dates.</div>`}</div>
+      ${WK.length ? `<div class="card md"><h2>Week in review <span class="m">${esc(WK[0].start)} to ${esc(WK[0].end)}</span></h2>
+        ${WK[0].one ? `<p><b>${esc(WK[0].one)}</b></p>` : ""}${WK[0].html}
+        ${WK.length > 1 ? `<details><summary>Earlier weeks</summary>${WK.slice(1).map((w) => `<h3>${esc(w.start)} to ${esc(w.end)}</h3>${w.one ? `<p><b>${esc(w.one)}</b></p>` : ""}${w.html}`).join("")}</details>` : ""}</div>` : ""}`;
+
+    if (cal.length) {
+      const byDay = {};
+      cal.forEach((c) => { byDay[c.when] = (byDay[c.when] || 0) + 1; });
+      barChart($("#calc"), Object.keys(byDay).sort().map((d) => ({
+        label: new Date(d + "T00:00").toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" }), value: byDay[d],
+        note: cal.filter((c) => c.when === d).slice(0, 8).map((c) => esc(c.company)).join(", ") + (byDay[d] > 8 ? " …" : "") })), "board meeting");
+    }
+    $("#per").onclick = (e) => { const b = e.target.closest("button"); if (b) { store.set("mkper", b.dataset.p); route(); } };
+    if (!M.length) return;
+    const from = startOf();
+    const color = (i) => cssv(PAL[i % PAL.length]);
+    const drawCompare = () => {
+      const ss = sel.map((sym) => M.find((x) => x.sym === sym)).filter(Boolean);
+      $("#mleg").innerHTML = ss.length ? legend(ss.map((se, i) => [se.name, color(i)])) : `<div class="m">Tap tiles below to compare up to 5 series.</div>`;
+      if (!ss.length) { $("#mc").innerHTML = ""; return; }
+      const xs = [...new Set(ss.flatMap((se) => se.pts.filter((p) => p[0] >= from).map((p) => p[0])))].sort();
+      const series = ss.map((se, i) => {
+        const b = baseAt(se, from)[1]; let j = 0, last = null; const raw = [];
+        const values = xs.map((d) => {
+          while (j < se.pts.length && se.pts[j][0] <= d) { last = se.pts[j][1]; j++; }
+          raw.push(last == null ? "" : fmtP(last) + " " + se.unit);
+          return last == null ? null : (last / b) * 100;
+        });
+        return { name: se.name, color: color(i), values, raw };
+      });
+      indexChart($("#mc"), xs, series, "index");
+    };
+    drawCompare();
+    const idx = M.filter((x) => x.group === "India indices").map((se) => ({ se, v: chg(se, from) })).filter((r) => r.v != null).sort((a, b) => b.v - a.v);
+    rankChart($("#ms"), idx.map(({ se, v }) => ({ label: se.name, value: Math.round(v * 10) / 10, color: cssv(v >= 0 ? "--pos" : "--neg"),
+      note: se.note ? esc(se.note) : "", onclick: se.note ? () => go("#peers/" + encodeURIComponent(se.note)) : null })), "% over " + per);
+    view.querySelectorAll(".tiles.mk").forEach((box) => {
+      box.innerHTML = M.filter((x) => x.group === box.dataset.g).map((se) => {
+        const c = chg(se, from), d1 = day(se), last = se.pts[se.pts.length - 1];
+        const vals = se.pts.filter((p) => p[0] >= from).map((p) => p[1]);
+        return `<button class="tile mt ${sel.includes(se.sym) ? "on" : ""}" data-sym="${esc(se.sym)}" title="${esc(se.note || se.name)}">
+          <div class="k">${esc(se.name)}</div>
+          <div class="v" style="font-size:18px">${fmtP(last[1])} <span class="m" style="font-size:11px">${esc(se.unit)}</span></div>
+          <div class="ch"><span class="${pctCls(d1)}">${pct(d1)} 1D</span> · <span class="${pctCls(c)}">${pct(c)} ${per}</span></div>
+          ${spark(vals, cssv(c == null || c >= 0 ? "--pos" : "--neg"))}
+          ${se.note ? `<div class="nt">${esc(se.note)}</div>` : ""}</button>`;
+      }).join("");
+    });
+    view.querySelectorAll(".tile.mt").forEach((t) => t.addEventListener("click", () => {
+      const sym = t.dataset.sym;
+      sel = sel.includes(sym) ? sel.filter((x) => x !== sym) : sel.concat(sym).slice(-5);
+      store.set("mksel", sel);
+      view.querySelectorAll(".tile.mt").forEach((x) => x.classList.toggle("on", sel.includes(x.dataset.sym)));
+      redraws.length = 0; drawCompare();
+      rankChart($("#ms"), idx.map(({ se, v }) => ({ label: se.name, value: Math.round(v * 10) / 10, color: cssv(v >= 0 ? "--pos" : "--neg"),
+        note: se.note ? esc(se.note) : "", onclick: se.note ? () => go("#peers/" + encodeURIComponent(se.note)) : null })), "% over " + per);
+    }));
+  }
+
+  /* ------------------------------------------------------------ trackers */
+  async function pageTrackers(which) {
+    const D = await getTrack();
+    const T = D.trackers || {};
+    which = ["results", "orders", "calls"].includes(which) ? which : "results";
+    const names = { results: "Results", orders: "Order wins", calls: "Broker calls" };
+    const rows0 = T[which] || [];
+    const secs = [...new Set(rows0.map((r) => r.sector || "Other"))].sort();
+    const st = store.get("trk-" + which, { q: "", sec: "", w: false, days: 30 });
+    view.innerHTML = `<h1>Trackers</h1>
+      <div class="sub">Pulled from the news by AI and kept for four months${T.updated ? " · updated " + esc(T.updated.replace("T", " ")) : ""} · check figures in the linked story before acting</div>
+      <div class="card secnav">${Object.keys(names).map((k) => `<a href="#trackers/${k}" class="${k === which ? "on" : ""}">${names[k]} <span class="m">${(T[k] || []).length}</span></a>`).join("")}</div>
+      <div class="filters"><input type="search" id="kq" placeholder="Search company" value="${esc(st.q)}">
+        <select id="ks"><option value="">All sectors</option>${secs.map((x) => `<option ${x === st.sec ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>
+        <select id="kd">${[7, 30, 90, 120].map((d) => `<option value="${d}" ${d === st.days ? "selected" : ""}>Last ${d} days</option>`).join("")}</select>
+        <label class="m"><input type="checkbox" id="kw" ${st.w ? "checked" : ""}> Watchlist only</label></div>
+      <div id="kbody"></div>`;
+    const draw = () => {
+      redraws.length = 0;
+      Object.assign(st, { q: $("#kq").value, sec: $("#ks").value, w: $("#kw").checked, days: Number($("#kd").value) });
+      store.set("trk-" + which, st);
+      const cut = new Date(); cut.setDate(cut.getDate() - st.days); const cutS = cut.toISOString().slice(0, 10);
+      const rows = rows0.filter((r) => r.date >= cutS && (!st.q || r.company.toLowerCase().includes(st.q.toLowerCase()))
+        && (!st.sec || (r.sector || "Other") === st.sec) && (!st.w || isWatch(r.company)));
+      const body = $("#kbody");
+      const open = (c) => () => go("#companies/" + encodeURIComponent(c));
+      const src = (r) => `<a class="m" href="${esc(r.link)}" target="_blank" rel="noopener" title="${esc(r.title)}">source</a>`;
+      if (!rows.length) { body.innerHTML = empty("Nothing here yet for these filters."); return; }
+      if (which === "results") {
+        const both = rows.filter((r) => r.rev_yoy != null && r.pat_yoy != null);
+        const clamp = (v) => Math.max(-100, Math.min(300, v));
+        const RC = { strong: "--pos", weak: "--neg", mixed: "--s4", "in-line": "--neu" };
+        const bySec = {};
+        rows.filter((r) => r.pat_yoy != null).forEach((r) => { (bySec[r.sector || "Other"] = bySec[r.sector || "Other"] || []).push(r.pat_yoy); });
+        const secRows = Object.entries(bySec).filter(([, v]) => v.length >= 2).map(([k, v]) => ({ k, m: median(v), n: v.length })).sort((a, b) => b.m - a.m);
+        body.innerHTML = `${both.length >= 3 ? `<div class="card"><h2>Sales growth vs profit growth <span class="m">YoY %, one dot per company · dashed lines = medians</span></h2>
+            ${legend([["Strong", cssv("--pos")], ["Weak", cssv("--neg")], ["Mixed", cssv("--s4")], ["In line / not stated", cssv("--neu")]])}<div id="kr1"></div>
+            <div class="help">Top-right of the dashed lines: sales and profit both growing faster than the typical company. High sales growth with low profit growth points to margin pressure. Values beyond -100% / +300% are drawn at the edge. Tap a dot to open the company.</div></div>` : ""}
+          ${secRows.length ? `<div class="card"><h2>Median profit growth by sector <span class="m">YoY %, sectors with 2+ results</span></h2><div id="kr2"></div></div>` : ""}
+          <div class="card"><h2>${plural(rows.length, "result")}</h2><div class="tw"><table class="tt"><tr><th>Company</th><th>Qtr</th><th>Revenue Rs cr</th><th>YoY</th><th>Net profit Rs cr</th><th>YoY</th><th>Read</th><th>Date</th></tr>
+            ${rows.map((r) => `<tr><td>${isWatch(r.company) ? "★ " : ""}<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a><div class="m">${esc(r.sector || "")}</div></td>
+              <td>${esc(r.quarter)}</td><td>${r.revenue == null ? "–" : fmtM(r.revenue)}</td><td class="${pctCls(r.rev_yoy)}">${pct(r.rev_yoy)}</td>
+              <td>${r.profit == null ? "–" : fmtM(r.profit)}</td><td class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</td>
+              <td>${r.read ? `<span class="rd ${esc(r.read.replace(/\W/g, ""))}">${esc(r.read)}</span>` : ""}</td><td>${esc(r.date.slice(5))} ${src(r)}</td></tr>`).join("")}</table></div></div>`;
+        if (both.length >= 3) scatterChart($("#kr1"), both.map((r) => ({ label: r.company + (r.quarter ? " · " + r.quarter : ""), x: clamp(r.rev_yoy), y: clamp(r.pat_yoy),
+          color: cssv(RC[r.read] || "--neu"), note: r.read ? "Read: " + esc(r.read) : "", onclick: open(r.company) })), "Revenue growth YoY %", "Profit growth YoY %");
+        if (secRows.length) rankChart($("#kr2"), secRows.map((x) => ({ label: x.k, value: Math.round(x.m * 10) / 10, color: cssv(x.m >= 0 ? "--pos" : "--neg"),
+          note: plural(x.n, "company"), onclick: () => { $("#ks").value = x.k; draw(); } })), "% median profit growth");
+      } else if (which === "orders") {
+        const val = rows.filter((r) => r.value != null).sort((a, b) => b.value - a.value);
+        const bySec = {};
+        val.forEach((r) => { const k = r.sector || "Other"; bySec[k] = (bySec[k] || 0) + r.value; });
+        body.innerHTML = `${val.length ? `<div class="card"><h2>Biggest orders <span class="m">Rs crore</span></h2><div id="ko1"></div></div>
+          <div class="card"><h2>Order value by sector <span class="m">Rs crore, total in the period</span></h2><div id="ko2"></div></div>` : ""}
+          <div class="card"><h2>${plural(rows.length, "order")}</h2><div class="tw"><table class="tt"><tr><th>Company</th><th>Rs cr</th><th>Client</th><th>For</th><th>Date</th></tr>
+          ${rows.map((r) => `<tr><td>${isWatch(r.company) ? "★ " : ""}<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a><div class="m">${esc(r.sector || "")}</div></td>
+            <td>${r.value == null ? "–" : fmtM(r.value)}</td><td>${esc(r.client)}</td><td>${esc(r.what)}</td><td>${esc(r.date.slice(5))} ${src(r)}</td></tr>`).join("")}</table></div></div>`;
+        if (val.length) {
+          barChart($("#ko1"), val.slice(0, 15).map((r) => ({ label: r.company, value: Math.round(r.value), note: esc([r.client, r.what].filter(Boolean).join(" · ")), onclick: open(r.company) })), "Rs crore");
+          barChart($("#ko2"), Object.entries(bySec).sort((a, b) => b[1] - a[1]).slice(0, 15).map(([k, v]) => ({ label: k, value: Math.round(v), onclick: () => { $("#ks").value = k; draw(); } })), "Rs crore");
+        }
+      } else {
+        const posA = (r) => /upgrade|initiate|raise/.test(r.action) && !/sell|reduce|underweight/i.test(r.rating) || (/buy|add|outperform|overweight/i.test(r.rating) && !/downgrade|cut/.test(r.action));
+        const negA = (r) => /downgrade|cut/.test(r.action) || /sell|reduce|underperform|underweight/i.test(r.rating);
+        const bySec = {};
+        rows.forEach((r) => { const k = r.sector || "Other"; const o = bySec[k] = bySec[k] || { pos: 0, neg: 0, neu: 0 }; if (negA(r)) o.neg++; else if (posA(r)) o.pos++; else o.neu++; });
+        const cnt = {};
+        rows.forEach((r) => { cnt[r.company] = (cnt[r.company] || 0) + 1; });
+        body.innerHTML = `<div class="card"><h2>Brokers' tilt by sector <span class="m">bullish calls → · ← bearish calls</span></h2><div id="kc1"></div></div>
+          <div class="card"><h2>Most-discussed stocks <span class="m">number of broker calls</span></h2><div id="kc2"></div></div>
+          <div class="card"><h2>${plural(rows.length, "call")}</h2><div class="tw"><table class="tt"><tr><th>Company</th><th>Broker</th><th>Rating</th><th>Target Rs</th><th>Action</th><th>Date</th></tr>
+          ${rows.map((r) => `<tr><td>${isWatch(r.company) ? "★ " : ""}<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a><div class="m">${esc(r.sector || "")}</div></td>
+            <td>${esc(r.broker)}</td><td class="${negA(r) ? "dn" : posA(r) ? "up" : ""}">${esc(r.rating)}</td><td>${r.target == null ? "–" : fmt(Math.round(r.target))}</td>
+            <td>${esc(r.action)}</td><td>${esc(r.date.slice(5))} ${src(r)}</td></tr>`).join("")}</table></div></div>`;
+        divergingChart($("#kc1"), Object.entries(bySec).sort((a, b) => (b[1].pos + b[1].neg) - (a[1].pos + a[1].neg)).slice(0, 15).map(([k, o]) => ({
+          label: k, pos: o.pos, neg: o.neg, neu: o.neu, total: o.pos + o.neg + o.neu,
+          tip: `<b>${esc(k)}</b><br>${o.pos} bullish · ${o.neg} bearish · ${o.neu} neutral<br><span class="m">Tap to filter</span>`,
+          onclick: () => { $("#ks").value = k; draw(); } })));
+        barChart($("#kc2"), Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => ({ label: k, value: v,
+          note: esc(rows.filter((r) => r.company === k).map((r) => r.broker + ": " + r.rating).slice(0, 5).join("<br>")), onclick: open(k) })), "call");
+      }
+    };
+    ["kq", "ks", "kw", "kd"].forEach((id) => { $("#" + id).addEventListener(id === "kq" ? "input" : "change", draw); });
+    draw();
+  }
+
   async function pagePresentations() {
     const all = await getPres();
     if (!all.length) { view.innerHTML = empty("No investor presentations collected yet - they're picked up from BSE on every update."); return; }
@@ -807,6 +1068,8 @@
       else if (tab === "concalls") await pageConcalls(arg || null);
       else if (tab === "peers") await pagePeers(arg || null);
       else if (tab === "presentations") await pagePresentations();
+      else if (tab === "markets") await pageMarkets();
+      else if (tab === "trackers") await pageTrackers(arg || null);
       else if (tab === "tab") await pageTab(arg);
       else if (tab === "archive") pageArchive();
       else if (tab === "settings") pageSettings();

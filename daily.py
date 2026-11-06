@@ -52,6 +52,9 @@ def step_news():
         C.fetch_presentations()
     except Exception as e:  # BSE is sometimes slow - the news brief is already saved
         say(f"  presentations skipped this time: {str(e)[:150]}")
+    say("\nPrices, results calendar, week in review ...")
+    import trackers
+    trackers.step()
 
 
 def watchlist():

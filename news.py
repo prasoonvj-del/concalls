@@ -519,7 +519,7 @@ def load_cache():
     c = json.loads(CACHE_FILE.read_text(encoding="utf-8")) if CACHE_FILE.exists() else {}
     if c.get("version") != 2:  # v1 recorded negative stories as neutral - start fresh
         c = {"next_id": c.get("next_id", 1), "ids": c.get("ids", {}), "version": 2}
-    for k in ("ids", "tags", "explain", "sections", "seen"):
+    for k in ("ids", "tags", "explain", "sections", "seen", "extract"):
         c.setdefault(k, {})
     c.setdefault("next_id", 1)
     return c
@@ -528,7 +528,7 @@ def load_cache():
 def save_cache(c, now):
     cutoff = (now - dt.timedelta(days=3)).isoformat()
     old = {k for k, v in c["seen"].items() if v < cutoff}
-    for part in ("ids", "tags", "explain", "seen"):
+    for part in ("ids", "tags", "explain", "seen", "extract"):
         c[part] = {k: v for k, v in c[part].items() if k not in old}
     CACHE_FILE.write_text(json.dumps(c, ensure_ascii=False), encoding="utf-8")
 
@@ -602,6 +602,13 @@ def build(conf=None, log_failed=True):
         say(f"    failed: {e}")
         top = []
     time.sleep(pool.pause)
+
+    try:  # results, order wins, broker calls and dated events -> data/trackers.json
+        import trackers
+        trackers.update(relevant, pool, cache, now_utc)
+        save_cache(cache, now_utc)
+    except Exception as e:
+        say(f"  trackers skipped: {str(e)[:150]}")
 
     sections = {}
     todo = [c for c in cats if len(by_cat[c]) >= conf["min_stories"]]
@@ -707,22 +714,21 @@ STORIES:
 """
 
 
-SPORTS_PROMPT = """You are writing the "{tab}" page of a sports fan's daily briefing, from {n} stories in
+SPORTS_PROMPT = """You are writing the "{tab}" page of a cricket fan's daily briefing, from {n} stories in
 sports media over the last {hours} hours. Each story has an id in brackets, the headline, a short
-description (often missing) and how many outlets covered it.
+description (often missing) and how many outlets covered it. The reader follows CRICKET ONLY:
+ignore every story about other sports.
 
 Write in Markdown, using ONLY these stories. Put the ids after each point, like [12] or [12, 40].
-Merge duplicates (live-score updates of the same match are one item). Indian teams and players first.
+Merge duplicates (live-score updates of the same match are one item). India first.
 
-**In one line:** <the biggest sports story today>
+**In one line:** <the biggest cricket story today>
 ### Results & scores
 (bullets: match, result, standout performance - only what the stories state)
 ### The big stories
-(3-6 bullets: selection, injuries, records, controversies, transfers)
+(3-6 bullets: selection, injuries, records, controversies, IPL/WPL auctions and transfers)
 ### Coming up
-(bullets: matches or events in the next few days mentioned in the stories. Skip if none.)
-### Business of sport
-(bullets: broadcast rights, sponsorship, leagues, listed companies involved. Skip if none.)
+(bullets: matches or series in the next few days mentioned in the stories. Skip if none.)
 
 STORIES:
 """

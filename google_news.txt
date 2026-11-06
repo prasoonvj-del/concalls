@@ -46,6 +46,5 @@ Google: Global | China economy stimulus markets
 
 Tab: Sports | India cricket
 Tab: Sports | BCCI OR IPL OR "Ranji Trophy"
-Tab: Sports | India football OR hockey OR badminton OR chess OR tennis
-Tab: Sports | Olympics OR "Asian Games" OR "Commonwealth Games" India athletes
-Tab: Sports | sports rights OR sponsorship India league
+Tab: Sports | cricket Test OR ODI OR T20 match report
+Tab: Sports | "Women's cricket" OR WPL India
