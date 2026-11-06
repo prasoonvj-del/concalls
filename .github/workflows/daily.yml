@@ -1,12 +1,28 @@
 name: Daily update
 
 on:
-  # Runs are started by a scheduled task on Claude that updates run-now.txt at
-  # 05:10, 07:10, 10:10, 14:10, 16:10, 19:10, 22:10 IST - GitHub's own timer kept dropping runs.
-  # "news-only" in run-now.txt = news refresh; anything else = full update (news + concalls).
-  workflow_dispatch:         # "Run workflow" button for a manual refresh
+  # Three independent starters, so a missed timer never leaves the site stale:
+  #  1. cron-job.org calls the "workflow_dispatch" address at 05:10, 07:10, 10:10, 14:10,
+  #     16:10, 19:10, 22:10 IST with mode = full (05:10, 14:10) or news-only (the rest).
+  #  2. A Claude scheduled task edits run-now.txt at the same times (push trigger).
+  #  3. GitHub's own timer, 30 minutes later, as a last fallback.
+  # Whichever arrives second is skipped if the site was updated less than 60 minutes ago.
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "full = news + concalls, news-only = news refresh"
+        default: full
+        type: choice
+        options: [full, news-only]
+      force:
+        description: "Run even if the site was updated in the last hour"
+        default: false
+        type: boolean
   push:
-    paths: ["run-now.txt"]   # editing this file also starts a run
+    paths: ["run-now.txt"]
+  schedule:
+    # 30 min after each IST slot (times in UTC): 05:40, 07:40, 10:40, 14:40, 16:40, 19:40, 22:40 IST
+    - cron: "10 0,2,5,9,11,14,17 * * *"
 
 permissions:
   contents: write
@@ -18,7 +34,42 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+      mode: ${{ steps.check.outputs.mode }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: run-now.txt
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          EVENT="${{ github.event_name }}"
+          MODE=full
+          if [ "$EVENT" = "workflow_dispatch" ]; then MODE="${{ inputs.mode }}"; fi
+          if [ "$EVENT" = "push" ] && grep -q "news-only" run-now.txt; then MODE=news-only; fi
+          if [ "$EVENT" = "schedule" ]; then
+            H=$(date -u +%H); if [ "$H" != "00" ] && [ "$H" != "09" ]; then MODE=news-only; fi
+          fi
+          GO=true
+          if [ "${{ inputs.force }}" != "true" ]; then
+            LAST=$(gh api repos/${{ github.repository }}/commits/data --jq .commit.committer.date 2>/dev/null || echo "")
+            if [ -n "$LAST" ]; then
+              AGE=$(( ($(date -u +%s) - $(date -u -d "$LAST" +%s)) / 60 ))
+              echo "Site data last updated $AGE minutes ago"
+              if [ "$AGE" -lt 60 ]; then GO=false; echo "Updated recently - skipping this start"; fi
+            fi
+          fi
+          echo "Event=$EVENT mode=$MODE go=$GO"
+          echo "go=$GO" >> "$GITHUB_OUTPUT"
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+
   update:
+    needs: gate
+    if: needs.gate.outputs.go == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 100
     environment:
@@ -54,7 +105,7 @@ jobs:
         run: |
           mkdir -p data
           MODE=
-          if [ "${{ github.event_name }}" = "push" ] && grep -q "news-only" run-now.txt; then MODE=--news-only; fi
+          if [ "${{ needs.gate.outputs.mode }}" = "news-only" ]; then MODE=--news-only; fi
           python daily.py $MODE 2>&1 | tee data/last_run.log
 
       - name: Save data (one commit, replaced each run - the repository doesn't grow)
