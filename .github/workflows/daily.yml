@@ -2,9 +2,9 @@ name: Daily update
 
 on:
   schedule:   # times are UTC; GitHub may start a run 10-30 minutes late
-    - cron: "40 23 * * *"            # 05:10 IST  full update (news + concalls)
-    - cron: "40 13 * * *"            # 19:10 IST  full update (concalls filed during the day)
-    - cron: "40 1,4,7,10,16 * * *"   # 07:10, 10:10, 13:10, 16:10, 22:10 IST  news refresh
+    - cron: "40 23 * * *"            # 05:10 IST  full update (news + concalls filed overnight)
+    - cron: "40 8 * * *"             # 14:10 IST  full update - just after Gemini's free quota resets (13:30 IST)
+    - cron: "40 1,4,10,13,16 * * *"  # 07:10, 10:10, 16:10, 19:10, 22:10 IST  news refresh
   workflow_dispatch:         # "Run workflow" button for a manual refresh
   push:
     paths: ["run-now.txt"]   # editing this file also starts a run
@@ -49,10 +49,12 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROK_API_KEY: ${{ secrets.GROK_API_KEY }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           PYTHONUNBUFFERED: "1"
         run: |
           mkdir -p data
-          if [ "${{ github.event.schedule }}" = "40 1,4,7,10,16 * * *" ]; then MODE=--news-only; else MODE=; fi
+          if [ "${{ github.event.schedule }}" = "40 1,4,10,13,16 * * *" ]; then MODE=--news-only; else MODE=; fi
           python daily.py $MODE 2>&1 | tee data/last_run.log
 
       - name: Save data (one commit, replaced each run - the repository doesn't grow)

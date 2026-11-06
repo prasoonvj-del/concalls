@@ -224,9 +224,20 @@ def recheck_figures(lib):
     say("  done.")
 
 
+def report_ai():
+    """Which AI providers this run can use (names only - never the keys)."""
+    for section, label in (("ai", "Main AI"), ("backup", "Backup AI")):
+        try:
+            ai = C.AI(section)
+            say(f"{label}: {ai.provider} ({ai.url.split('/')[2]})")
+        except C.AIError as e:
+            say(f"{label}: not set up ({e})")
+
+
 def main():
     import sys
     conf = settings()
+    report_ai()
     if "--news-only" in sys.argv:
         conf["concalls"] = False
     if "--concalls-only" in sys.argv:

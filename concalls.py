@@ -236,21 +236,32 @@ class AI:
         # Most free tiers other than Gemini accept only a few thousand tokens per request;
         # longer transcripts are then summarised in parts (0 = no limit).
         self.max_input_tokens = int(c.get("max_input_tokens", "0" if section == "ai" else "5000") or 0)
+        if os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY", "").startswith("xai-") or \
+                c.get("api_key", "").strip().startswith("xai-"):
+            self.max_input_tokens = 0 if section != "ai" else self.max_input_tokens  # Grok takes whole transcripts
         # In the cloud (GitHub Actions) keys come from encrypted secrets, not config.ini
-        env_key = os.environ.get("GEMINI_API_KEY" if section == "ai" else "GROQ_API_KEY", "").strip()
+        names = ("GEMINI_API_KEY",) if section == "ai" else ("GROQ_API_KEY", "GROK_API_KEY", "XAI_API_KEY")
+        env_key = next((os.environ[n].strip() for n in names if os.environ.get(n, "").strip()), "")
         self.key = env_key or c.get("api_key", "").strip()
         default_url = ("https://generativelanguage.googleapis.com/v1beta/openai" if section == "ai"
                        else "https://api.groq.com/openai/v1")
         self.url = c.get("base_url", default_url).strip().rstrip("/")
-        self.model = c.get("model", "auto" if section == "ai" else "openai/gpt-oss-120b").strip()
+        self.model = c.get("model", "auto").strip()
+        # the key tells us the provider, whatever config.ini says (Groq: gsk_..., xAI Grok: xai-...)
+        if self.key.startswith("xai-"):
+            self.url, self.provider = "https://api.x.ai/v1", "xAI Grok"
+            if "x.ai" not in c.get("base_url", ""):
+                self.model = "auto"
+        elif self.key.startswith("gsk_"):
+            self.url, self.provider = "https://api.groq.com/openai/v1", "Groq"
+        else:
+            self.provider = "Gemini" if "generativelanguage" in self.url else self.url.split("/")[2]
         self.max_wait = int(c.get("max_wait_seconds", "180") or 180)
         self.pause = float(c.get("seconds_between_calls", "5") or 5)
         self.max_chars = int(c.get("max_transcript_chars", "250000") or 250000)
         self.reasoning = "generativelanguage" in self.url or self.model.startswith("gemini")
         if section != "ai" and (not self.key or "PASTE" in self.key.upper()):
             raise AIError("no backup configured")
-        if section != "ai" and self.model.lower() == "auto" and "generativelanguage" not in self.url:
-            raise AIError("backup needs a model name in config.ini")
         if not self.key or "PASTE" in self.key.upper():
             raise AIError("No API key yet. Open config.ini in Notepad and paste your key after api_key = "
                           "(free Gemini key: https://aistudio.google.com/apikey)")
@@ -272,7 +283,22 @@ class AI:
             raise AIError(f"Couldn't list models ({r.status_code}): {self._msg(r)}")
         ids = [m.get("id", "").replace("models/", "") for m in r.json().get("data", [])]
         if not any("gemini" in i for i in ids):
-            raise AIError("Set a model name in config.ini (model = ...) for this provider.")
+            # Groq / xAI / others: take the best general chat model on offer
+            prefs = ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "moonshotai/kimi-k2-instruct",
+                     "qwen/qwen3-32b", "openai/gpt-oss-20b"]
+            skip = ("whisper", "tts", "guard", "embed", "image", "vision", "audio", "playai", "compound", "imagine")
+            chat = [i for i in ids if not any(x in i.lower() for x in skip)]
+            pick = next((p for p in prefs if p in chat), None)
+            if not pick and any("grok" in i for i in chat):
+                grok = [i for i in chat if "grok" in i]
+                pick = next((i for i in grok if "fast" in i), None) or next((i for i in grok if "mini" in i), None) or grok[0]
+            if not pick and chat:
+                pick = chat[0]
+            if not pick:
+                raise AIError(f"No usable model found for {self.url}")
+            self.model, self.backups = pick, [i for i in prefs if i in chat and i != pick]
+            say(f"  Using {pick}")
+            return
         self.reasoning = True  # ask Gemini to think briefly - much faster
         bad = ("image", "tts", "audio", "live", "embed", "robotics", "computer", "preview", "exp", "native")
         flash = [i for i in ids if "flash" in i and not any(b in i for b in bad)]
