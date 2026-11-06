@@ -1,10 +1,9 @@
 name: Daily update
 
 on:
-  schedule:   # times are UTC; GitHub may start a run 10-30 minutes late
-    - cron: "40 23 * * *"            # 05:10 IST  full update (news + concalls filed overnight)
-    - cron: "40 8 * * *"             # 14:10 IST  full update - just after Gemini's free quota resets (13:30 IST)
-    - cron: "40 1,4,10,13,16 * * *"  # 07:10, 10:10, 16:10, 19:10, 22:10 IST  news refresh
+  # Runs are started by a scheduled task on Claude that updates run-now.txt at
+  # 05:10, 07:10, 10:10, 14:10, 16:10, 19:10, 22:10 IST - GitHub's own timer kept dropping runs.
+  # "news-only" in run-now.txt = news refresh; anything else = full update (news + concalls).
   workflow_dispatch:         # "Run workflow" button for a manual refresh
   push:
     paths: ["run-now.txt"]   # editing this file also starts a run
@@ -54,7 +53,8 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           mkdir -p data
-          if [ "${{ github.event.schedule }}" = "40 1,4,10,13,16 * * *" ]; then MODE=--news-only; else MODE=; fi
+          MODE=
+          if [ "${{ github.event_name }}" = "push" ] && grep -q "news-only" run-now.txt; then MODE=--news-only; fi
           python daily.py $MODE 2>&1 | tee data/last_run.log
 
       - name: Save data (one commit, replaced each run - the repository doesn't grow)
