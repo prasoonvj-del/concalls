@@ -91,12 +91,12 @@ def settings():
 
     # separate tabs: "Tab name = folder, folder; Tab name = folder"
     tabs = {}
-    for part in n.get("tabs", "Tech = Tech; Auto = Auto").split(";"):
+    for part in n.get("tabs", "Tech = Tech; Auto = Auto; Sports = Sports").split(";"):
         name, _, folders = part.partition("=")
         if name.strip() and folders.strip():
             tabs[name.strip()] = [f.strip().lower() for f in folders.split(",") if f.strip()]
     return {"opml": n.get("opml", "feeds.opml").strip(),
-            "skip": [x.lower() for x in lst("skip_folders", "Sports, Financial History")],
+            "skip": [x.lower() for x in lst("skip_folders", "Financial History")],
             "tabs": tabs,
             "google": n.get("google_news", "yes").strip().lower() in ("yes", "true", "1", "on"),
             "hours": int(n.get("hours", "24") or 24),
@@ -104,8 +104,9 @@ def settings():
             "min_stories": int(n.get("min_stories_for_digest", "3") or 3)}
 
 
-def google_feeds():
-    """Google News searches (google_news.txt + watchlist companies), as extra feeds for the main brief."""
+def google_feeds(tab=None):
+    """Google News searches from google_news.txt (+ watchlist companies) as extra feeds.
+    Lines starting "Tab: <name> |" feed that tab instead of the main brief."""
     from urllib.parse import quote_plus
     out, path = [], C.BASE / "google_news.txt"
     rows = []
@@ -114,9 +115,15 @@ def google_feeds():
             line = line.strip()
             if line and not line.startswith("#") and "|" in line:
                 folder, _, q = line.partition("|")
-                rows.append((folder.strip(), q.strip()))
-    import daily  # watchlist companies get their own search
-    rows += [("Google: Watchlist", f'"{w}"') for w in daily.watchlist()]
+                folder = folder.strip()
+                is_tab = folder.lower().startswith("tab:")
+                if tab is None and not is_tab:
+                    rows.append((folder, q.strip()))
+                elif tab is not None and is_tab and folder[4:].strip().lower() == tab.lower():
+                    rows.append((tab, q.strip()))
+    if tab is None:
+        import daily  # watchlist companies get their own search
+        rows += [("Google: Watchlist", f'"{w}"') for w in daily.watchlist()]
     for folder, q in rows:
         url = f"https://news.google.com/rss/search?q={quote_plus(q + ' when:1d')}&hl=en-IN&gl=IN&ceid=IN:en"
         out.append({"url": url, "name": f"Google News: {q}", "folder": folder})
@@ -700,10 +707,33 @@ STORIES:
 """
 
 
+SPORTS_PROMPT = """You are writing the "{tab}" page of a sports fan's daily briefing, from {n} stories in
+sports media over the last {hours} hours. Each story has an id in brackets, the headline, a short
+description (often missing) and how many outlets covered it.
+
+Write in Markdown, using ONLY these stories. Put the ids after each point, like [12] or [12, 40].
+Merge duplicates (live-score updates of the same match are one item). Indian teams and players first.
+
+**In one line:** <the biggest sports story today>
+### Results & scores
+(bullets: match, result, standout performance - only what the stories state)
+### The big stories
+(3-6 bullets: selection, injuries, records, controversies, transfers)
+### Coming up
+(bullets: matches or events in the next few days mentioned in the stories. Skip if none.)
+### Business of sport
+(bullets: broadcast rights, sponsorship, leagues, listed companies involved. Skip if none.)
+
+STORIES:
+"""
+
+
 def build_tab(tab, folders, opml, conf, pool, cache, offset):
     """A separate tab (e.g. Tech, Auto): no per-story AI tagging - stories are merged and ranked by
     coverage, then ONE AI digest. Reused while little has changed, so it costs ~1 request a run."""
     feeds = [f for f in read_opml(opml, []) if f["folder"].lower() in folders]
+    if conf["google"]:
+        feeds += google_feeds(tab)
     if not feeds:
         return {"name": tab, "html": "", "one": "", "stories": [], "stats": {"feeds": 0}}
     say(f"\n{tab} tab: reading {len(feeds)} feeds ...")
@@ -724,7 +754,8 @@ def build_tab(tab, folders, opml, conf, pool, cache, offset):
         say(f"  little new - keeping the earlier {tab} digest")
     elif top:
         try:
-            text = ask_fitted(pool, TAB_PROMPT.format(tab=tab, n=len(top), hours=conf["hours"]),
+            prompt = SPORTS_PROMPT if "sport" in tab.lower() else TAB_PROMPT
+            text = ask_fitted(pool, prompt.format(tab=tab, n=len(top), hours=conf["hours"]),
                               [story_line(s) for s in top], label=f"{tab} digest")
             cache["sections"]["tab:" + tab] = {"keys": keys, "text": text,
                                                "idmap": {str(s["id"]): s["key"] for s in top}}

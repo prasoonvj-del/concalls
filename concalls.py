@@ -626,6 +626,55 @@ def download_list(days):
     say(f"\nDone: {new} new transcripts. Library: {len(lib['calls'])} transcripts from {len(companies)} companies.")
 
 
+PRES_FILE = DATA / "presentations.json"
+
+
+def is_presentation(row):
+    text = " ".join(str(row.get(k) or "") for k in ("NEWSSUB", "HEADLINE", "SUBCATNAME")).lower()
+    return "presentation" in text and str(row.get("ATTACHMENTNAME") or "").lower().endswith(".pdf")
+
+
+def fetch_presentations(days=2, keep_days=45):
+    """Investor presentations filed on BSE (what blogs like Alpha Ideas repost), kept for ~6 weeks."""
+    old = json.loads(PRES_FILE.read_text(encoding="utf-8")) if PRES_FILE.exists() else []
+    have = {p["id"] for p in old}
+    to = dt.date.today()
+    frm = to - dt.timedelta(days=days)
+    rows = [r for r in bse_query(frm, to, "Investor Presentation") if is_presentation(r)]
+    lib = load_lib()
+    new = 0
+    for row in rows:
+        att = row["ATTACHMENTNAME"]
+        pid = f"{row.get('SCRIP_CD')}_{Path(att).stem}"[:120]
+        if pid in have:
+            continue
+        try:
+            d = dt.datetime.fromisoformat(str(row.get("NEWS_DT") or row.get("DT_TM"))[:19])
+        except ValueError:
+            continue
+        code = str(row.get("SCRIP_CD"))
+        old.append({"id": pid, "code": code, "company": (row.get("SLONGNAME") or "").strip() or code,
+                    "when": d.strftime("%Y-%m-%dT%H:%M"), "title": clean_head(row),
+                    "sector": lib["sectors"].get(code, ""), "pdf": BSE_PDF[0] + att})
+        have.add(pid)
+        new += 1
+    cutoff = (to - dt.timedelta(days=keep_days)).isoformat()
+    old = sorted([p for p in old if p["when"] >= cutoff], key=lambda p: p["when"], reverse=True)
+    for p in old:  # fill in sectors learnt since
+        if not p.get("sector"):
+            p["sector"] = lib["sectors"].get(p["code"], "")
+    DATA.mkdir(parents=True, exist_ok=True)
+    PRES_FILE.write_text(json.dumps(old, ensure_ascii=False), encoding="utf-8")
+    say(f"  investor presentations: {new} new, {len(old)} kept")
+    return old
+
+
+def clean_head(row):
+    t = str(row.get("HEADLINE") or row.get("NEWSSUB") or "").strip()
+    t = re.sub(r"\s+", " ", t)
+    return t[:220]
+
+
 def get_text(call):
     """Downloads the PDF and extracts the text. Returns (text, problem)."""
     txt = TXT_DIR / f"{call['id']}.txt"

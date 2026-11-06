@@ -33,6 +33,12 @@
     }
     return window.DESK_CONCALLS;
   }
+  async function getPres() {
+    if (!window.DESK_PRES) {
+      try { await loadScript("data/presentations.js"); } catch (e) { window.DESK_PRES = []; }
+    }
+    return window.DESK_PRES;
+  }
   const dates = () => IDX.briefs.map((b) => b.date);
   const latest = () => (IDX.briefs.length ? IDX.briefs[IDX.briefs.length - 1].date : null);
   let current = null;
@@ -512,6 +518,7 @@
     const items = (mentions[key] || []).sort((a, c) => (a.s.when < c.s.when ? 1 : -1))
       .filter((x) => { const k = x.s.title.toLowerCase().replace(/\W+/g, ""); if (seenT.has(k)) return false; seenT.add(k); return true; });
     const call = cc.calls.filter((c) => sameCo(c.company, name)).sort((a, c) => (a.date < c.date ? 1 : -1))[0];
+    const decks = (await getPres()).filter((d) => sameCo(d.company, name) || (call && d.code === call.code)).slice(0, 5);
     const p = items.filter((x) => x.s.sent === "+").length, n = items.filter((x) => x.s.sent === "-").length;
     view.innerHTML = `<h1>${esc(key)}</h1><div class="sub"><a href="#companies">All companies</a> · ${plural(items.length, "story")} in the last ${plural(briefs.length, "brief")} · ${p}▲ ${n}▼</div>
       <div class="grid g2">
@@ -523,7 +530,10 @@
           ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""} <span class="m">· ${esc(call.sector)} · filed ${esc(call.date)}</span></div>
           ${call.checks.length ? `<div class="warn">Highlighted figures weren't found word-for-word in the transcript - check them in the PDF.</div>` : ""}
           ${keyFigures(call)}${call.html}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p>` : `<div class="m">No concall summary for this company yet.</div>`}</div>
-      </div>`;
+      </div>
+      ${decks.length ? `<div class="card"><h2>Investor presentations</h2><ul class="list">${decks.map((d) => `<li>
+        <div class="t"><a href="${esc(d.pdf)}" target="_blank" rel="noopener">${esc(d.title || "Investor presentation")}</a></div>
+        <div class="src">${when(d.when)} · PDF on BSE</div></li>`).join("")}</ul></div>` : ""}`;
     view.querySelectorAll("[data-sid]").forEach((d) => d.addEventListener("click", async () => {
       currentBrief = await getBrief(d.dataset.storyDate); current = currentBrief.date; openStory(d.dataset.sid);
     }));
@@ -712,6 +722,43 @@
     $("#tq").oninput = draw; draw();
   }
 
+  async function pagePresentations() {
+    const all = await getPres();
+    if (!all.length) { view.innerHTML = empty("No investor presentations collected yet - they're picked up from BSE on every update."); return; }
+    const wl = watchlist();
+    const isW = (d) => wl.some((w) => sameCo(d.company, w) || d.company.toLowerCase().includes(w.toLowerCase()));
+    const secs = [...new Set(all.map((d) => d.sector || "Unsorted"))].sort();
+    const days = [...new Set(all.map((d) => d.when.slice(0, 10)))];
+    const perDay = days.slice(0, 14).reverse().map((d) => ({ label: d.slice(5), value: all.filter((x) => x.when.startsWith(d)).length }));
+    view.innerHTML = `<h1>Investor presentations</h1>
+      <div class="sub">Filed by companies on BSE · ${plural(all.length, "deck")} over the last ${plural(days.length, "day")} · newest first${wl.length ? " · ★ = your watchlist" : ""}</div>
+      <div class="card"><h2>Decks filed per day</h2><div id="pd"></div></div>
+      <div class="card"><div class="filters"><input type="search" id="pq" placeholder="Search company or title">
+        <select id="ps"><option value="">All sectors</option>${secs.map((x) => `<option>${esc(x)}</option>`).join("")}</select>
+        <label class="m"><input type="checkbox" id="pw"> Watchlist only</label></div>
+        <ul class="list" id="pl"></ul></div>`;
+    const box = $("#pd");
+    const W = Math.max(280, box.clientWidth || 600), H = 120, bw = W / perDay.length;
+    const mx = Math.max(1, ...perDay.map((r) => r.value));
+    box.innerHTML = `<svg viewBox="0 0 ${W} ${H + 18}" width="100%" role="img" aria-label="Decks per day">${perDay.map((r, i) => {
+      const h = (r.value / mx) * H;
+      return `<rect x="${i * bw + 3}" y="${H - h}" width="${bw - 6}" height="${h}" rx="3" fill="var(--s1)"><title>${r.label}: ${r.value}</title></rect>
+        <text x="${i * bw + bw / 2}" y="${H + 14}" text-anchor="middle" class="lab" style="font-size:10px">${r.label}</text>`;
+    }).join("")}</svg>`;
+    const draw = () => {
+      const q = $("#pq").value.toLowerCase(), sec = $("#ps").value, wo = $("#pw").checked;
+      const rows = all.filter((d) => (!q || (d.company + " " + d.title).toLowerCase().includes(q))
+        && (!sec || (d.sector || "Unsorted") === sec) && (!wo || isW(d)))
+        .sort((a, b) => (isW(b) - isW(a)) || (a.when < b.when ? 1 : -1));
+      $("#pl").innerHTML = rows.slice(0, 400).map((d) => `<li>
+        <div class="t">${isW(d) ? "★ " : ""}<a href="#companies/${encodeURIComponent(d.company)}">${esc(d.company)}</a> ·
+          <a href="${esc(d.pdf)}" target="_blank" rel="noopener">open deck (PDF)</a></div>
+        <div class="src">${esc(d.sector || "Unsorted")} · ${when(d.when)}${d.title ? " · " + esc(d.title.slice(0, 140)) : ""}</div></li>`).join("")
+        || `<li class="m">Nothing matches.</li>`;
+    };
+    $("#pq").oninput = draw; $("#ps").onchange = draw; $("#pw").onchange = draw; draw();
+  }
+
   function pageArchive() {
     if (!IDX.briefs.length) { view.innerHTML = empty("No briefs yet."); return; }
     view.innerHTML = `<h1>Archive</h1><div class="sub">Every morning brief (about three months are kept)</div>
@@ -759,6 +806,7 @@
       else if (tab === "companies") await pageCompanies(arg || null);
       else if (tab === "concalls") await pageConcalls(arg || null);
       else if (tab === "peers") await pagePeers(arg || null);
+      else if (tab === "presentations") await pagePresentations();
       else if (tab === "tab") await pageTab(arg);
       else if (tab === "archive") pageArchive();
       else if (tab === "settings") pageSettings();

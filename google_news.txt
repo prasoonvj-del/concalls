@@ -1,11 +1,16 @@
 # Google News searches added to the morning brief (last 24 hours each).
 # One per line:  Folder | search words   (Google News search syntax works: OR, quotes, -word)
+# Lines starting "Tab: Sports |" (or Tech, Auto) feed that tab instead of the main brief.
 # Your [cloud] watchlist companies are searched automatically too.
 
 Google: Markets | Sensex Nifty today
 Google: Markets | FII DII flows India equities
 Google: Markets | "block deal" OR "bulk deal" NSE BSE
 Google: Markets | IPO India subscription OR listing
+Google: Markets | site:cnbctv18.com market stocks
+Google: Markets | site:cnbctv18.com brokerage target price
+Google: Corporate | site:cnbctv18.com results OR earnings OR management
+Google: Global | site:cnbc.com markets stocks
 Google: Corporate | "bags order" OR "order win" OR "wins order" India
 Google: Corporate | Q2 results net profit India company
 Google: Corporate | rating upgrade OR downgrade CRISIL OR ICRA OR CARE
@@ -38,3 +43,9 @@ Google: Global | Federal Reserve rates markets
 Google: Global | crude oil prices Brent
 Google: Global | US tariffs India trade deal
 Google: Global | China economy stimulus markets
+
+Tab: Sports | India cricket
+Tab: Sports | BCCI OR IPL OR "Ranji Trophy"
+Tab: Sports | India football OR hockey OR badminton OR chess OR tennis
+Tab: Sports | Olympics OR "Asian Games" OR "Commonwealth Games" India athletes
+Tab: Sports | sports rights OR sponsorship India league

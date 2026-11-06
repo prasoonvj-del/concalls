@@ -47,6 +47,11 @@ def settings():
 def step_news():
     say("\n================ NEWS BRIEF ================")
     news.build()
+    try:
+        say("\nInvestor presentations filed on BSE ...")
+        C.fetch_presentations()
+    except Exception as e:  # BSE is sometimes slow - the news brief is already saved
+        say(f"  presentations skipped this time: {str(e)[:150]}")
 
 
 def watchlist():

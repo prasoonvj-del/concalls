@@ -87,11 +87,13 @@ def build(quiet=False):
                       "companies": dict(sorted(comp.items(), key=lambda kv: -kv[1])[:40])})
     cc = concall_data()
     (data / "concalls.js").write_text(_js("DESK_CONCALLS", None, cc), encoding="utf-8")
+    pres = json.loads(C.PRES_FILE.read_text(encoding="utf-8")) if C.PRES_FILE.exists() else []
+    (data / "presentations.js").write_text(_js("DESK_PRES", None, pres), encoding="utf-8")
     tabs = []
     if files:
         tabs = [t["name"] for t in json.loads(files[-1].read_text(encoding="utf-8")).get("tabs", []) if t.get("stories")]
     meta = {"briefs": index, "tabs": tabs, "updated": dt.datetime.now(IST).isoformat(timespec="minutes"),
-            "concalls": len(cc["calls"]), "overviews": len(cc["overviews"])}
+            "concalls": len(cc["calls"]), "overviews": len(cc["overviews"]), "presentations": len(pres)}
     (data / "index.js").write_text(_js("DESK_INDEX", None, meta), encoding="utf-8")
     # cache-busting: every build gets new file addresses, so a refresh always shows the latest edition
     stamp = dt.datetime.now(IST).strftime("%Y%m%d%H%M")
@@ -103,6 +105,7 @@ def build(quiet=False):
     js = (PUBLIC / "app.js").read_text(encoding="utf-8")
     js = js.replace('"data/brief-" + date + ".js"', '"data/brief-" + date + ".js?v=' + stamp + '"')
     js = js.replace('loadScript("data/concalls.js")', 'loadScript("data/concalls.js?v=' + stamp + '")')
+    js = js.replace('loadScript("data/presentations.js")', 'loadScript("data/presentations.js?v=' + stamp + '")')
     (PUBLIC / "app.js").write_text(js, encoding="utf-8")
     if not quiet:
         C.say(f"Website built: {PUBLIC / 'index.html'}  ({len(index)} briefs, {len(cc['calls'])} concall summaries)")
