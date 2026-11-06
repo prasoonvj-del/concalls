@@ -146,3 +146,5 @@ h2 select{font-size:13px;padding:4px 8px;margin-left:6px}
 .tt td{padding:6px 8px;border-bottom:1px solid var(--line,rgba(127,127,127,.12));vertical-align:top}
 .rd{font-size:12px;padding:1px 8px;border-radius:999px;background:var(--neu);color:#222}
 .rd.strong{background:var(--pos);color:#fff}.rd.weak{background:var(--neg);color:#fff}.rd.mixed{background:var(--s4);color:#222}
+.ctx{font-size:13px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line,rgba(127,127,127,.25))}
+.ctxc{font-size:13.5px;margin:10px 0;padding:10px 12px;border-radius:10px;background:var(--surface-2,rgba(127,127,127,.08));line-height:1.55}
