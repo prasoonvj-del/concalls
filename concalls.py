@@ -569,7 +569,10 @@ def bse_query(frm, to, subcategory):
                 if r.status_code == 403:
                     raise RuntimeError("BSE refused the connection (403). Run setup.bat to install curl_cffi.")
                 r.raise_for_status()
-                js = r.json()
+                try:
+                    js = r.json()
+                except ValueError:
+                    raise ValueError(f"not JSON (HTTP {r.status_code}): {r.text[:80]!r}")
                 break
             except RuntimeError:
                 raise
@@ -640,7 +643,11 @@ def fetch_presentations(days=2, keep_days=45):
     have = {p["id"] for p in old}
     to = dt.date.today()
     frm = to - dt.timedelta(days=days)
-    rows = [r for r in bse_query(frm, to, "Investor Presentation") if is_presentation(r)]
+    try:
+        rows = [r for r in bse_query(frm, to, "Investor Presentation") if is_presentation(r)]
+    except RuntimeError as e:  # fall back to all of today's announcements, filtered
+        say(f"  presentation filter not answering ({str(e)[:80]}) - scanning today's announcements instead")
+        rows = [r for r in bse_query(to - dt.timedelta(days=1), to, "-1") if is_presentation(r)]
     lib = load_lib()
     new = 0
     for row in rows:
