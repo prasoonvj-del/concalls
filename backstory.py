@@ -71,12 +71,36 @@ def short_name(name):
 LAST_HTTP = {"status": None}
 
 
-def prices(sess, code):
+def find_symbol(sess, name, code):
+    """Yahoo ticker for a BSE company: search by name (NSE first, then BSE); numeric BSE code as a last resort."""
+    q = short_name(name)
+    for host in ("query2", "query1"):
+        try:
+            r = sess.get(f"https://{host}.finance.yahoo.com/v1/finance/search",
+                         params={"q": q, "quotesCount": 6, "newsCount": 0}, timeout=20)
+            if r.status_code != 200:
+                continue
+            quotes = [x for x in r.json().get("quotes", []) if x.get("quoteType") == "EQUITY"]
+        except Exception:
+            continue
+        want = C.norm(q)
+        def same(x):
+            got = C.norm(short_name(x.get("longname") or x.get("shortname") or ""))
+            return got and (got.startswith(want[:12]) or want.startswith(got[:12]))
+        for suffix in (".NS", ".BO"):
+            for x in quotes:
+                if x.get("symbol", "").endswith(suffix) and same(x):
+                    return x["symbol"]
+        break
+    return f"{code}.BO"
+
+
+def prices(sess, sym):
     """Weekly closes for 2 years. Returns None if Yahoo has nothing; raises RuntimeError if Yahoo is refusing us."""
     for attempt in range(3):
         for host in ("query1", "query2"):
             try:
-                r = sess.get(f"https://{host}.finance.yahoo.com/v8/finance/chart/{code}.BO",
+                r = sess.get(f"https://{host}.finance.yahoo.com/v8/finance/chart/{sym}",
                              params={"range": "2y", "interval": "1wk"}, timeout=25)
             except Exception as e:
                 LAST_HTTP["status"] = str(e)[:60]
@@ -180,7 +204,7 @@ def step(mode="full"):
         return
     lib = C.load_lib()
     store = load()
-    for k in [k for k, v in store.items() if v.get("status") == "no-price" and not v.get("v")]:
+    for k in [k for k, v in store.items() if v.get("status") == "no-price" and v.get("v", 0) < 3]:
         del store[k]  # from the first run, when Yahoo was refusing requests
     n_max, minutes = ALLOWANCE[mode]
     latest = {}
@@ -214,14 +238,17 @@ def step(mode="full"):
         if made >= n_max or time.time() > deadline:
             break
         code = c["code"]
+        sym = (store.get(code) or {}).get("sym") or find_symbol(sess, c["company"], code)
         try:
-            pts = prices(sess, code)
+            pts = prices(sess, sym)
+            if not pts and sym != f"{code}.BO":
+                pts = prices(sess, f"{code}.BO")
         except RuntimeError as e:
             say(f"  {e} - stopping here, the rest continue next update")
             break
         time.sleep(1.5)
         if not pts:
-            store[code] = {"status": "no-price", "at": today.isoformat(), "company": c["company"], "v": 2}
+            store[code] = {"status": "no-price", "at": today.isoformat(), "company": c["company"], "v": 3, "sym": sym}
             continue
         moves = big_moves(pts)
         news = headlines(c["company"])
@@ -245,7 +272,7 @@ def step(mode="full"):
         if m:
             one = m.group(1).strip()
             text = text.replace(m.group(0), "")
-        store[code] = {"status": "ok", "at": today.isoformat(), "call_date": c["date"], "company": c["company"],
+        store[code] = {"status": "ok", "at": today.isoformat(), "call_date": c["date"], "company": c["company"], "sym": sym,
                        "one": one, "html": C.md(text), "pts": pts, "moves": moves, "n_news": len(news),
                        "model": getattr(ai, "model", "")}
         made += 1
