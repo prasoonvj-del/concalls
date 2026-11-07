@@ -37,13 +37,16 @@ For each story that contains one of these facts, write one line in exactly one o
 RESULT | id | company | quarter (like Q2 FY27) | revenue Rs crore | revenue YoY % | net profit Rs crore | profit YoY % | read: strong / weak / mixed / in-line
 ORDER | id | company | order value Rs crore | client or awarding body | what the order is for (max 8 words)
 CALL | id | brokerage | company | rating (Buy / Sell / Hold / Add / Reduce / Neutral) | target price Rs | action (upgrade / downgrade / initiate / maintain / raise target / cut target)
-EVENT | id | date YYYY-MM-DD | what happens (max 10 words: RBI policy, CPI data, IPO opens, Fed decision, results of a company...)
+EVENT | id | date YYYY-MM-DD | type (india-policy / india-data / global / company) | what happens (max 10 words) | who in India it affects (sectors or listed companies, max 10 words)
 
 Rules:
 - Only facts the story states. Never guess numbers. A company name must be the listed company.
 - Convert amounts to Rs crore (1 lakh crore = 100000 crore; USD at Rs {fx}/$, EUR at Rs {eur}/EUR).
 - Numbers only in number fields (no "Rs", "cr" or "%"). A loss is a negative profit.
-- EVENT only for things happening on or after today with a clear date.
+- EVENT only for things happening on or after today with a clear date, and only if it can move Indian markets:
+  government / RBI / SEBI / GST Council / ministry decisions, economic data, central banks abroad, OPEC, big IPOs,
+  results or events of LARGE Indian companies, or of foreign companies with a clear Indian link
+  (e.g. Bloom Energy -> MTAR Technologies, Walmart -> home-textile exporters). Not small-company results.
 - A story can give several lines (e.g. two brokerages). Stories with none of these facts: write nothing.
 - Output only the lines, nothing else.
 
@@ -189,7 +192,11 @@ def update(stories, pool, cache, now_utc):
                 d = p[1]
                 if not re.match(r"^\d{4}-\d{2}-\d{2}$", d):
                     continue
-                rec = dict(base, when=d, what=p[2] if p[2] != "-" else "")
+                if p[2].lower().strip() in ("india-policy", "india-data", "global", "company"):
+                    typ, what, impact = p[2].lower().strip(), p[3], p[4]
+                else:  # older 3-field format
+                    typ, what, impact = "", p[2], "-"
+                rec = dict(base, when=d, what=what if what != "-" else "", kind=typ, impact=impact if impact != "-" else "")
                 uid = f"E|{d}|{re.sub(r'[^a-z0-9]', '', rec['what'].lower())[:40]}"
                 if not rec["what"]:
                     continue
@@ -408,9 +415,160 @@ def weekly_review(pool=None):
     WEEKLY_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
 
 
+# ============================================================================ agenda: what's coming that can move Indian stocks
+
+# Foreign companies whose results / events move Indian listed companies (link shown on the site)
+GLOBAL_LINKS = {
+    "BE": "Bloom Energy - MTAR Technologies (makes its fuel-cell units)",
+    "NVDA": "Nvidia - AI demand read-through: Netweb Technologies, data-centre and IT services stocks",
+    "MSFT": "Microsoft - AI/cloud capex read-through for Indian IT and data-centre plays",
+    "GOOGL": "Alphabet - AI/cloud capex read-through for Indian IT and data-centre plays",
+    "AMZN": "Amazon - cloud capex and retail demand read-through for Indian IT",
+    "META": "Meta - AI capex read-through for data-centre plays",
+    "ACN": "Accenture - demand outlook read-through for TCS, Infosys, HCLTech, Wipro",
+    "CTSH": "Cognizant - demand read-through for Indian IT services",
+    "TSM": "TSMC - semiconductor cycle read-through for Indian electronics and semiconductor plays",
+    "WMT": "Walmart - orders for home-textile and apparel exporters (Welspun Living, Indo Count, Gokaldas)",
+    "TGT": "Target - orders for home-textile exporters (Welspun Living, Indo Count, Himatsingka)",
+    "COST": "Costco - US retail demand read-through for textile exporters",
+    "GEV": "GE Vernova - power-equipment cycle: GE Vernova T&D India, Azad Engineering, Triveni Turbine",
+    "BA": "Boeing - aerospace supply chain: Azad Engineering, Dynamatic, PTC Industries",
+    "LLY": "Eli Lilly - GLP-1 drugs: read-through for Indian generic and CDMO pharma",
+    "NVO": "Novo Nordisk - GLP-1 drugs: read-through for Indian generic and CDMO pharma",
+    "UL": "Unilever - parent of Hindustan Unilever",
+    "DEO": "Diageo - parent of United Spirits",
+    "BTI": "British American Tobacco - large shareholder in ITC",
+    "GSK": "GSK - parent of GlaxoSmithKline Pharmaceuticals (India)",
+    "SNY": "Sanofi - parent of Sanofi India",
+    "ABT": "Abbott - parent of Abbott India",
+    "HON": "Honeywell - parent of Honeywell Automation India",
+    "CMI": "Cummins - parent of Cummins India",
+    "WHR": "Whirlpool - parent of Whirlpool of India",
+    "LIN": "Linde - parent of Linde India",
+    "CL": "Colgate-Palmolive - parent of Colgate-Palmolive (India)",
+    "PG": "Procter & Gamble - parent of P&G Hygiene and Gillette India",
+    "MMM": "3M - parent of 3M India",
+    "TKR": "Timken - parent of Timken India",
+    "BP": "BP - parent of Castrol India",
+    "XOM": "ExxonMobil - crude and refining margins: Reliance, OMCs",
+    "TSLA": "Tesla - EV demand read-through for Indian EV component makers",
+}
+
+# usual Indian release days (marked "usual date" on the site - exact days can shift)
+INDIA_RULES = [
+    (1, "Monthly auto sales (Maruti, M&M, Tata Motors, Bajaj, Hero...)", "india-data", "Automobiles, Auto Components"),
+    (1, "HSBC India manufacturing PMI", "india-data", "Capital Goods, Metals, overall market"),
+    (12, "India CPI inflation (MoSPI)", "india-data", "RBI rate expectations: Banks, NBFCs, Real Estate, Autos"),
+    (14, "India WPI inflation", "india-data", "Input costs: Chemicals, Metals, FMCG margins"),
+    (15, "India trade data (exports, imports, trade deficit)", "india-data", "Rupee; exporters (IT, Textiles, Pharma)"),
+    (28, "India industrial production (IIP)", "india-data", "Capital Goods, Cement, Power, Metals"),
+]
+
+MACRO_NOTES = [
+    (r"fomc|federal funds|fed chair|powell|fed ", "FII flows, rupee, IT & banks"),
+    (r"cpi|inflation", "US rate expectations -> FII flows, IT stocks"),
+    (r"non-farm|employment|unemployment|jobless", "US rate expectations -> FII flows"),
+    (r"gdp", "global growth outlook"),
+    (r"pmi|ism", "global demand: metals, chemicals, exporters"),
+    (r"ecb|lagarde", "euro, exporters to Europe (textiles, auto components)"),
+    (r"boj|ueda", "yen carry trade -> global risk appetite"),
+    (r"retail sales", "US consumer demand: textile & apparel exporters"),
+    (r"pce", "US inflation -> rate expectations"),
+]
+
+
+def _next_days(n):
+    t = dt.datetime.now(IST).date()
+    return [t + dt.timedelta(days=i) for i in range(n)]
+
+
+def india_usual(days=14):
+    out = []
+    for d in _next_days(days):
+        for day, what, kind, impact in INDIA_RULES:
+            if d.day == day:
+                out.append({"when": d.isoformat(), "what": what, "kind": kind, "impact": impact, "usual": True})
+        # F&O monthly expiry: last Tuesday of the month (NSE)
+        if d.weekday() == 1 and (d + dt.timedelta(days=7)).month != d.month:
+            out.append({"when": d.isoformat(), "what": "NSE monthly F&O expiry", "kind": "india-data",
+                        "impact": "volatility in heavily traded stocks", "usual": True})
+        if d.month in (2, 5, 8, 11) and (d + dt.timedelta(days=1)).month != d.month:
+            out.append({"when": d.isoformat(), "what": "India quarterly GDP data (usual: last working day)",
+                        "kind": "india-data", "impact": "whole market; cyclicals", "usual": True})
+    return out
+
+
+def global_macro():
+    """High-impact global releases (US, euro area, China, Japan, UK) for this week and next."""
+    sess = _session()
+    out = []
+    for f in ("thisweek", "nextweek"):
+        try:
+            r = sess.get(f"https://nfs.faireconomy.media/ff_calendar_{f}.json", timeout=25)
+            rows = r.json() if r.status_code == 200 else []
+        except Exception:
+            rows = []
+        for e in rows:
+            if e.get("impact") != "High" or e.get("country") not in ("USD", "EUR", "CNY", "JPY", "GBP"):
+                continue
+            try:
+                when = dt.datetime.fromisoformat(e["date"]).astimezone(IST)
+            except (KeyError, ValueError):
+                continue
+            title = f"{ {'USD': 'US', 'EUR': 'Euro area', 'CNY': 'China', 'JPY': 'Japan', 'GBP': 'UK'}[e['country']]} {e['title']}"
+            note = next((n for pat, n in MACRO_NOTES if re.search(pat, e["title"], re.I)), "global markets")
+            out.append({"when": when.strftime("%Y-%m-%d"), "time": when.strftime("%H:%M"), "what": title,
+                        "kind": "global", "impact": note})
+    return out
+
+
+def global_companies(days=14):
+    """Results dates of foreign companies with an Indian link (Nasdaq earnings calendar)."""
+    sess = _session()
+    out = []
+    for d in _next_days(days):
+        if d.weekday() > 4:
+            continue
+        try:
+            r = sess.get("https://api.nasdaq.com/api/calendar/earnings", params={"date": d.isoformat()},
+                         headers={"Accept": "application/json"}, timeout=25)
+            rows = ((r.json().get("data") or {}).get("rows") or []) if r.status_code == 200 else []
+        except Exception:
+            rows = []
+        for row in rows:
+            sym = (row.get("symbol") or "").upper()
+            if sym in GLOBAL_LINKS:
+                name, _, link = GLOBAL_LINKS[sym].partition(" - ")
+                t = row.get("time", "")
+                # US after-market results land in the Indian morning of the next day
+                land = d + dt.timedelta(days=1) if "after" in t else d
+                out.append({"when": land.isoformat(), "what": f"{name} results",
+                            "kind": "global-co", "impact": link,
+                            "time": "before Indian open" if "after" in t else ("evening IST" if "pre" in t else "")})
+        time.sleep(0.4)
+    return out
+
+
+def update_agenda():
+    data = load(TRACK_FILE, {})
+    agenda, ok = [], []
+    for name, fn in (("India usual releases", india_usual), ("global data", global_macro), ("global companies", global_companies)):
+        try:
+            got = fn()
+            agenda += got
+            ok.append(f"{name} {len(got)}")
+        except Exception as e:
+            ok.append(f"{name} failed ({str(e)[:60]})")
+    if not any(a["kind"] != "india-data" or not a.get("usual") for a in agenda) and data.get("agenda"):
+        agenda = [a for a in data["agenda"] if a["when"] >= dt.date.today().isoformat()] or agenda  # keep last good one
+    data["agenda"] = sorted(agenda, key=lambda a: (a["when"], a.get("time", "")))
+    TRACK_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    say("  agenda: " + ", ".join(ok))
+
+
 def step(pool=None):
     """Everything here that doesn't depend on today's stories (called from daily.py)."""
-    for name, fn in (("prices", update_markets), ("results calendar", update_calendar)):
+    for name, fn in (("prices", update_markets), ("agenda", update_agenda), ("results calendar", update_calendar)):
         try:
             fn()
         except Exception as e:

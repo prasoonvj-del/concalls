@@ -1026,10 +1026,41 @@
 
     const ahead = new Date(); ahead.setDate(ahead.getDate() + 14);
     const aheadS = ahead.toISOString().slice(0, 10);
-    const ev = (T.events || []).filter((e) => e.when >= today && e.when <= aheadS);
+    // agenda: India policy & data, global data, foreign companies with Indian links, big Indian companies
+    const KIND = { "india-policy": ["India policy", "--s1"], "india-data": ["India data", "--s3"], global: ["Global", "--s2"],
+      "global-co": ["Global company", "--s4"], company: ["Company", "--s5"] };
+    const NIFTY = ["Reliance Industries", "HDFC Bank", "ICICI Bank", "Infosys", "Tata Consultancy Services", "Bharti Airtel", "ITC", "State Bank of India",
+      "Larsen & Toubro", "Kotak Mahindra Bank", "Axis Bank", "Hindustan Unilever", "Bajaj Finance", "Bajaj Finserv", "Maruti Suzuki", "Mahindra & Mahindra",
+      "Sun Pharmaceutical", "HCL Technologies", "Titan Company", "Asian Paints", "UltraTech Cement", "NTPC", "Power Grid Corporation", "Tata Motors",
+      "Tata Steel", "JSW Steel", "Hindalco Industries", "Oil & Natural Gas", "ONGC", "Coal India", "Adani Ports", "Adani Enterprises", "Nestle India", "Wipro",
+      "Tech Mahindra", "Cipla", "Dr. Reddy's Laboratories", "Dr Reddys Laboratories", "Grasim Industries", "Eicher Motors", "Hero MotoCorp", "Bajaj Auto",
+      "Shriram Finance", "Trent", "Bharat Electronics", "SBI Life Insurance", "HDFC Life Insurance", "Apollo Hospitals", "Tata Consumer Products",
+      "IndusInd Bank", "Jio Financial Services", "Eternal", "Zomato", "InterGlobe Aviation", "Max Healthcare", "Hindustan Aeronautics", "Bajaj Housing",
+      "Vedanta", "Hindustan Zinc", "DLF", "Avenue Supermarts", "Varun Beverages", "Godrej Consumer", "Britannia Industries", "Pidilite", "Siemens", "ABB India",
+      "Divi's Laboratories", "LTIMindtree", "Adani Green", "Adani Power", "Tata Power", "Bank of Baroda", "Punjab National Bank", "Canara Bank", "LIC", "Life Insurance Corporation"]
+      .map((x) => norm(x));
+    const big = (n) => isWatch(n) || NIFTY.some((x) => { const y = norm(n); return y === x || (y.startsWith(x) && /^(ltd|limited|corp|corporation|co|company|india)?$/.test(y.slice(x.length))); });
+    const guessKind = (w) => /\b(rbi|sebi|gst|government|ministry|cabinet|parliament|budget|niti|irdai|trai|policy|auction|repo)\b/i.test(w) && !/\b(us|fed|ecb|usda|china|japan)\b/i.test(w) ? "india-policy"
+      : /\b(fed|fomc|us |usda|ecb|boj|china|opec|nasdaq|wall street|treasury)\b/i.test(w + " ") ? "global"
+      : /\b(cpi|wpi|inflation|gdp|iip|pmi|trade data|muhurat|holiday|expiry|trading session)\b/i.test(w) ? "india-data" : "company";
+    const tok = (t) => new Set(t.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length > 2));
+    const same = (a, b) => { const x = tok(a), y = tok(b); let n = 0; x.forEach((w) => { if (y.has(w)) n++; }); return n / Math.max(1, Math.min(x.size, y.size)) >= 0.6; };
+    const items = [];
+    (T.agenda || []).filter((e) => e.when >= today && e.when <= aheadS).forEach((e) => items.push(e));
+    (T.events || []).filter((e) => e.when >= today && e.when <= aheadS && e.what).forEach((e) => {
+      if (e.kind === "company" && !big(e.what) && !(e.impact || "").length) return;
+      if (!e.kind && /results?\b/i.test(e.what) && !big(e.what)) return;   // older facts: skip small-company results
+      if (items.some((x) => x.when === e.when && same(x.what, e.what))) return;
+      // the news confirms a usual-date release (e.g. "retail inflation data" = CPI): keep one line, now with a source
+      const SYN = [/cpi|retail inflation|consumer price/i, /wpi|wholesale/i, /iip|industrial (output|production)/i, /trade (data|deficit)|exports/i, /gdp/i, /pmi/i, /auto sales/i];
+      const g = SYN.find((r) => r.test(e.what));
+      const u = g && /^india/.test(guessKind(e.what)) && items.find((x) => x.usual && x.when === e.when && g.test(x.what));
+      if (u) { u.usual = false; u.link = e.link; return; }
+      items.push(Object.assign({}, e, { kind: e.kind || guessKind(e.what) }));
+    });
     const cal = (T.calendar || []).filter((e) => e.when >= today && e.when <= aheadS);
-    const daysA = [...new Set(ev.map((e) => e.when).concat(cal.map((e) => e.when)))].sort();
-
+    const daysA = [...new Set(items.map((e) => e.when).concat(cal.map((e) => e.when)))].sort();
+    const kf = store.get("wakind", "");
     view.innerHTML = `<h1>Markets</h1>
       <div class="sub">Indices, commodities, the rupee and yields${D.markets && D.markets.updated ? " · prices as of " + esc(D.markets.updated.replace("T", " ")) : ""} · tap any tile to add it to the comparison</div>
       <div class="filters seg" id="per">${Object.keys(PER).map((k) => `<button class="${k === per ? "on" : ""}" data-p="${k}">${k}</button>`).join("")}</div>
@@ -1037,28 +1068,35 @@
       <div class="card"><h2>Indian sector indices <span class="m">change over ${per} · tap to see that sector's peers</span></h2><div id="ms"></div></div>
       ${groups.filter((g) => g !== "India indices").map((g) => `<div class="card"><h2>${esc(g)}</h2><div class="tiles mk" data-g="${esc(g)}"></div></div>`).join("")}
       <div class="card"><h2>India indices</h2><div class="tiles mk" data-g="India indices"></div></div>` : `<div class="card m">Prices haven't been collected yet - they arrive with the next update.</div>`}
-      <div class="card"><h2>Week ahead <span class="m">next two weeks: results board meetings (BSE) and dated events from the news</span></h2>
-        ${cal.length ? `<div id="calc"></div>` : ""}
-        ${daysA.length ? daysA.map((d) => {
-          const e1 = ev.filter((e) => e.when === d), c1 = cal.filter((e) => e.when === d).sort((a, b) => isWatch(b.company) - isWatch(a.company) || a.company.localeCompare(b.company));
-          const nice = new Date(d + "T00:00").toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" });
-          return `<div class="wa"><div class="wd">${nice}</div><div>
-            ${e1.map((e) => `<div>• ${esc(e.what)} <a class="m" href="${esc(e.link)}" target="_blank" rel="noopener">source</a></div>`).join("")}
-            ${c1.length ? `<div><b>${plural(c1.length, "company")} ${c1.length === 1 ? "reports" : "report"} results:</b>
-              <span class="m">${c1.map((c) => `${isWatch(c.company) ? "★ " : ""}<a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a>${c.sector ? " (" + esc(c.sector) + ")" : ""}`).join(" · ")}</span></div>` : ""}
-          </div></div>`;
-        }).join("") : `<div class="m">Nothing dated yet - the calendar fills as companies file board-meeting notices and the news mentions dates.</div>`}</div>
+      <div class="card"><h2>Week ahead <span class="m">next two weeks · what can move Indian stocks</span></h2>
+        <div class="filters seg" id="wak">${[["", "All"], ["india", "India policy & data"], ["global", "Global"], ["co", "Companies"]].map(([k, l]) => `<button data-k="${k}" class="${k === kf ? "on" : ""}">${l}</button>`).join("")}</div>
+        <div id="wal"></div></div>
       ${WK.length ? `<div class="card md"><h2>Week in review <span class="m">${esc(WK[0].start)} to ${esc(WK[0].end)}</span></h2>
         ${WK[0].one ? `<p><b>${esc(WK[0].one)}</b></p>` : ""}${WK[0].html}
         ${WK.length > 1 ? `<details><summary>Earlier weeks</summary>${WK.slice(1).map((w) => `<h3>${esc(w.start)} to ${esc(w.end)}</h3>${w.one ? `<p><b>${esc(w.one)}</b></p>` : ""}${w.html}`).join("")}</details>` : ""}</div>` : ""}`;
 
-    if (cal.length) {
-      const byDay = {};
-      cal.forEach((c) => { byDay[c.when] = (byDay[c.when] || 0) + 1; });
-      barChart($("#calc"), Object.keys(byDay).sort().map((d) => ({
-        label: new Date(d + "T00:00").toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" }), value: byDay[d],
-        note: cal.filter((c) => c.when === d).slice(0, 8).map((c) => esc(c.company)).join(", ") + (byDay[d] > 8 ? " …" : "") })), "board meeting");
-    }
+    const drawAgenda = () => {
+      const k = store.get("wakind", "");
+      const keep = (e) => !k || (k === "india" ? /^india/.test(e.kind) : k === "global" ? e.kind === "global" : /co|company/.test(e.kind));
+      const rows = daysA.map((d) => {
+        const e1 = items.filter((e) => e.when === d && keep(e)).sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+        const c1 = !k || k === "co" ? cal.filter((e) => e.when === d) : [];
+        const bigCos = c1.filter((c) => big(c.company)), rest = c1.length - bigCos.length;
+        if (!e1.length && !bigCos.length) return "";
+        const nice = new Date(d + "T00:00").toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" });
+        return `<div class="wa"><div class="wd">${nice}</div><div>
+          ${e1.map((e) => `<div class="ag"><span class="kc" style="background:var(${(KIND[e.kind] || KIND.company)[1]})">${(KIND[e.kind] || KIND.company)[0]}</span>
+            <b>${esc(e.what)}</b>${e.time ? ` <span class="m">${esc(e.time)}</span>` : ""}${e.usual ? ` <span class="m" title="Usual release day - can shift by a day or two">(usual date)</span>` : ""}
+            ${e.link ? ` <a class="m" href="${esc(e.link)}" target="_blank" rel="noopener">source</a>` : ""}
+            ${e.impact ? `<div class="m">→ ${esc(e.impact)}</div>` : ""}</div>`).join("")}
+          ${bigCos.length ? `<div class="ag"><span class="kc" style="background:var(--s5)">Results</span> <b>${bigCos.map((c) => `<a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a>`).join(", ")}</b>${rest > 0 ? ` <span class="m">+ ${rest} smaller companies</span>` : ""}</div>` : ""}
+        </div></div>`;
+      }).join("");
+      $("#wal").innerHTML = rows || `<div class="m">Nothing on the agenda for this filter yet.</div>`;
+    };
+    drawAgenda();
+    $("#wak").onclick = (e) => { const b2 = e.target.closest("button"); if (!b2) return; store.set("wakind", b2.dataset.k);
+      $("#wak").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b2)); drawAgenda(); };
     $("#per").onclick = (e) => { const b = e.target.closest("button"); if (b) { store.set("mkper", b.dataset.p); route(); } };
     if (!M.length) return;
     const from = startOf();
