@@ -128,6 +128,14 @@ def build(quiet=False):
         elif x and x.get("status") == "no-text":
             d["scan"] = True
     (data / "presentations.js").write_text(_js("DESK_PRES", None, pres), encoding="utf-8")
+    import backstory as BS
+    (data / "bs").mkdir(exist_ok=True)
+    have = []
+    for code, b in BS.load().items():
+        if b.get("status") == "ok":
+            (data / "bs" / f"{code}.js").write_text(_js("DESK_BS", code, b), encoding="utf-8")
+            have.append(code)
+    (data / "bsindex.js").write_text(_js("DESK_BSIDX", None, have), encoding="utf-8")
     import trackers as TK
     track = {"trackers": TK.load(TK.TRACK_FILE, {}), "markets": TK.load(TK.MARKET_FILE, {"series": []}),
              "weekly": TK.load(TK.WEEKLY_FILE, {"reviews": []})}
@@ -149,6 +157,7 @@ def build(quiet=False):
     js = js.replace('"data/brief-" + date + ".js"', '"data/brief-" + date + ".js?v=' + stamp + '"')
     js = js.replace('loadScript("data/concalls.js")', 'loadScript("data/concalls.js?v=' + stamp + '")')
     js = js.replace('const CCV = ""', 'const CCV = "?v=' + stamp + '"')
+    js = js.replace('loadScript("data/bsindex.js")', 'loadScript("data/bsindex.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/conews.js")', 'loadScript("data/conews.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/trackers.js")', 'loadScript("data/trackers.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/presentations.js")', 'loadScript("data/presentations.js?v=' + stamp + '")')

@@ -200,3 +200,7 @@ a.badge{text-decoration:none}
 #view.slide-l{animation:slideL .22s ease-out}#view.slide-r{animation:slideR .22s ease-out}
 .ag{margin:4px 0 8px;line-height:1.45}
 .kc{display:inline-block;font-size:11px;color:#fff;border-radius:4px;padding:1px 6px;margin-right:6px;vertical-align:1px}
+.pv{margin:6px 0 10px;line-height:1.45}
+.pvg{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:0 22px}
+@media (max-width:520px){.pvg{grid-template-columns:1fr}}
+.cogrid .pvg{grid-template-columns:1fr}

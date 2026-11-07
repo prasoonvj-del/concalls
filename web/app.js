@@ -198,7 +198,7 @@
       const every = Math.ceil(xs.length / Math.max(2, Math.floor((W - L - R) / 70)));
       xs.forEach((d, i) => {
         if (i % every === 0 || i === xs.length - 1)
-          el("text", { x: x(i), y: H - 6, "text-anchor": "middle" }, s, d.slice(8) + "/" + d.slice(5, 7));
+          el("text", { x: x(i), y: H - 6, "text-anchor": "middle" }, s, xs.length > 120 ? d.slice(5, 7) + "/" + d.slice(2, 4) : d.slice(8) + "/" + d.slice(5, 7));
       });
       series.forEach((se) => {
         const pts = se.values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
@@ -328,9 +328,9 @@
   }
 
   /** Lines on a free (non-zero) scale, e.g. prices rebased to 100. */
-  function indexChart(host, xs, series, unit) {
+  function indexChart(host, xs, series, unit, bands, height) {
     mount(host, (h, W) => {
-      const H = 260, L = 44, R = 14, T = 10, B = 26;
+      const H = height || 260, L = 44, R = 14, T = 10, B = 26;
       const s = svg(W, H);
       const all = series.flatMap((se) => se.values.filter((v) => v != null));
       let lo = Math.min(...all), hi = Math.max(...all);
@@ -343,10 +343,15 @@
         el("text", { x: L - 6, y: yy + 4, "text-anchor": "end" }, s, Math.round(v));
       }
       if (lo < 100 && hi > 100 && unit === "index") el("line", { x1: L, x2: W - R, y1: y(100), y2: y(100), class: "axis" }, s);
+      (bands || []).forEach((b) => {
+        const r1 = el("rect", { x: x(b.i0), y: T, width: Math.max(3, x(b.i1) - x(b.i0)), height: H - T - B, fill: b.color, opacity: 0.16 }, s);
+        if (b.label) el("text", { x: (x(b.i0) + x(b.i1)) / 2, y: T + 11, "text-anchor": "middle", style: "font-size:10px;font-weight:600", fill: b.color }, s, b.label);
+        return r1;
+      });
       const every = Math.ceil(xs.length / Math.max(2, Math.floor((W - L - R) / 70)));
       xs.forEach((d, i) => {
         if (i % every === 0 || i === xs.length - 1)
-          el("text", { x: x(i), y: H - 6, "text-anchor": "middle" }, s, d.slice(8) + "/" + d.slice(5, 7));
+          el("text", { x: x(i), y: H - 6, "text-anchor": "middle" }, s, xs.length > 120 ? d.slice(5, 7) + "/" + d.slice(2, 4) : d.slice(8) + "/" + d.slice(5, 7));
       });
       series.forEach((se) => {
         let path = "", pen = false;
@@ -393,6 +398,12 @@
     }
     return window.DESK_TRACK;
   }
+
+  const PIVOT_LBL = { capacity: "Capacity", order: "Big order", legal: "Legal / case", approval: "Approval", strategy: "Strategy shift",
+    "m&a": "M&A", funding: "Funding / debt", rating: "Rating", management: "Management" };
+  const pivotLine = (r, showCo = true) => `<div class="pv"><span class="kc" style="background:var(${r.sent === "-" ? "--neg" : "--s1"})">${esc(PIVOT_LBL[r.type] || r.type || "Pivot")}</span>
+    ${showCo ? `<a href="#companies/${encodeURIComponent(r.company)}"><b>${esc(r.company)}</b></a> - ` : ""}${esc(r.what)}
+    ${r.why ? `<div class="m">→ ${esc(r.why)} · ${esc(r.date.slice(5))} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div>` : `<div class="m">${esc(r.date.slice(5))} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div>`}</div>`;
   const median = (a) => { const b = a.slice().sort((p, q) => p - q), m = b.length >> 1; return b.length ? (b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2) : null; };
   const isWatch = (name) => watchlist().some((w) => sameCo(name, w) || String(name).toLowerCase().includes(w.toLowerCase()));
   const legend = (items) => `<div class="legend">${items.map(([n, c]) => `<span><i style="background:${c}"></i>${esc(n)}</span>`).join("")}</div>`;
@@ -529,6 +540,7 @@
       ${b.big ? `<div class="card md"><h2>The big picture</h2><div id="bigp">${b.big}</div></div>` : ""}
       ${wl.length ? `<div class="card"><h2>Your watchlist <span class="m">${esc(wl.join(", "))}</span></h2>${
         wlStories.length ? `<div id="wlf"></div>` : `<div class="m">No news on your watchlist in this brief.</div>`}</div>` : ""}
+      <div id="pivw"></div>
       ${top.length ? `<h2 style="margin:18px 0 10px">Top stories, explained</h2><div class="grid g2" id="topx">${top.map((t, ti) => {
         const s = byId[t.id];
         return `<div class="card explain"><h3 class="t" data-story="${s.id}" style="cursor:pointer">${esc(s.title)}</h3>
@@ -553,6 +565,12 @@
     $("#datesel").onchange = (e) => go("#today/" + e.target.value);
     if ($("#wlf")) storyFeed($("#wlf"), wlStories, { page: 6, ph: "Search watchlist news" });
     loadCtx().then(() => {
+      const PV = ((window.DESK_TRACK || {}).trackers || {}).pivots || [];
+      const wk = new Date(b.date + "T00:00"); wk.setDate(wk.getDate() - 7);
+      const recentP = PV.filter((r) => r.date >= wk.toISOString().slice(0, 10) && r.date <= b.date)
+        .sort((x, y) => (isWatch(y.company) - isWatch(x.company)) || (y.imp || 0) - (x.imp || 0) || (x.date < y.date ? 1 : -1)).slice(0, 10);
+      if ($("#pivw") && recentP.length) $("#pivw").innerHTML = `<div class="card"><h2>Pivots of the week <span class="m">company-changing news that can re-rate or de-rate a stock · <a href="#trackers/pivots">all ${PV.length}</a></span></h2>
+        <div class="pvg">${recentP.map((r) => pivotLine(r)).join("")}</div></div>`;
       view.querySelectorAll(".ctxs").forEach((d) => { d.innerHTML = JSON.parse(d.dataset.cos).map(ctxLine).join(""); });
       // "Stocks in focus": company names open the company page, with the tone of their last concall
       const bp = $("#bigp");
@@ -759,7 +777,7 @@
       .filter((x) => { const k = x.s.title.toLowerCase().replace(/\W+/g, ""); if (seenT.has(k)) return false; seenT.add(k); return true; });
     const groups = groupNews(items);
     const call = latestCall(name);
-    const tk = ["results", "orders", "calls"].map((k) => (TK[k] || []).filter((r) => sameCo(r.company, name)));
+    const tk = ["results", "orders", "calls", "pivots"].map((k) => (TK[k] || []).filter((r) => sameCo(r.company, name)));
     const decks = P.filter((d) => sameCo(d.company, name) || (call && d.code === call.code)).slice(0, 6);
     const nextRes = (TK.calendar || []).find((r) => (sameCo(r.company, name) || (call && r.code === call.code)) && r.when >= new Date().toISOString().slice(0, 10));
     const sector = call ? call.sector : (decks[0] && decks[0].sector) || (items[0] ? items[0].s.cat : "");
@@ -789,15 +807,23 @@
         <span class="r2">${d.one ? `<span class="badge">summary</span>` : d.scan ? `<span class="badge w" title="Image-only slides - no text for the AI to read">images only</span>` : ""}</span></summary>
         <div class="b md">${d.one ? `<p><b>${esc(d.one)}</b></p>` : ""}${d.html || (d.scan ? `<div class="m">The slides are images, so there's no text to summarise.</div>` : `<div class="m">Summary not written yet - it'll appear after a coming update.</div>`)}
         <p><a href="${esc(d.pdf)}" target="_blank" rel="noopener">Open the deck (PDF)</a></p></div></details>`;
-    const trackerList = () => `<ul class="list">
+    const trackerList = () => `${tk[3].length ? `<div class="pvg" style="margin-bottom:6px">${tk[3].map((r) => pivotLine(r, false)).join("")}</div>` : ""}<ul class="list">
         ${tk[0].map((r) => `<li><div class="t">Results ${esc(r.quarter)}: revenue ${r.revenue == null ? "–" : "Rs " + fmtM(r.revenue) + " cr"} (<span class="${pctCls(r.rev_yoy)}">${pct(r.rev_yoy)}</span>), net profit ${r.profit == null ? "–" : "Rs " + fmtM(r.profit) + " cr"} (<span class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</span>)${r.read ? " · " + esc(r.read) : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
         ${tk[1].map((r) => `<li><div class="t">Order: ${r.value == null ? "" : "Rs " + fmtM(r.value) + " cr "}${esc(r.client ? "from " + r.client : "")} ${esc(r.what)}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
         ${tk[2].map((r) => `<li><div class="t">${esc(r.broker)}: ${esc(r.rating)}${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}${r.action ? " (" + esc(r.action) + ")" : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}</ul>`;
     const body = $("#cobody");
     const callHtml = call ? await ccHtml(call) : "";
+    const bsCode = call ? call.code : decks[0] ? decks[0].code : null;
+    if (!window.DESK_BSIDX) { try { await loadScript("data/bsindex.js"); } catch (e) { window.DESK_BSIDX = []; } }
+    let story = null;
+    if (bsCode && window.DESK_BSIDX.includes(bsCode)) {
+      window.DESK_BS = window.DESK_BS || {};
+      if (!window.DESK_BS[bsCode]) { try { await loadScript("data/bs/" + bsCode + ".js" + CCV); } catch (e) { /* none */ } }
+      story = window.DESK_BS[bsCode] || null;
+    }
     const perDay = briefs.map((b) => { const xs = items.filter((x) => x.date === b.date); return { label: b.date.slice(5), pos: xs.filter((x) => x.s.sent === "+").length, neg: xs.filter((x) => x.s.sent === "-").length, neu: xs.filter((x) => x.s.sent !== "+" && x.s.sent !== "-").length }; })
       .map((r) => Object.assign(r, { total: r.pos + r.neg + r.neu, tip: `<b>${r.label}</b><br>${r.pos} positive · ${r.neg} negative · ${r.neu} neutral` }));
-    const hasTk = tk[0].length + tk[1].length + tk[2].length > 0;
+    const hasTk = tk[0].length + tk[1].length + tk[2].length + tk[3].length > 0;
     const concallCard = call ? `<div class="card md"><h2>Concall ${esc(call.quarter)} <span class="m">filed ${esc(call.date)}</span></h2>
         <div style="margin-bottom:8px">${call.tone ? `<span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>` : ""} ${call.compared ? `<span class="badge">vs last quarter</span>` : ""}
         ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""}</div>
@@ -807,7 +833,11 @@
         ${decks[0].one ? `<p><b>${esc(decks[0].one)}</b></p>` : ""}${decks[0].html || (decks[0].scan ? `<div class="m">The slides are images, so there's no text to summarise.</div>` : `<div class="m">Summary not written yet - it'll appear after a coming update.</div>`)}
         <p><a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">Open the deck (PDF)</a></p>
         ${decks.length > 1 ? `<div class="m">Earlier decks: ${decks.slice(1).map((d) => `<a href="${esc(d.pdf)}" target="_blank" rel="noopener">${esc(d.when.slice(0, 10))}</a>${d.one ? ` - ${esc(d.one.slice(0, 120))}` : ""}`).join(" · ")}</div>` : ""}</div>` : "";
-    const sideCards = `${hasTk ? `<div class="card"><h2>Results, orders & broker calls</h2>${trackerList()}</div>` : ""}
+    const storyCard = story ? `<div class="card md"><h2>The story so far <span class="m">last 2 years · share price & what moved it</span></h2>
+        ${story.one ? `<p><b>${esc(story.one)}</b></p>` : ""}<div id="bspx"></div>
+        ${story.moves && story.moves.length ? `<div class="m" style="margin:2px 0 8px">Shaded: biggest 4-week moves - ${story.moves.map((m) => `<span class="${m.pct >= 0 ? "up" : "dn"}">${esc(m.from.slice(2, 7))} ${m.pct > 0 ? "+" : ""}${Math.round(m.pct)}%</span>`).join(" · ")}</div>` : ""}
+        ${story.html}<div class="m">Written ${esc(story.at)} from ${story.n_news} dated headlines, the price history and our concall notes. Check before acting.</div></div>` : "";
+    const sideCards = `${storyCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
       <div class="card"><h2>In the news <span class="m">${plural(items.length, "story")} · ${pz}▲ ${nz}▼</span></h2>
         ${items.length >= 4 ? `<div id="cod"></div>` : ""}
         ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>`;
@@ -815,6 +845,11 @@
       ? `<div class="cogrid"><div>${concallCard}${deckCard}</div><div>${sideCards}</div></div>`
       : `<div class="grid g2" style="align-items:start">${sideCards}</div>`;
     if (items.length >= 4) divergingChart($("#cod"), perDay.filter((r) => r.total));
+    if (story && story.pts) {
+      const xs = story.pts.map((p) => p[0]), idxOf = (d) => Math.max(0, xs.findIndex((x) => x >= d));
+      indexChart($("#bspx"), xs, [{ name: "Share price (Rs)", color: cssv("--s1"), values: story.pts.map((p) => p[1]) }], "Rs",
+        (story.moves || []).map((m) => ({ i0: idxOf(m.from), i1: idxOf(m.to), color: cssv(m.pct >= 0 ? "--pos" : "--neg"), label: (m.pct > 0 ? "+" : "") + Math.round(m.pct) + "%" })), 200);
+    }
     const more = $("#conm");
     if (more) more.onclick = () => { $("#conl").innerHTML = groups.map(newsLine).join(""); more.remove(); bindNews(); };
     const bindNews = () => body.querySelectorAll("[data-sid]").forEach((d) => { if (d.dataset.b) return; d.dataset.b = 1; d.addEventListener("click", async () => {
@@ -1148,8 +1183,8 @@
   async function pageTrackers(which) {
     const D = await getTrack();
     const T = D.trackers || {};
-    which = ["results", "orders", "calls"].includes(which) ? which : "results";
-    const names = { results: "Results", orders: "Order wins", calls: "Broker calls" };
+    which = ["pivots", "results", "orders", "calls"].includes(which) ? which : "pivots";
+    const names = { pivots: "Pivots", results: "Results", orders: "Order wins", calls: "Broker calls" };
     const rows0 = T[which] || [];
     const secs = [...new Set(rows0.map((r) => r.sector || "Other"))].sort();
     const st = store.get("trk-" + which, { q: "", sec: "", w: false, days: 30 });
@@ -1173,7 +1208,16 @@
       const src = (r) => `<a class="m" href="${esc(r.link)}" target="_blank" rel="noopener" title="${esc(r.title)}">source</a>`;
       if (!rows.length) { body.innerHTML = empty("Nothing here yet for these filters."); return; }
       const full = rows; let lim = st.lim || 25;
-      if (which === "results") {
+      if (which === "pivots") {
+        const byType = {}, bySec = {};
+        rows.forEach((r) => { const t = PIVOT_LBL[r.type] || "Other"; byType[t] = (byType[t] || 0) + 1; const k = r.sector || "Other"; bySec[k] = (bySec[k] || 0) + 1; });
+        body.innerHTML = `<div class="grid g2" style="align-items:start"><div class="card"><h2>Pivots by kind</h2><div id="kp1"></div></div>
+            <div class="card"><h2>Pivots by sector <span class="m">tap to filter</span></h2><div id="kp2"></div></div></div>
+          <div class="card"><h2>${plural(rows.length, "pivot")} <span class="m">strategy shifts, capacity, big orders, legal wins, approvals, M&A, funding, ratings</span></h2>
+          <div class="pvg">${rows.slice(0, lim).map((r) => pivotLine(r)).join("")}</div>${full.length > lim ? `<button class="kmore">Show all ${full.length}</button>` : ""}</div>`;
+        barChart($("#kp1"), Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: k, value: v })), "pivot");
+        barChart($("#kp2"), Object.entries(bySec).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => ({ label: k, value: v, onclick: () => { $("#ks").value = k; draw(); } })), "pivot");
+      } else if (which === "results") {
         const both = rows.filter((r) => r.rev_yoy != null && r.pat_yoy != null);
         const clamp = (v) => Math.max(-100, Math.min(300, v));
         const RC = { strong: "--pos", weak: "--neg", mixed: "--s4", "in-line": "--neu" };

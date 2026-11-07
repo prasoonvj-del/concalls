@@ -267,6 +267,11 @@ def main():
             decks.step(C.Pool(), "full" if conf["concalls"] else "news")
         except Exception:
             say(f"\n!! Deck summaries failed:\n{traceback.format_exc()}")
+        try:
+            import backstory
+            backstory.step("full" if conf["concalls"] else "news")
+        except Exception:
+            say(f"\n!! 'Story so far' failed:\n{traceback.format_exc()}")
     say("\n================ WEBSITE ================")
     site_builder.build()
     say(f"\nAll done in {(time.time() - started) / 60:.0f} minutes.")

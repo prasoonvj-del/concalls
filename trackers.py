@@ -26,7 +26,9 @@ CANDIDATE = re.compile(
     r"result|profit|revenue|net loss|ebitda|\bq[1-4]\b|quarter|order|contract|bags|wins|\bbid\b|tender|target"
     r"|\bbuy\b|\bsell\b|upgrade|downgrade|initiat|overweight|underweight|outperform|brokerage|rating"
     r"|\bipo\b|policy|meeting|\bcpi\b|\bgdp\b|inflation|next week|scheduled|record date|to announce|due on"
-    r"|board meet|\bfed\b|budget|auction|listing", re.I)
+    r"|board meet|\bfed\b|budget|auction|listing"
+    r"|capacity|plant|expansion|commission|approval|usfda|clearance|acqui|merger|demerger|stake|court|tribunal"
+    r"|arbitration|verdict|nclt|settlement|pivot|launch|capex|upgrade|qip|fund rais|debt-free|order book|award|patent", re.I)
 
 EXTRACT_PROMPT = """You read Indian market news and pull out hard facts into a fixed format. Today is {today}.
 Below are news stories, each with an id in brackets, a headline and sometimes a short description.
@@ -37,12 +39,17 @@ For each story that contains one of these facts, write one line in exactly one o
 RESULT | id | company | quarter (like Q2 FY27) | revenue Rs crore | revenue YoY % | net profit Rs crore | profit YoY % | read: strong / weak / mixed / in-line
 ORDER | id | company | order value Rs crore | client or awarding body | what the order is for (max 8 words)
 CALL | id | brokerage | company | rating (Buy / Sell / Hold / Add / Reduce / Neutral) | target price Rs | action (upgrade / downgrade / initiate / maintain / raise target / cut target)
+PIVOT | id | company | type (capacity / order / legal / approval / strategy / M&A / funding / rating / management) | what changed (max 15 words) | why it could re-rate or de-rate the stock (max 12 words)
 EVENT | id | date YYYY-MM-DD | type (india-policy / india-data / global / company) | what happens (max 10 words) | who in India it affects (sectors or listed companies, max 10 words)
 
 Rules:
 - Only facts the story states. Never guess numbers. A company name must be the listed company.
 - Convert amounts to Rs crore (1 lakh crore = 100000 crore; USD at Rs {fx}/$, EUR at Rs {eur}/EUR).
 - Numbers only in number fields (no "Rs", "cr" or "%"). A loss is a negative profit.
+- PIVOT only for company-changing news: a new plant or big capacity addition, an order large for the company's size,
+  a court / arbitration / tax-case win or loss, a regulatory approval or ban lifted, a shift in business model or product
+  mix, an acquisition / demerger / stake sale, a big fund-raise or debt clean-up, a rating change, a key management change.
+  Not routine results. An order can be both ORDER and PIVOT if it is transformational.
 - EVENT only for things happening on or after today with a clear date, and only if it can move Indian markets:
   government / RBI / SEBI / GST Council / ministry decisions, economic data, central banks abroad, OPEC, big IPOs,
   results or events of LARGE Indian companies, or of foreign companies with a clear Indian link
@@ -96,7 +103,7 @@ def parse_lines(text, ids):
             continue
         kind = parts[0].upper()
         sid = re.sub(r"\D", "", parts[1])
-        if kind not in ("RESULT", "ORDER", "CALL", "EVENT") or not sid or int(sid) not in ids:
+        if kind not in ("RESULT", "ORDER", "CALL", "EVENT", "PIVOT") or not sid or int(sid) not in ids:
             continue
         out.append([kind, int(sid)] + parts[2:])
     return out
@@ -104,6 +111,9 @@ def parse_lines(text, ids):
 
 def extract(stories, pool, cache):
     """Sends only stories not read before; remembers the lines per story."""
+    if cache.get("extract_v") != 2:  # pivots added: read recent stories once more
+        cache["extract"] = {}
+        cache["extract_v"] = 2
     known = cache.setdefault("extract", {})
     fx = market_fx()
     todo = [s for s in stories if s["key"] not in known and CANDIDATE.search(s["title"] + " " + s.get("desc", ""))]
@@ -141,7 +151,7 @@ def sector_for(story, lib_sectors_by_name, company):
 def update(stories, pool, cache, now_utc):
     extract(stories, pool, cache)
     data = load(TRACK_FILE, {})
-    for k in ("results", "orders", "calls", "events", "calendar"):
+    for k in ("results", "orders", "calls", "events", "calendar", "pivots"):
         data.setdefault(k, [])
     lib = C.load_lib()
     by_name = {}
@@ -149,7 +159,8 @@ def update(stories, pool, cache, now_utc):
         sec = lib["sectors"].get(c["code"])
         if sec:
             by_name[C.norm(c["company"])] = sec
-    idx = {k: {r["uid"]: r for r in data[k]} for k in ("results", "orders", "calls", "events")}
+    idx = {k: {r["uid"]: r for r in data[k]} for k in ("results", "orders", "calls", "events", "pivots")}
+    KINDS = {"RESULT": "results", "ORDER": "orders", "CALL": "calls", "EVENT": "events", "PIVOT": "pivots"}
     added = 0
     for s in stories:
         lines = cache["extract"].get(s["key"]) or []
@@ -188,6 +199,16 @@ def update(stories, pool, cache, now_utc):
                            target=num(p[4]), action=p[5].lower() if p[5] != "-" else "",
                            sector=sector_for(s, by_name, co))
                 uid = f"C|{C.norm(p[1])}|{C.norm(co)}|{base['date']}"
+            elif kind == "PIVOT":
+                co = p[1]
+                rec = dict(base, company=co, type=p[2].lower() if p[2] != "-" else "", what=p[3] if p[3] != "-" else "",
+                           why=p[4] if p[4] != "-" else "", imp=s.get("imp", 0), sent=s.get("sent", "="),
+                           sector=sector_for(s, by_name, co))
+                if not rec["what"]:
+                    continue
+                uid = f"P|{C.norm(co)}|{re.sub(r'[^a-z0-9]', '', rec['what'].lower())[:30]}"
+                if any(u.startswith(f"P|{C.norm(co)}|") and idx["pivots"][u]["date"] == base["date"] for u in idx["pivots"]):
+                    continue
             else:  # EVENT
                 d = p[1]
                 if not re.match(r"^\d{4}-\d{2}-\d{2}$", d):
@@ -200,19 +221,19 @@ def update(stories, pool, cache, now_utc):
                 uid = f"E|{d}|{re.sub(r'[^a-z0-9]', '', rec['what'].lower())[:40]}"
                 if not rec["what"]:
                     continue
-            if uid in idx[{"RESULT": "results", "ORDER": "orders", "CALL": "calls", "EVENT": "events"}[kind]]:
+            if uid in idx[KINDS[kind]]:
                 continue
             rec["uid"] = uid
-            idx[{"RESULT": "results", "ORDER": "orders", "CALL": "calls", "EVENT": "events"}[kind]][uid] = rec
+            idx[KINDS[kind]][uid] = rec
             added += 1
     cutoff = (now_utc.astimezone(IST) - dt.timedelta(days=KEEP_DAYS)).strftime("%Y-%m-%d")
     today = now_utc.astimezone(IST).strftime("%Y-%m-%d")
-    for k in ("results", "orders", "calls"):
+    for k in ("results", "orders", "calls", "pivots"):
         data[k] = sorted([r for r in idx[k].values() if r["date"] >= cutoff], key=lambda r: r["date"], reverse=True)
     past = (now_utc.astimezone(IST) - dt.timedelta(days=7)).strftime("%Y-%m-%d")
     data["events"] = sorted([r for r in idx["events"].values() if r["when"] >= past], key=lambda r: r["when"])
     say(f"  trackers: {added} new facts · {len(data['results'])} results, {len(data['orders'])} orders, "
-        f"{len(data['calls'])} broker calls, {len([e for e in data['events'] if e['when'] >= today])} upcoming events")
+        f"{len(data['calls'])} broker calls, {len(data['pivots'])} pivots, {len([e for e in data['events'] if e['when'] >= today])} upcoming events")
     data["updated"] = now_utc.astimezone(IST).isoformat(timespec="minutes")
     C.DATA.mkdir(parents=True, exist_ok=True)
     TRACK_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
