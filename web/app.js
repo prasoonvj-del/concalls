@@ -756,7 +756,7 @@
     const res = tk[0][0], brk = tk[2][0], ord = tk[1][0];
     const chips = [
       call && call.tone ? `<span class="chip">Concall ${esc(call.quarter)}: <span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>${call.prev_tone && call.prev_tone !== call.tone ? ` <span class="m">was ${esc(call.prev_tone)}</span>` : ""}</span>` : "",
-      res ? `<span class="chip">Results ${esc(res.quarter)}: revenue <span class="${pctCls(res.rev_yoy)}">${pct(res.rev_yoy)}</span> · profit <span class="${pctCls(res.pat_yoy)}">${pct(res.pat_yoy)}</span></span>` : "",
+      res ? `<span class="chip">Results ${esc(res.quarter)}:${res.rev_yoy != null ? ` revenue <span class="${pctCls(res.rev_yoy)}">${pct(res.rev_yoy)}</span>` : ""}${res.rev_yoy != null && res.pat_yoy != null ? " ·" : ""}${res.pat_yoy != null ? ` profit <span class="${pctCls(res.pat_yoy)}">${pct(res.pat_yoy)}</span>` : ""}</span>` : "",
       brk ? `<span class="chip">${esc(brk.broker)}: ${esc(brk.rating)}${brk.target ? " · Rs " + fmt(Math.round(brk.target)) : ""}${tk[2].length > 1 ? ` <span class="m">+${tk[2].length - 1} more</span>` : ""}</span>` : "",
       ord ? `<span class="chip">Order${ord.value ? " Rs " + fmtM(ord.value) + " cr" : ""}${ord.client ? " · " + esc(ord.client) : ""}</span>` : "",
       nextRes ? `<span class="chip">Results due ${esc(new Date(nextRes.when + "T00:00").toLocaleDateString("en-IN", { day: "2-digit", month: "short" }))}</span>` : "",
@@ -768,13 +768,9 @@
     else if (res) figs = `<div class="tiles" style="margin:6px 0">${[["Revenue", res.revenue, "Rs cr"], ["Revenue growth", res.rev_yoy, "% YoY"], ["Net profit", res.profit, "Rs cr"], ["Profit growth", res.pat_yoy, "% YoY"]]
       .filter((x) => x[1] != null).map((x) => `<div class="tile"><div class="v" style="font-size:19px">${fmtM(x[1])}</div><div class="k">${x[0]} · ${x[2]}</div></div>`).join("")}</div>`;
     const deckSum = decks.find((d) => d.one || d.html);
-    const tabs = [["ov", "Overview"], call ? ["cc", "Concall " + call.quarter] : null, decks.length ? ["dk", plural(decks.length, "deck")] : null,
-      items.length ? ["nw", `News (${groups.length})`] : null, (tk[0].length + tk[1].length + tk[2].length) > 1 ? ["tk", "Results & calls"] : null].filter(Boolean);
-    let tab = store.get("cotab", "ov"); if (!tabs.some((t) => t[0] === tab)) tab = "ov";
     view.innerHTML = `<div class="cohead"><h1>${esc(key)}</h1>
         <div class="sub"><a href="#companies">All companies</a>${sector ? ` · <a href="#sectors/${encodeURIComponent(sector)}">${esc(sector)}</a>` : ""}${call ? ` · <a href="#peers/${encodeURIComponent(call.sector)}">peers</a> · <a href="${esc(call.pdf)}" target="_blank" rel="noopener">transcript</a>` : ""}${decks[0] ? ` · <a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">latest deck</a>` : ""}</div>
         ${chips ? `<div class="chips">${chips}</div>` : ""}${figs}</div>
-      <div class="cotabs">${tabs.map(([k, l]) => `<button data-t="${k}" class="${k === tab ? "on" : ""}">${esc(l)}</button>`).join("")}</div>
       <div id="cobody"></div>`;
     const newsLine = (g) => `<li class="nl"><div class="t" data-story-date="${g.x.date}" data-sid="${g.x.s.id}">${esc(g.x.s.title)}</div>
         <div class="src">${sentChip(g.x.s.sent)} · ${impDots(g.x.s.imp)} · ${when(g.x.s.when)}${g.more.length ? ` · <details class="sim"><summary>+${g.more.length} similar</summary>${g.more.map((m) => `<div class="t" data-story-date="${m.date}" data-sid="${m.s.id}">${esc(m.s.title)}</div>`).join("")}</details>` : ""}</div></li>`;
@@ -786,46 +782,33 @@
         ${tk[0].map((r) => `<li><div class="t">Results ${esc(r.quarter)}: revenue ${r.revenue == null ? "–" : "Rs " + fmtM(r.revenue) + " cr"} (<span class="${pctCls(r.rev_yoy)}">${pct(r.rev_yoy)}</span>), net profit ${r.profit == null ? "–" : "Rs " + fmtM(r.profit) + " cr"} (<span class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</span>)${r.read ? " · " + esc(r.read) : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
         ${tk[1].map((r) => `<li><div class="t">Order: ${r.value == null ? "" : "Rs " + fmtM(r.value) + " cr "}${esc(r.client ? "from " + r.client : "")} ${esc(r.what)}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
         ${tk[2].map((r) => `<li><div class="t">${esc(r.broker)}: ${esc(r.rating)}${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}${r.action ? " (" + esc(r.action) + ")" : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}</ul>`;
-    const drawTab = () => {
-      redraws.length = 0;
-      const body = $("#cobody");
-      if (tab === "ov") {
-        const takes = [
-          call ? `<li><b>Concall ${esc(call.quarter)}:</b> ${esc(firstLine(call.html))} <a href="#" data-jump="cc">more</a></li>` : "",
-          deckSum ? `<li><b>Investor deck:</b> ${esc(deckSum.one || firstLine(deckSum.html))} <a href="#" data-jump="dk">more</a></li>` : "",
-          res ? `<li><b>Results ${esc(res.quarter)}:</b> revenue ${res.revenue == null ? "" : "Rs " + fmtM(res.revenue) + " cr "}(${pct(res.rev_yoy)}), net profit ${res.profit == null ? "" : "Rs " + fmtM(res.profit) + " cr "}(${pct(res.pat_yoy)})${res.read ? " - " + esc(res.read) : ""}</li>` : "",
-          brk ? `<li><b>Brokers:</b> ${tk[2].slice(0, 3).map((r) => `${esc(r.broker)} ${esc(r.rating)}${r.target ? " (Rs " + fmt(Math.round(r.target)) + ")" : ""}`).join(" · ")}</li>` : "",
-          ord ? `<li><b>Orders:</b> ${tk[1].slice(0, 3).map((r) => `${r.value ? "Rs " + fmtM(r.value) + " cr" : ""} ${esc(r.client || r.what)}`).join(" · ")}</li>` : "",
-        ].filter(Boolean).join("");
-        const perDay = briefs.map((b) => { const xs = items.filter((x) => x.date === b.date); return { label: b.date.slice(5), pos: xs.filter((x) => x.s.sent === "+").length, neg: xs.filter((x) => x.s.sent === "-").length, neu: xs.filter((x) => x.s.sent !== "+" && x.s.sent !== "-").length }; })
-          .map((r) => Object.assign(r, { total: r.pos + r.neg + r.neu, tip: `<b>${r.label}</b><br>${r.pos} positive · ${r.neg} negative · ${r.neu} neutral` }));
-        body.innerHTML = `<div class="grid g2" style="align-items:start">
-          <div class="card"><h2>Takeaways</h2>${takes ? `<ul class="tk">${takes}</ul>` : `<div class="m">No concall, deck or results on file yet - see the news.</div>`}</div>
-          <div class="card"><h2>Latest news <span class="m">${groups.length > 6 ? `<a href="#" data-jump="nw">all ${groups.length}</a>` : ""}</span></h2>
-            ${groups.length ? `<ul class="list">${groups.slice(0, 6).map(newsLine).join("")}</ul>` : `<div class="m">No news in recent briefs.</div>`}
-            ${items.length >= 4 ? `<div class="m" style="margin-top:8px">News tone by day</div><div id="cod"></div>` : ""}</div></div>`;
-        if (items.length >= 4) divergingChart($("#cod"), perDay.filter((r) => r.total));
-      } else if (tab === "cc") {
-        body.innerHTML = `<div class="card md"><div style="margin-bottom:8px"><span class="badge">${esc(call.quarter)}</span>
-          ${call.tone ? `<span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>` : ""} ${call.compared ? `<span class="badge">vs last quarter</span>` : ""}
-          ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""} <span class="m">· filed ${esc(call.date)}</span></div>
-          ${call.checks.length ? `<div class="warn">Highlighted figures weren't found word-for-word in the transcript - check them in the PDF.</div>` : ""}
-          ${call.html}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a>${deckFor(call) ? ` · <a href="${esc(deckFor(call).pdf)}" target="_blank" rel="noopener">Investor deck (PDF)</a>` : ""}</p></div>`;
-      } else if (tab === "dk") {
-        body.innerHTML = `<div class="card">${decks.map((d, i) => deckBlock(d, i === 0)).join("")}</div>`;
-      } else if (tab === "nw") {
-        body.innerHTML = `<div class="card"><ul class="list">${groups.map(newsLine).join("")}</ul></div>`;
-      } else {
-        body.innerHTML = `<div class="card">${trackerList()}</div>`;
-      }
-      body.querySelectorAll("[data-sid]").forEach((d) => d.addEventListener("click", async () => {
-        currentBrief = await getBrief(d.dataset.storyDate); current = currentBrief.date; openStory(d.dataset.sid);
-      }));
-      body.querySelectorAll("[data-jump]").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); setTab(a.dataset.jump); }));
-    };
-    const setTab = (t) => { tab = t; store.set("cotab", t); view.querySelectorAll(".cotabs button").forEach((b) => b.classList.toggle("on", b.dataset.t === t)); drawTab(); };
-    view.querySelectorAll(".cotabs button").forEach((b) => b.addEventListener("click", () => setTab(b.dataset.t)));
-    drawTab();
+    const body = $("#cobody");
+    const perDay = briefs.map((b) => { const xs = items.filter((x) => x.date === b.date); return { label: b.date.slice(5), pos: xs.filter((x) => x.s.sent === "+").length, neg: xs.filter((x) => x.s.sent === "-").length, neu: xs.filter((x) => x.s.sent !== "+" && x.s.sent !== "-").length }; })
+      .map((r) => Object.assign(r, { total: r.pos + r.neg + r.neu, tip: `<b>${r.label}</b><br>${r.pos} positive · ${r.neg} negative · ${r.neu} neutral` }));
+    const hasTk = tk[0].length + tk[1].length + tk[2].length > 0;
+    const concallCard = call ? `<div class="card md"><h2>Concall ${esc(call.quarter)} <span class="m">filed ${esc(call.date)}</span></h2>
+        <div style="margin-bottom:8px">${call.tone ? `<span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>` : ""} ${call.compared ? `<span class="badge">vs last quarter</span>` : ""}
+        ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""}</div>
+        ${call.checks.length ? `<div class="warn">Highlighted figures weren't found word-for-word in the transcript - check them in the PDF.</div>` : ""}
+        ${call.html}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p></div>` : "";
+    const deckCard = decks.length ? `<div class="card md"><h2>Investor deck <span class="m">${when(decks[0].when)}</span></h2>
+        ${decks[0].one ? `<p><b>${esc(decks[0].one)}</b></p>` : ""}${decks[0].html || (decks[0].scan ? `<div class="m">The slides are images, so there's no text to summarise.</div>` : `<div class="m">Summary not written yet - it'll appear after a coming update.</div>`)}
+        <p><a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">Open the deck (PDF)</a></p>
+        ${decks.length > 1 ? `<div class="m">Earlier decks: ${decks.slice(1).map((d) => `<a href="${esc(d.pdf)}" target="_blank" rel="noopener">${esc(d.when.slice(0, 10))}</a>${d.one ? ` - ${esc(d.one.slice(0, 120))}` : ""}`).join(" · ")}</div>` : ""}</div>` : "";
+    const sideCards = `${hasTk ? `<div class="card"><h2>Results, orders & broker calls</h2>${trackerList()}</div>` : ""}
+      <div class="card"><h2>In the news <span class="m">${plural(items.length, "story")} · ${pz}▲ ${nz}▼</span></h2>
+        ${items.length >= 4 ? `<div id="cod"></div>` : ""}
+        ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>`;
+    body.innerHTML = call || decks.length
+      ? `<div class="cogrid"><div>${concallCard}${deckCard}</div><div>${sideCards}</div></div>`
+      : `<div class="grid g2" style="align-items:start">${sideCards}</div>`;
+    if (items.length >= 4) divergingChart($("#cod"), perDay.filter((r) => r.total));
+    const more = $("#conm");
+    if (more) more.onclick = () => { $("#conl").innerHTML = groups.map(newsLine).join(""); more.remove(); bindNews(); };
+    const bindNews = () => body.querySelectorAll("[data-sid]").forEach((d) => { if (d.dataset.b) return; d.dataset.b = 1; d.addEventListener("click", async () => {
+      currentBrief = await getBrief(d.dataset.storyDate); current = currentBrief.date; openStory(d.dataset.sid);
+    }); });
+    bindNews();
   }
 
   function keyFigures(c) {
