@@ -27,6 +27,21 @@
     if (!window.DESK_BRIEFS[date]) await loadScript("data/brief-" + date + ".js");
     return window.DESK_BRIEFS[date];
   }
+  const CCV = "";
+  async function ccHtml(c) {
+    window.DESK_CCH = window.DESK_CCH || {};
+    if (window.DESK_CCH[c.k] == null) { try { await loadScript("data/cc/" + c.k + ".js" + CCV); } catch (e) { return ""; } }
+    return window.DESK_CCH[c.k] || "";
+  }
+  async function ovHtml(o) {
+    window.DESK_OVH = window.DESK_OVH || {};
+    if (window.DESK_OVH[o.k] == null) { try { await loadScript("data/cc/ov" + o.k + ".js" + CCV); } catch (e) { return ""; } }
+    return window.DESK_OVH[o.k] || "";
+  }
+  async function ccText() {
+    if (!window.DESK_CCTEXT) { try { await loadScript("data/cctext.js" + CCV); } catch (e) { window.DESK_CCTEXT = {}; } }
+    return window.DESK_CCTEXT;
+  }
   async function getConcalls() {
     if (!window.DESK_CONCALLS) {
       try { await loadScript("data/concalls.js"); } catch (e) { window.DESK_CONCALLS = { calls: [], overviews: [] }; }
@@ -491,7 +506,6 @@
     if (!IDX.briefs.length) { view.innerHTML = empty("No news brief yet - it appears here after the first morning run."); return; }
     date = date || latest();
     const b = await getBrief(date);
-    await loadCtx();
     current = date; currentBrief = b;
     const st = b.stats;
     const pos = b.sections.reduce((a, s) => a + s.pos, 0), neg = b.sections.reduce((a, s) => a + s.neg, 0);
@@ -517,15 +531,14 @@
         wlStories.length ? `<div id="wlf"></div>` : `<div class="m">No news on your watchlist in this brief.</div>`}</div>` : ""}
       ${top.length ? `<h2 style="margin:18px 0 10px">Top stories, explained</h2><div class="grid g2" id="topx">${top.map((t, ti) => {
         const s = byId[t.id];
-        return `<div class="card explain" ${ti >= 6 ? 'data-more hidden' : ""}><h3 class="t" data-story="${s.id}" style="cursor:pointer">${esc(s.title)}</h3>
+        return `<div class="card explain"><h3 class="t" data-story="${s.id}" style="cursor:pointer">${esc(s.title)}</h3>
           <div style="margin-bottom:6px">${sentChip(s.sent)} · ${impDots(s.imp)} · <span class="chip link" data-go="#sectors/${encodeURIComponent(s.cat)}">${esc(s.cat)}</span></div>
           ${t.why ? `<div class="row"><b>Why it matters:</b> ${esc(t.why)}</div>` : ""}
-          ${t.context || t.watch ? `<details class="fold sm"><summary>Context & what to watch</summary>
-            ${t.context ? `<div class="row"><b>Context:</b> ${esc(t.context)}</div>` : ""}
-            ${t.watch ? `<div class="row"><b>What to watch:</b> ${esc(t.watch)}</div>` : ""}</details>` : ""}
-          ${s.companies.slice(0, 3).map(ctxLine).join("")}
+          ${t.context ? `<div class="row"><b>Context:</b> ${esc(t.context)}</div>` : ""}
+          ${t.watch ? `<div class="row"><b>What to watch:</b> ${esc(t.watch)}</div>` : ""}
+          <div class="ctxs" data-cos="${esc(JSON.stringify(s.companies.slice(0, 3)))}"></div>
           <div class="src" style="margin-top:6px">${plural(s.outlets, "outlet")}: ${esc(s.sources.slice(0, 4).map((x) => x.name).join(", "))}</div></div>`;
-      }).join("")}</div>${top.length > 6 ? `<button id="morex">Show ${top.length - 6} more explained stories</button>` : ""}` : ""}
+      }).join("")}</div>` : ""}
       <div class="grid g2" style="margin-top:14px">
         <div class="card"><h2>Sector mood <span class="m">stories by sentiment</span></h2>
           ${legend([["Negative", cssv("--neg")], ["Positive", cssv("--pos")]])}<div id="c-mood"></div><div id="t-mood"></div></div>
@@ -538,20 +551,21 @@
       ${b.failed && b.failed.length ? `<details class="card"><summary class="m" style="cursor:pointer">${plural(b.failed.length, "feed")} didn't load this time</summary>
         <ul class="list">${b.failed.map((f) => `<li>${esc(f.name)} <span class="src">(${esc(f.folder)}) - ${esc(f.error)}</span></li>`).join("")}</ul></details>` : ""}`;
     $("#datesel").onchange = (e) => go("#today/" + e.target.value);
-    if ($("#bigp")) foldSections($("#bigp"), /mood|focus|stocks/i);
     if ($("#wlf")) storyFeed($("#wlf"), wlStories, { page: 6, ph: "Search watchlist news" });
-    // "Stocks in focus": company names open the company page, with what we know about them
-    view.querySelectorAll(".md table tr td:first-child").forEach((td) => {
-      const name = td.textContent.replace(/\*/g, "").trim();
-      if (!name || td.querySelector("a")) return;
-      const x = ctxOf(name);
-      const known = x || b.stories.some((st2) => st2.companies.some((c) => sameCo(c, name)));
-      if (!known) return;
-      td.innerHTML = `<a href="#companies/${encodeURIComponent(x ? x.name : name)}">${esc(name)}</a>` +
-        (x && x.call && x.call.tone ? `<div><span class="tone ${esc(x.call.tone)}" title="Tone of the last concall (${esc(x.call.quarter)})">${esc(x.call.tone)}</span></div>` : "");
+    loadCtx().then(() => {
+      view.querySelectorAll(".ctxs").forEach((d) => { d.innerHTML = JSON.parse(d.dataset.cos).map(ctxLine).join(""); });
+      // "Stocks in focus": company names open the company page, with the tone of their last concall
+      const bp = $("#bigp");
+      if (bp) bp.querySelectorAll("table tr td:first-child").forEach((td) => {
+        const name = td.textContent.replace(/\*/g, "").trim();
+        if (!name || td.querySelector("a")) return;
+        const x = ctxOf(name);
+        const known = x || b.stories.some((st2) => st2.companies.some((c) => sameCo(c, name)));
+        if (!known) return;
+        td.innerHTML = `<a href="#companies/${encodeURIComponent(x ? x.name : name)}">${esc(name)}</a>` +
+          (x && x.call && x.call.tone ? `<div><span class="tone ${esc(x.call.tone)}" title="Tone of the last concall (${esc(x.call.quarter)})">${esc(x.call.tone)}</span></div>` : "");
+      });
     });
-    const mx = $("#morex");
-    if (mx) mx.onclick = () => { view.querySelectorAll("[data-more]").forEach((d) => { d.hidden = false; }); mx.remove(); };
 
     const moodRows = b.sections.slice(0, 14).map((s) => ({ label: s.cat, pos: s.pos, neg: s.neg, neu: s.neu, total: s.ids.length,
       onclick: () => go("#sectors/" + encodeURIComponent(s.cat)) }));
@@ -655,12 +669,11 @@
             ${marketLine(sec.cat)}
             ${sec.one ? `<p><b>${sec.one}</b></p>` : ""}<div id="sw">${sec.html || `<p class="m">Too few stories today for a write-up - see the list below.</p>`}</div></div>
           ${ov || calls.length || res.length ? `<div class="card"><h2>What managements said <span class="m">concalls${res.length ? " & results" : ""} in this sector</span></h2>
-            ${ov ? `<details class="sum"><summary><span class="n">Sector overview</span><span class="m">${esc(ov.quarter)} · ${ov.companies.length} companies</span></summary><div class="b md">${ov.html}</div></details>` : ""}
+            ${ov ? `<div class="md"><div class="m">Sector overview · ${esc(ov.quarter)} · ${ov.companies.length} companies</div>${await ovHtml(ov)}</div>` : ""}
             ${calls.length ? `<div class="chips">${calls.slice(0, 30).map((c) => `<span class="chip link" data-go="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}${c.tone ? ` <span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}</span>`).join("")}${calls.length > 30 ? `<a class="chip link" href="#concalls/${encodeURIComponent(sec.cat)}">all ${calls.length} →</a>` : ""}</div>` : ""}
             ${res.length ? `<div class="m" style="margin-top:8px">Results this season: ${res.slice(0, 12).map((r) => `<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a> <span class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</span>`).join(" · ")}${res.length > 12 ? ` · <a href="#trackers/results">all →</a>` : ""}</div>` : ""}</div>` : ""}
           <div class="card"><h2>Stories</h2><div id="sl"></div></div>
         </div></div>`;
-    foldSections($("#sw"), /happening|what's/i);
     storyFeed($("#sl"), sec.ids.map((i) => byId[i]).filter(Boolean), { ph: "Search " + sec.cat + " stories" });
   }
 
@@ -686,15 +699,13 @@
     const cc = await getConcalls();
     await loadCtx();
     const P = window.DESK_PRES || [], TK = (window.DESK_TRACK || {}).trackers || {};
-    const recent = IDX.briefs.slice(-7);
-    const briefs = [];
-    for (const x of recent) { try { briefs.push(await getBrief(x.date)); } catch (e) { /* missing file */ } }
-    if (!currentBrief && briefs.length) { currentBrief = briefs[briefs.length - 1]; current = currentBrief.date; }
+    if (!window.DESK_CONEWS) { try { await loadScript("data/conews.js"); } catch (e) { window.DESK_CONEWS = {}; } }
+    const briefs = IDX.briefs.slice(-7).map((x) => ({ date: x.date }));
     const mentions = {};
-    briefs.forEach((b) => b.stories.forEach((s) => s.companies.forEach((c) => {
+    Object.entries(window.DESK_CONEWS).forEach(([c, list]) => {
       const k = Object.keys(mentions).find((m) => sameCo(m, c)) || c;
-      (mentions[k] = mentions[k] || []).push({ s, date: b.date });
-    })));
+      list.forEach((m) => (mentions[k] = mentions[k] || []).push({ s: { id: m.id, title: m.t, sent: m.s, imp: m.i, when: m.w, cat: m.c }, date: m.d }));
+    });
     cc.calls.forEach((c) => { if (!Object.keys(mentions).some((m) => sameCo(m, c.company))) mentions[c.company] = mentions[c.company] || []; });
     const known = new Set(cc.calls.map((c) => c.code));
     P.forEach((d) => { if (!known.has(d.code) && !Object.keys(mentions).some((m) => sameCo(m, d.company))) mentions[d.company] = []; });
@@ -783,6 +794,7 @@
         ${tk[1].map((r) => `<li><div class="t">Order: ${r.value == null ? "" : "Rs " + fmtM(r.value) + " cr "}${esc(r.client ? "from " + r.client : "")} ${esc(r.what)}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
         ${tk[2].map((r) => `<li><div class="t">${esc(r.broker)}: ${esc(r.rating)}${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}${r.action ? " (" + esc(r.action) + ")" : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}</ul>`;
     const body = $("#cobody");
+    const callHtml = call ? await ccHtml(call) : "";
     const perDay = briefs.map((b) => { const xs = items.filter((x) => x.date === b.date); return { label: b.date.slice(5), pos: xs.filter((x) => x.s.sent === "+").length, neg: xs.filter((x) => x.s.sent === "-").length, neu: xs.filter((x) => x.s.sent !== "+" && x.s.sent !== "-").length }; })
       .map((r) => Object.assign(r, { total: r.pos + r.neg + r.neu, tip: `<b>${r.label}</b><br>${r.pos} positive · ${r.neg} negative · ${r.neu} neutral` }));
     const hasTk = tk[0].length + tk[1].length + tk[2].length > 0;
@@ -790,7 +802,7 @@
         <div style="margin-bottom:8px">${call.tone ? `<span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>` : ""} ${call.compared ? `<span class="badge">vs last quarter</span>` : ""}
         ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""}</div>
         ${call.checks.length ? `<div class="warn">Highlighted figures weren't found word-for-word in the transcript - check them in the PDF.</div>` : ""}
-        ${call.html}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p></div>` : "";
+        ${callHtml}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p></div>` : "";
     const deckCard = decks.length ? `<div class="card md"><h2>Investor deck <span class="m">${when(decks[0].when)}</span></h2>
         ${decks[0].one ? `<p><b>${esc(decks[0].one)}</b></p>` : ""}${decks[0].html || (decks[0].scan ? `<div class="m">The slides are images, so there's no text to summarise.</div>` : `<div class="m">Summary not written yet - it'll appear after a coming update.</div>`)}
         <p><a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">Open the deck (PDF)</a></p>
@@ -843,21 +855,24 @@
         <select id="kt"><option value="">Any tone</option>${TONES.map((t) => `<option>${t}</option>`).join("")}</select>
         <input type="search" id="kf" placeholder="Search company or any word (cotton, capex, tariff…)"></div>
       <div id="kov"></div><div class="card" style="padding:4px 8px"><div id="kl"></div></div>`;
-    let shown = 40;
-    const draw = () => {
+    let shown = 40, seq = 0;
+    const draw = async () => {
+      const my = ++seq;
       Object.assign(st, { s: $("#ks").value, q: $("#kq").value, t: $("#kt").value, f: $("#kf").value.toLowerCase() });
+      const TX = st.f ? await ccText() : {};
+      if (my !== seq) return;
       view.querySelectorAll(".stile").forEach((b) => b.classList.toggle("on", b.dataset.s === st.s));
       const ov = st.s ? cc.overviews.filter((o) => o.sector === st.s && (!st.q || o.quarter === st.q)).sort((a, b) => (a.quarter < b.quarter ? 1 : -1))[0] : null;
-      $("#kov").innerHTML = ov ? `<div class="card md"><h2>${esc(st.s)} - what managements are saying <span class="m">${esc(ov.quarter)} · ${ov.companies.length} companies</span></h2>${marketLine(st.s)}<div id="kovb">${ov.html}</div></div>` : "";
-      if (ov) foldSections($("#kovb"), /./);
+      $("#kov").innerHTML = ov ? `<div class="card md"><h2>${esc(st.s)} - what managements are saying <span class="m">${esc(ov.quarter)} · ${ov.companies.length} companies</span></h2>${marketLine(st.s)}<div id="kovb">${await ovHtml(ov)}</div></div>` : "";
+      if (my !== seq) return;
       const calls = cc.calls.filter((c) => (!st.s || c.sector === st.s) && (!st.q || c.quarter === st.q) && (!st.t || c.tone === st.t) &&
-        (!st.f || (c.company + " " + c.html).toLowerCase().includes(st.f))).sort((a, b) => (a.date < b.date ? 1 : -1));
-      $("#kl").innerHTML = calls.slice(0, shown).map((c) => `<details class="sum"><summary><span class="n">${esc(c.company)}</span><span class="m">${esc(c.quarter)}${st.s ? "" : " · " + esc(c.sector)} · ${esc(c.date.slice(5))}</span>
-          <span class="r2">${deckFor(c) ? `<span class="badge" title="An investor deck was filed with this call">deck</span>` : ""}${c.compared ? `<span class="badge" title="Includes what changed vs last quarter">vs last qtr</span>` : ""}
+        (!st.f || c.company.toLowerCase().includes(st.f) || (TX[c.k] || "").includes(st.f))).sort((a, b) => (a.date < b.date ? 1 : -1));
+      $("#kl").innerHTML = calls.slice(0, shown).map((c) => `<div class="crow">
+          <div class="ch"><a class="n" href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a><span class="m">${esc(c.quarter)}${st.s ? "" : " · " + esc(c.sector)} · ${esc(c.date.slice(5))}</span>
+          <span class="r2">${deckFor(c) ? `<a class="badge" href="${esc(deckFor(c).pdf)}" target="_blank" rel="noopener" title="Investor deck filed with this call">deck</a>` : ""}${c.compared ? `<span class="badge" title="Includes what changed vs last quarter">vs last qtr</span>` : ""}
           ${c.checks.length ? `<span class="badge w" title="Figures not found word-for-word in the transcript">⚠ ${c.checks.length}</span>` : ""}
-          ${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}</span></summary>
-          <div class="b md">${c.checks.length ? `<div class="warn">Highlighted figures weren't found word-for-word in the transcript - they may be calculated by the AI or misread.</div>` : ""}
-          ${keyFigures(c)}${c.html}<p><a href="${esc(c.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a>${(() => { const d = deckFor(c); return d ? ` · <a href="${esc(d.pdf)}" target="_blank" rel="noopener">Investor deck (PDF)</a>` : ""; })()} · <a href="#companies/${encodeURIComponent(c.company)}">Everything on ${esc(c.company)} →</a></p></div></details>`).join("")
+          ${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}</span></div>
+          <div class="cp">${esc(c.one || "")} <a href="#companies/${encodeURIComponent(c.company)}">full summary →</a></div></div>`).join("")
         + (calls.length > shown ? `<button id="kmore" style="margin:8px">Show ${Math.min(80, calls.length - shown)} more${calls.length - shown > 80 ? ` (${calls.length - shown} left)` : ""}</button>` : "")
         || empty("Nothing matches.");
       const mb = $("#kmore"); if (mb) mb.onclick = () => { shown += 80; draw(); };
@@ -989,7 +1004,6 @@
       <div class="grid g2 tabg" style="align-items:start">
         ${t.html ? `<div class="card md">${t.one ? `<p><b>${t.one}</b></p>` : ""}<div id="tw">${t.html}</div></div>` : ""}
         <div class="card"><h2>Most-covered stories <span class="m">tap for all sources</span></h2><div id="tl"></div></div></div>`;
-    if (t.html) foldSections($("#tw"), /.*/);
     storyFeed($("#tl"), t.stories, { ph: "Search " + t.name.toLowerCase() + " stories", page: 12 });
   }
 
@@ -1030,8 +1044,8 @@
           const nice = new Date(d + "T00:00").toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" });
           return `<div class="wa"><div class="wd">${nice}</div><div>
             ${e1.map((e) => `<div>• ${esc(e.what)} <a class="m" href="${esc(e.link)}" target="_blank" rel="noopener">source</a></div>`).join("")}
-            ${c1.length ? `<details><summary>${plural(c1.length, "company")} ${c1.length === 1 ? "reports" : "report"} results${c1.some((c) => isWatch(c.company)) ? " · ★ watchlist" : ""}</summary>
-              <div class="m">${c1.map((c) => `${isWatch(c.company) ? "★ " : ""}<a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a>${c.sector ? " (" + esc(c.sector) + ")" : ""}`).join(" · ")}</div></details>` : ""}
+            ${c1.length ? `<div><b>${plural(c1.length, "company")} ${c1.length === 1 ? "reports" : "report"} results:</b>
+              <span class="m">${c1.map((c) => `${isWatch(c.company) ? "★ " : ""}<a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a>${c.sector ? " (" + esc(c.sector) + ")" : ""}`).join(" · ")}</span></div>` : ""}
           </div></div>`;
         }).join("") : `<div class="m">Nothing dated yet - the calendar fills as companies file board-meeting notices and the news mentions dates.</div>`}</div>
       ${WK.length ? `<div class="card md"><h2>Week in review <span class="m">${esc(WK[0].start)} to ${esc(WK[0].end)}</span></h2>
@@ -1210,13 +1224,17 @@
       const rows = all.filter((d) => (!q || (d.company + " " + d.title).toLowerCase().includes(q))
         && (!sec || (d.sector || "Unsorted") === sec) && (!wo || isW(d)))
         .sort((a, b) => (isW(b) - isW(a)) || (a.when < b.when ? 1 : -1));
-      $("#pl").innerHTML = rows.slice(0, 400).map((d) => `<li>
+      $("#pl").innerHTML = rows.slice(0, shownP).map((d) => `<li>
         <div class="t">${isW(d) ? "★ " : ""}<a href="#companies/${encodeURIComponent(d.company)}">${esc(d.company)}</a> ·
           <a href="${esc(d.pdf)}" target="_blank" rel="noopener">open deck (PDF)</a>${hasCall(d) ? ` · <a href="#companies/${encodeURIComponent(d.company)}">concall summary</a>` : ""}</div>
-        <div class="src">${esc(d.sector || "Unsorted")} · ${when(d.when)}${d.title ? " · " + esc(d.title.slice(0, 140)) : ""}</div></li>`).join("")
+        <div class="src">${esc(d.sector || "Unsorted")} · ${when(d.when)}${d.title ? " · " + esc(d.title.slice(0, 140)) : ""}</div>
+        ${d.one ? `<div class="cp" style="font-size:13.5px;margin-top:2px">${esc(d.one)}</div>` : ""}</li>`).join("")
+        + (rows.length > shownP ? `<li><button id="pmore">Show ${Math.min(100, rows.length - shownP)} more</button></li>` : "")
         || `<li class="m">Nothing matches.</li>`;
+      const pm = $("#pmore"); if (pm) pm.onclick = () => { shownP += 100; draw(); };
     };
-    $("#pq").oninput = draw; $("#ps").onchange = draw; $("#pw").onchange = draw; draw();
+    let shownP = 50;
+    $("#pq").oninput = () => { shownP = 50; draw(); }; $("#ps").onchange = () => { shownP = 50; draw(); }; $("#pw").onchange = () => { shownP = 50; draw(); }; draw();
   }
 
   function pageArchive() {

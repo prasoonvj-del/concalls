@@ -76,6 +76,8 @@ def build(quiet=False):
     files = sorted(BRIEFS.glob("*.json")) if BRIEFS.exists() else []
     for f in files[-90:]:
         b = json.loads(f.read_text(encoding="utf-8"))
+        for st in b["stories"] + [x for t in b.get("tabs", []) for x in t.get("stories", [])]:
+            st["sources"] = st.get("sources", [])[:6]  # the count stays in "outlets"; keeps the page light
         (data / f"brief-{b['date']}.js").write_text(_js("DESK_BRIEFS", b["date"], b), encoding="utf-8")
         comp = {}
         for s in b["stories"]:
@@ -85,7 +87,36 @@ def build(quiet=False):
                       "cats": {s["cat"]: len(s["ids"]) for s in b["sections"]},
                       "mood": {s["cat"]: [s["pos"], s["neg"], s["neu"]] for s in b["sections"]},
                       "companies": dict(sorted(comp.items(), key=lambda kv: -kv[1])[:40])})
+    # small per-company news index (last 7 briefs) so the Companies pages don't load whole briefs
+    conews = {}
+    for f in files[-7:]:
+        b = json.loads(f.read_text(encoding="utf-8"))
+        for s in b["stories"]:
+            if not s["companies"]:
+                continue
+            mini = {"id": s["id"], "d": b["date"], "t": s["title"], "s": s.get("sent", "="), "i": s.get("imp", 0),
+                    "w": s["when"], "c": s["cat"]}
+            for n in s["companies"]:
+                conews.setdefault(n, []).append(mini)
+    (data / "conews.js").write_text(_js("DESK_CONEWS", None, conews), encoding="utf-8")
     cc = concall_data()
+    # summaries are split out: the index (small) loads everywhere, each summary only when it's opened
+    (data / "cc").mkdir(exist_ok=True)
+    text = {}
+    for i, c in enumerate(cc["calls"]):
+        c["k"] = i
+        plain = re.sub(r"<[^>]+>", " ", c["html"])
+        plain = re.sub(r"\s+", " ", plain).strip()
+        m = re.search(r"<(?:li|p)>(.*?)</(?:li|p)>", c["html"], re.S)
+        one = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", m.group(1) if m else plain)).strip()
+        one = re.sub(r"^Tone:\s*\w+\s*[-–—:]\s*", "", one)
+        c["one"] = one[:257] + "…" if len(one) > 260 else one
+        text[i] = plain.lower()
+        (data / "cc" / f"{i}.js").write_text(_js("DESK_CCH", i, c.pop("html")), encoding="utf-8")
+    for j, o in enumerate(cc["overviews"]):
+        o["k"] = j
+        (data / "cc" / f"ov{j}.js").write_text(_js("DESK_OVH", j, o.pop("html")), encoding="utf-8")
+    (data / "cctext.js").write_text(_js("DESK_CCTEXT", None, text), encoding="utf-8")
     (data / "concalls.js").write_text(_js("DESK_CONCALLS", None, cc), encoding="utf-8")
     pres = json.loads(C.PRES_FILE.read_text(encoding="utf-8")) if C.PRES_FILE.exists() else []
     import decks as DK
@@ -117,6 +148,8 @@ def build(quiet=False):
     js = (PUBLIC / "app.js").read_text(encoding="utf-8")
     js = js.replace('"data/brief-" + date + ".js"', '"data/brief-" + date + ".js?v=' + stamp + '"')
     js = js.replace('loadScript("data/concalls.js")', 'loadScript("data/concalls.js?v=' + stamp + '")')
+    js = js.replace('const CCV = ""', 'const CCV = "?v=' + stamp + '"')
+    js = js.replace('loadScript("data/conews.js")', 'loadScript("data/conews.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/trackers.js")', 'loadScript("data/trackers.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/presentations.js")', 'loadScript("data/presentations.js?v=' + stamp + '")')
     (PUBLIC / "app.js").write_text(js, encoding="utf-8")
