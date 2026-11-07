@@ -34,7 +34,8 @@ Use ONLY the material below. Link a price move to a piece of news only when thei
 headlines. Never invent numbers, dates or events. Prices are in Rs.
 
 Leave out moves you can't explain, unless they are among the 2-3 biggest. Write Markdown, about 250 words:
-**In one line:** <the stock's story in one sentence, e.g. "Re-rated from Rs X to Rs Y as ... then ...">
+**In one line:** <the stock's story in one sentence - "Re-rated from Rs X to Rs Y as ..." if it rose over the period,
+"De-rated from Rs X to Rs Y as ..." if it fell, or "Round trip: ..." if it rose and fell back>
 ### Re-rating factors
 (bullets: RISES only - what lifted the stock: date, the news, the price reaction)
 ### De-rating factors
