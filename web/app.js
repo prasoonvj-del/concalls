@@ -617,8 +617,28 @@
     $("#fs").onchange = list; $("#fi").onchange = list; list();
   }
 
+  // repeat headlines (same story from several outlets / days) -> one line with "+n similar"
+  function groupNews(items) {
+    const words = (t) => new Set(t.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length > 3));
+    const groups = [];
+    items.forEach((x) => {
+      const w = words(x.s.title);
+      const g = groups.find((gr) => { let n = 0; w.forEach((v) => { if (gr.w.has(v)) n++; }); return n / Math.max(1, Math.min(w.size, gr.w.size)) >= 0.5; });
+      if (g) { g.more.push(x); w.forEach((v) => g.w.add(v)); } else groups.push({ x, w, more: [] });
+    });
+    return groups;
+  }
+  const firstLine = (html) => {
+    const d = document.createElement("div"); d.innerHTML = html || "";
+    const el1 = d.querySelector("li, p");
+    const t = (el1 ? el1.textContent : d.textContent).trim();
+    return t.length > 260 ? t.slice(0, 257) + "…" : t;
+  };
+
   async function pageCompanies(name) {
     const cc = await getConcalls();
+    await loadCtx();
+    const P = window.DESK_PRES || [], TK = (window.DESK_TRACK || {}).trackers || {};
     const recent = IDX.briefs.slice(-7);
     const briefs = [];
     for (const x of recent) { try { briefs.push(await getBrief(x.date)); } catch (e) { /* missing file */ } }
@@ -629,54 +649,136 @@
       (mentions[k] = mentions[k] || []).push({ s, date: b.date });
     })));
     cc.calls.forEach((c) => { if (!Object.keys(mentions).some((m) => sameCo(m, c.company))) mentions[c.company] = mentions[c.company] || []; });
+    const known = new Set(cc.calls.map((c) => c.code));
+    P.forEach((d) => { if (!known.has(d.code) && !Object.keys(mentions).some((m) => sameCo(m, d.company))) mentions[d.company] = []; });
+    const latestCall = (n) => cc.calls.filter((c) => sameCo(c.company, n)).sort((a, c) => (a.date < c.date ? 1 : -1))[0];
+
     if (!name) {
-      const names = Object.keys(mentions).sort((a, c) => mentions[c].length - mentions[a].length || a.localeCompare(c));
-      view.innerHTML = `<h1>Companies</h1><div class="sub">News mentions over the last ${plural(briefs.length, "brief")}, and concall summaries</div>
-        <div class="filters"><input type="search" id="cq" placeholder="Search a company"></div>
-        <div class="card"><ul class="list" id="cl"></ul></div>`;
+      const rows = Object.keys(mentions).map((n) => {
+        const m = mentions[n], call = latestCall(n);
+        const deck = call ? deckFor(call) || P.find((d) => d.code === call.code) : P.find((d) => sameCo(d.company, n));
+        const res = (TK.results || []).find((r) => sameCo(r.company, n));
+        return { n, m: m.length, pos: m.filter((x) => x.s.sent === "+").length, neg: m.filter((x) => x.s.sent === "-").length,
+          call, deck, res, sector: call ? call.sector : (deck && deck.sector) || (res && res.sector) || ((m.find((x) => !/Markets|Macro|Economy|Policy|Global|IPO/i.test(x.s.cat)) || {}).s || {}).cat || "" };
+      });
+      const secs = [...new Set(rows.map((r) => r.sector).filter(Boolean))].sort();
+      const st = store.get("colist", { q: "", sec: "", sort: "news", has: "" });
+      view.innerHTML = `<h1>Companies</h1><div class="sub">${plural(rows.length, "company")} · news from the last ${plural(briefs.length, "brief")}, concall summaries, decks and results in one row each</div>
+        <div class="filters"><input type="search" id="cq" placeholder="Search a company" value="${esc(st.q)}">
+          <select id="cs"><option value="">All sectors</option>${secs.map((x) => `<option ${x === st.sec ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>
+          <select id="ch"><option value="">Everything</option><option value="call" ${st.has === "call" ? "selected" : ""}>With a concall summary</option>
+            <option value="deck" ${st.has === "deck" ? "selected" : ""}>With an investor deck</option><option value="res" ${st.has === "res" ? "selected" : ""}>With results this season</option></select>
+          <select id="co"><option value="news">Most in the news</option><option value="az" ${st.sort === "az" ? "selected" : ""}>A–Z</option>
+            <option value="pos" ${st.sort === "pos" ? "selected" : ""}>Most positive news</option><option value="neg" ${st.sort === "neg" ? "selected" : ""}>Most negative news</option>
+            <option value="call" ${st.sort === "call" ? "selected" : ""}>Latest concall first</option></select></div>
+        <div class="card tw"><table class="tt co" id="cl"></table></div>`;
       const draw = () => {
-        const q = $("#cq").value.toLowerCase();
-        $("#cl").innerHTML = names.filter((n) => !q || n.toLowerCase().includes(q)).slice(0, 300).map((n) => {
-          const m = mentions[n], call = cc.calls.find((c) => sameCo(c.company, n));
-          return `<li><a href="#companies/${encodeURIComponent(n)}" style="text-decoration:none"><b>${esc(n)}</b></a>
-            <span class="m">${m.length ? plural(m.length, "story") : "no recent news"}</span>
-            ${call ? `<span class="badge">concall ${esc(call.quarter)}</span> ${call.tone ? `<span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>` : ""}` : ""}</li>`;
-        }).join("") || `<li class="m">No match.</li>`;
+        Object.assign(st, { q: $("#cq").value, sec: $("#cs").value, has: $("#ch").value, sort: $("#co").value }); store.set("colist", st);
+        const q = st.q.toLowerCase();
+        const sorters = { news: (a, b) => b.m - a.m || a.n.localeCompare(b.n), az: (a, b) => a.n.localeCompare(b.n), pos: (a, b) => b.pos - a.pos || b.m - a.m,
+          neg: (a, b) => b.neg - a.neg || b.m - a.m, call: (a, b) => ((b.call ? b.call.date : "") > (a.call ? a.call.date : "") ? 1 : -1) };
+        const list = rows.filter((r) => (!q || r.n.toLowerCase().includes(q)) && (!st.sec || r.sector === st.sec)
+          && (!st.has || (st.has === "call" ? r.call : st.has === "deck" ? r.deck : r.res))).sort(sorters[st.sort] || sorters.news);
+        const bar = (r) => r.m ? `<span class="mb" title="${r.pos} positive, ${r.neg} negative, ${r.m - r.pos - r.neg} neutral"><i style="width:${(100 * r.pos) / r.m}%;background:var(--pos)"></i><i style="width:${(100 * r.neg) / r.m}%;background:var(--neg)"></i></span>` : "";
+        $("#cl").innerHTML = `<tr><th>Company</th><th>News</th><th>Concall</th><th>Results</th><th>Deck</th></tr>` + list.slice(0, shown).map((r) => `<tr>
+          <td><a href="#companies/${encodeURIComponent(r.n)}">${isWatch(r.n) ? "★ " : ""}${esc(r.n)}</a><div class="m">${esc(r.sector || "")}</div></td>
+          <td>${r.m ? `${r.m} ${bar(r)}` : `<span class="m">–</span>`}</td>
+          <td>${r.call ? `${esc(r.call.quarter)} ${r.call.tone ? `<span class="tone ${esc(r.call.tone)}">${esc(r.call.tone)}</span>` : ""}` : `<span class="m">–</span>`}</td>
+          <td>${r.res ? `profit <span class="${pctCls(r.res.pat_yoy)}">${pct(r.res.pat_yoy)}</span>` : `<span class="m">–</span>`}</td>
+          <td>${r.deck ? `<a href="${esc(r.deck.pdf)}" target="_blank" rel="noopener">PDF</a>${r.deck.one ? " ✦" : ""}` : `<span class="m">–</span>`}</td></tr>`).join("")
+          + (list.length ? "" : `<tr><td colspan="5" class="m">No match.</td></tr>`)
+          + (list.length > shown ? `<tr><td colspan="5"><button id="cmore">Show ${Math.min(100, list.length - shown)} more of ${list.length - shown}</button></td></tr>` : "");
+        const mb = $("#cmore"); if (mb) mb.onclick = () => { shown += 100; draw(); };
       };
-      $("#cq").oninput = draw; draw();
+      let shown = 60;
+      ["cq", "cs", "ch", "co"].forEach((id) => $("#" + id).addEventListener(id === "cq" ? "input" : "change", () => { shown = 60; draw(); })); draw();
       return;
     }
+
     const key = Object.keys(mentions).find((m) => sameCo(m, name)) || name;
     const seenT = new Set();
     const items = (mentions[key] || []).sort((a, c) => (a.s.when < c.s.when ? 1 : -1))
       .filter((x) => { const k = x.s.title.toLowerCase().replace(/\W+/g, ""); if (seenT.has(k)) return false; seenT.add(k); return true; });
-    const call = cc.calls.filter((c) => sameCo(c.company, name)).sort((a, c) => (a.date < c.date ? 1 : -1))[0];
-    const TK = (await getTrack()).trackers || {};
+    const groups = groupNews(items);
+    const call = latestCall(name);
     const tk = ["results", "orders", "calls"].map((k) => (TK[k] || []).filter((r) => sameCo(r.company, name)));
-    const decks = (await getPres()).filter((d) => sameCo(d.company, name) || (call && d.code === call.code)).slice(0, 5);
-    const p = items.filter((x) => x.s.sent === "+").length, n = items.filter((x) => x.s.sent === "-").length;
-    view.innerHTML = `<h1>${esc(key)}</h1><div class="sub"><a href="#companies">All companies</a> · ${plural(items.length, "story")} in the last ${plural(briefs.length, "brief")} · ${p}▲ ${n}▼</div>
-      <div class="grid g2">
-        <div class="card"><h2>In the news</h2>${items.length ? `<ul class="list">${items.map(({ s, date }) => `<li>
-          <div class="t" data-story-date="${date}" data-sid="${s.id}">${esc(s.title)}</div>
-          <div class="src">${sentChip(s.sent)} · ${impDots(s.imp)} · ${esc(s.cat)} · ${when(s.when)}</div></li>`).join("")}</ul>` : `<div class="m">No news in recent briefs.</div>`}</div>
-        <div class="card md"><h2>Latest concall</h2>${call ? `<div style="margin-bottom:8px"><span class="badge">${esc(call.quarter)}</span>
-          ${call.tone ? `<span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>` : ""} ${call.compared ? `<span class="badge">vs last quarter</span>` : ""}
-          ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""} <span class="m">· ${esc(call.sector)} · filed ${esc(call.date)}</span></div>
-          ${call.checks.length ? `<div class="warn">Highlighted figures weren't found word-for-word in the transcript - check them in the PDF.</div>` : ""}
-          ${keyFigures(call)}${call.html}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p>` : `<div class="m">No concall summary for this company yet.</div>`}</div>
-      </div>
-      ${tk.some((x) => x.length) ? `<div class="card"><h2>From the trackers</h2><ul class="list">
+    const decks = P.filter((d) => sameCo(d.company, name) || (call && d.code === call.code)).slice(0, 6);
+    const nextRes = (TK.calendar || []).find((r) => (sameCo(r.company, name) || (call && r.code === call.code)) && r.when >= new Date().toISOString().slice(0, 10));
+    const sector = call ? call.sector : (decks[0] && decks[0].sector) || (items[0] ? items[0].s.cat : "");
+    const pz = items.filter((x) => x.s.sent === "+").length, nz = items.filter((x) => x.s.sent === "-").length;
+    const res = tk[0][0], brk = tk[2][0], ord = tk[1][0];
+    const chips = [
+      call && call.tone ? `<span class="chip">Concall ${esc(call.quarter)}: <span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>${call.prev_tone && call.prev_tone !== call.tone ? ` <span class="m">was ${esc(call.prev_tone)}</span>` : ""}</span>` : "",
+      res ? `<span class="chip">Results ${esc(res.quarter)}: revenue <span class="${pctCls(res.rev_yoy)}">${pct(res.rev_yoy)}</span> · profit <span class="${pctCls(res.pat_yoy)}">${pct(res.pat_yoy)}</span></span>` : "",
+      brk ? `<span class="chip">${esc(brk.broker)}: ${esc(brk.rating)}${brk.target ? " · Rs " + fmt(Math.round(brk.target)) : ""}${tk[2].length > 1 ? ` <span class="m">+${tk[2].length - 1} more</span>` : ""}</span>` : "",
+      ord ? `<span class="chip">Order${ord.value ? " Rs " + fmtM(ord.value) + " cr" : ""}${ord.client ? " · " + esc(ord.client) : ""}</span>` : "",
+      nextRes ? `<span class="chip">Results due ${esc(new Date(nextRes.when + "T00:00").toLocaleDateString("en-IN", { day: "2-digit", month: "short" }))}</span>` : "",
+      items.length ? `<span class="chip">News: ${pz}▲ ${nz}▼ of ${items.length}</span>` : "",
+    ].filter(Boolean).join("");
+    // key figures: concall metrics, else the results tracker
+    let figs = "";
+    if (call && Object.keys(call.metrics || {}).length) figs = keyFigures(call);
+    else if (res) figs = `<div class="tiles" style="margin:6px 0">${[["Revenue", res.revenue, "Rs cr"], ["Revenue growth", res.rev_yoy, "% YoY"], ["Net profit", res.profit, "Rs cr"], ["Profit growth", res.pat_yoy, "% YoY"]]
+      .filter((x) => x[1] != null).map((x) => `<div class="tile"><div class="v" style="font-size:19px">${fmtM(x[1])}</div><div class="k">${x[0]} · ${x[2]}</div></div>`).join("")}</div>`;
+    const deckSum = decks.find((d) => d.one || d.html);
+    const tabs = [["ov", "Overview"], call ? ["cc", "Concall " + call.quarter] : null, decks.length ? ["dk", plural(decks.length, "deck")] : null,
+      items.length ? ["nw", `News (${groups.length})`] : null, (tk[0].length + tk[1].length + tk[2].length) > 1 ? ["tk", "Results & calls"] : null].filter(Boolean);
+    let tab = store.get("cotab", "ov"); if (!tabs.some((t) => t[0] === tab)) tab = "ov";
+    view.innerHTML = `<div class="cohead"><h1>${esc(key)}</h1>
+        <div class="sub"><a href="#companies">All companies</a>${sector ? ` · <a href="#sectors/${encodeURIComponent(sector)}">${esc(sector)}</a>` : ""}${call ? ` · <a href="#peers/${encodeURIComponent(call.sector)}">peers</a> · <a href="${esc(call.pdf)}" target="_blank" rel="noopener">transcript</a>` : ""}${decks[0] ? ` · <a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">latest deck</a>` : ""}</div>
+        ${chips ? `<div class="chips">${chips}</div>` : ""}${figs}</div>
+      <div class="cotabs">${tabs.map(([k, l]) => `<button data-t="${k}" class="${k === tab ? "on" : ""}">${esc(l)}</button>`).join("")}</div>
+      <div id="cobody"></div>`;
+    const newsLine = (g) => `<li class="nl"><div class="t" data-story-date="${g.x.date}" data-sid="${g.x.s.id}">${esc(g.x.s.title)}</div>
+        <div class="src">${sentChip(g.x.s.sent)} · ${impDots(g.x.s.imp)} · ${when(g.x.s.when)}${g.more.length ? ` · <details class="sim"><summary>+${g.more.length} similar</summary>${g.more.map((m) => `<div class="t" data-story-date="${m.date}" data-sid="${m.s.id}">${esc(m.s.title)}</div>`).join("")}</details>` : ""}</div></li>`;
+    const deckBlock = (d, open) => `<details class="sum" ${open ? "open" : ""}><summary><span class="n">${esc((d.title || "Investor presentation").slice(0, 110))}</span><span class="m">${when(d.when)}</span>
+        <span class="r2">${d.one ? `<span class="badge">summary</span>` : d.scan ? `<span class="badge w" title="Image-only slides - no text for the AI to read">images only</span>` : ""}</span></summary>
+        <div class="b md">${d.one ? `<p><b>${esc(d.one)}</b></p>` : ""}${d.html || (d.scan ? `<div class="m">The slides are images, so there's no text to summarise.</div>` : `<div class="m">Summary not written yet - it'll appear after a coming update.</div>`)}
+        <p><a href="${esc(d.pdf)}" target="_blank" rel="noopener">Open the deck (PDF)</a></p></div></details>`;
+    const trackerList = () => `<ul class="list">
         ${tk[0].map((r) => `<li><div class="t">Results ${esc(r.quarter)}: revenue ${r.revenue == null ? "–" : "Rs " + fmtM(r.revenue) + " cr"} (<span class="${pctCls(r.rev_yoy)}">${pct(r.rev_yoy)}</span>), net profit ${r.profit == null ? "–" : "Rs " + fmtM(r.profit) + " cr"} (<span class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</span>)${r.read ? " · " + esc(r.read) : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
         ${tk[1].map((r) => `<li><div class="t">Order: ${r.value == null ? "" : "Rs " + fmtM(r.value) + " cr "}${esc(r.client ? "from " + r.client : "")} ${esc(r.what)}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
-        ${tk[2].map((r) => `<li><div class="t">${esc(r.broker)}: ${esc(r.rating)}${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}${r.action ? " (" + esc(r.action) + ")" : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
-      </ul></div>` : ""}
-      ${decks.length ? `<div class="card"><h2>Investor presentations</h2><ul class="list">${decks.map((d) => `<li>
-        <div class="t"><a href="${esc(d.pdf)}" target="_blank" rel="noopener">${esc(d.title || "Investor presentation")}</a></div>
-        <div class="src">${when(d.when)} · PDF on BSE</div></li>`).join("")}</ul></div>` : ""}`;
-    view.querySelectorAll("[data-sid]").forEach((d) => d.addEventListener("click", async () => {
-      currentBrief = await getBrief(d.dataset.storyDate); current = currentBrief.date; openStory(d.dataset.sid);
-    }));
+        ${tk[2].map((r) => `<li><div class="t">${esc(r.broker)}: ${esc(r.rating)}${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}${r.action ? " (" + esc(r.action) + ")" : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}</ul>`;
+    const drawTab = () => {
+      redraws.length = 0;
+      const body = $("#cobody");
+      if (tab === "ov") {
+        const takes = [
+          call ? `<li><b>Concall ${esc(call.quarter)}:</b> ${esc(firstLine(call.html))} <a href="#" data-jump="cc">more</a></li>` : "",
+          deckSum ? `<li><b>Investor deck:</b> ${esc(deckSum.one || firstLine(deckSum.html))} <a href="#" data-jump="dk">more</a></li>` : "",
+          res ? `<li><b>Results ${esc(res.quarter)}:</b> revenue ${res.revenue == null ? "" : "Rs " + fmtM(res.revenue) + " cr "}(${pct(res.rev_yoy)}), net profit ${res.profit == null ? "" : "Rs " + fmtM(res.profit) + " cr "}(${pct(res.pat_yoy)})${res.read ? " - " + esc(res.read) : ""}</li>` : "",
+          brk ? `<li><b>Brokers:</b> ${tk[2].slice(0, 3).map((r) => `${esc(r.broker)} ${esc(r.rating)}${r.target ? " (Rs " + fmt(Math.round(r.target)) + ")" : ""}`).join(" · ")}</li>` : "",
+          ord ? `<li><b>Orders:</b> ${tk[1].slice(0, 3).map((r) => `${r.value ? "Rs " + fmtM(r.value) + " cr" : ""} ${esc(r.client || r.what)}`).join(" · ")}</li>` : "",
+        ].filter(Boolean).join("");
+        const perDay = briefs.map((b) => { const xs = items.filter((x) => x.date === b.date); return { label: b.date.slice(5), pos: xs.filter((x) => x.s.sent === "+").length, neg: xs.filter((x) => x.s.sent === "-").length, neu: xs.filter((x) => x.s.sent !== "+" && x.s.sent !== "-").length }; })
+          .map((r) => Object.assign(r, { total: r.pos + r.neg + r.neu, tip: `<b>${r.label}</b><br>${r.pos} positive · ${r.neg} negative · ${r.neu} neutral` }));
+        body.innerHTML = `<div class="grid g2" style="align-items:start">
+          <div class="card"><h2>Takeaways</h2>${takes ? `<ul class="tk">${takes}</ul>` : `<div class="m">No concall, deck or results on file yet - see the news.</div>`}</div>
+          <div class="card"><h2>Latest news <span class="m">${groups.length > 6 ? `<a href="#" data-jump="nw">all ${groups.length}</a>` : ""}</span></h2>
+            ${groups.length ? `<ul class="list">${groups.slice(0, 6).map(newsLine).join("")}</ul>` : `<div class="m">No news in recent briefs.</div>`}
+            ${items.length >= 4 ? `<div class="m" style="margin-top:8px">News tone by day</div><div id="cod"></div>` : ""}</div></div>`;
+        if (items.length >= 4) divergingChart($("#cod"), perDay.filter((r) => r.total));
+      } else if (tab === "cc") {
+        body.innerHTML = `<div class="card md"><div style="margin-bottom:8px"><span class="badge">${esc(call.quarter)}</span>
+          ${call.tone ? `<span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>` : ""} ${call.compared ? `<span class="badge">vs last quarter</span>` : ""}
+          ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""} <span class="m">· filed ${esc(call.date)}</span></div>
+          ${call.checks.length ? `<div class="warn">Highlighted figures weren't found word-for-word in the transcript - check them in the PDF.</div>` : ""}
+          ${call.html}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a>${deckFor(call) ? ` · <a href="${esc(deckFor(call).pdf)}" target="_blank" rel="noopener">Investor deck (PDF)</a>` : ""}</p></div>`;
+      } else if (tab === "dk") {
+        body.innerHTML = `<div class="card">${decks.map((d, i) => deckBlock(d, i === 0)).join("")}</div>`;
+      } else if (tab === "nw") {
+        body.innerHTML = `<div class="card"><ul class="list">${groups.map(newsLine).join("")}</ul></div>`;
+      } else {
+        body.innerHTML = `<div class="card">${trackerList()}</div>`;
+      }
+      body.querySelectorAll("[data-sid]").forEach((d) => d.addEventListener("click", async () => {
+        currentBrief = await getBrief(d.dataset.storyDate); current = currentBrief.date; openStory(d.dataset.sid);
+      }));
+      body.querySelectorAll("[data-jump]").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); setTab(a.dataset.jump); }));
+    };
+    const setTab = (t) => { tab = t; store.set("cotab", t); view.querySelectorAll(".cotabs button").forEach((b) => b.classList.toggle("on", b.dataset.t === t)); drawTab(); };
+    view.querySelectorAll(".cotabs button").forEach((b) => b.addEventListener("click", () => setTab(b.dataset.t)));
+    drawTab();
   }
 
   function keyFigures(c) {

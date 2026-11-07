@@ -88,6 +88,14 @@ def build(quiet=False):
     cc = concall_data()
     (data / "concalls.js").write_text(_js("DESK_CONCALLS", None, cc), encoding="utf-8")
     pres = json.loads(C.PRES_FILE.read_text(encoding="utf-8")) if C.PRES_FILE.exists() else []
+    import decks as DK
+    sums = DK.load()
+    for d in pres:
+        x = sums.get(d["id"])
+        if x and x.get("status") == "ok":
+            d["one"], d["html"] = x.get("one", ""), x.get("html", "")
+        elif x and x.get("status") == "no-text":
+            d["scan"] = True
     (data / "presentations.js").write_text(_js("DESK_PRES", None, pres), encoding="utf-8")
     import trackers as TK
     track = {"trackers": TK.load(TK.TRACK_FILE, {}), "markets": TK.load(TK.MARKET_FILE, {"series": []}),

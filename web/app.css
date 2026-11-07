@@ -148,3 +148,15 @@ h2 select{font-size:13px;padding:4px 8px;margin-left:6px}
 .rd.strong{background:var(--pos);color:#fff}.rd.weak{background:var(--neg);color:#fff}.rd.mixed{background:var(--s4);color:#222}
 .ctx{font-size:13px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line,rgba(127,127,127,.25))}
 .ctxc{font-size:13.5px;margin:10px 0;padding:10px 12px;border-radius:10px;background:var(--surface-2,rgba(127,127,127,.08));line-height:1.55}
+/* company page */
+.cohead .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.cohead .chip{font-size:12.5px}
+.cotabs{display:flex;gap:4px;border-bottom:1px solid var(--line,rgba(127,127,127,.25));margin:12px 0;overflow-x:auto}
+.cotabs button{border:0;background:transparent;color:inherit;font:inherit;padding:8px 12px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.cotabs button.on{border-bottom-color:var(--s1);font-weight:600}
+ul.tk{margin:0;padding-left:18px}ul.tk li{margin:6px 0;line-height:1.5}
+.list li.nl{padding:6px 0}.list li.nl .t{font-size:14px}
+details.sim{display:inline}details.sim summary{display:inline;cursor:pointer;color:var(--s1)}details.sim .t{margin:4px 0 0 0;font-size:13px}
+.tt.co td{padding:5px 8px}
+.mb{display:inline-flex;width:56px;height:6px;border-radius:3px;overflow:hidden;background:var(--neu);vertical-align:middle;margin-left:4px}
+.mb i{display:block;height:100%}

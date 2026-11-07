@@ -259,6 +259,12 @@ def main():
             fn()
         except Exception:  # keep going - the site still gets built
             say(f"\n!! The {name} step failed:\n{traceback.format_exc()}")
+    if conf["news"] or conf["concalls"]:
+        try:
+            import decks
+            decks.step(C.Pool(), "full" if conf["concalls"] else "news")
+        except Exception:
+            say(f"\n!! Deck summaries failed:\n{traceback.format_exc()}")
     say("\n================ WEBSITE ================")
     site_builder.build()
     say(f"\nAll done in {(time.time() - started) / 60:.0f} minutes.")
