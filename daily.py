@@ -250,6 +250,8 @@ def main():
         conf["concalls"] = False
     if "--concalls-only" in sys.argv:
         conf["news"] = False
+    if "--site-only" in sys.argv:  # started again soon after an update: just rebuild the pages
+        conf["news"] = conf["concalls"] = False
     started = time.time()
     for name, enabled, fn in (("news", conf["news"], step_news),
                               ("concalls", conf["concalls"], lambda: step_concalls(conf))):

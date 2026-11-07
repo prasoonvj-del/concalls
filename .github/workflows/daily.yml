@@ -60,7 +60,7 @@ jobs:
             if [ -n "$LAST" ]; then
               AGE=$(( ($(date -u +%s) - $(date -u -d "$LAST" +%s)) / 60 ))
               echo "Site data last updated $AGE minutes ago"
-              if [ "$AGE" -lt 60 ]; then GO=false; echo "Updated recently - skipping this start"; fi
+              if [ "$AGE" -lt 60 ]; then MODE=site-only; echo "Updated recently - only rebuilding the website (no AI)"; fi
             fi
           fi
           echo "Event=$EVENT mode=$MODE go=$GO"
@@ -106,6 +106,7 @@ jobs:
           mkdir -p data
           MODE=
           if [ "${{ needs.gate.outputs.mode }}" = "news-only" ]; then MODE=--news-only; fi
+          if [ "${{ needs.gate.outputs.mode }}" = "site-only" ]; then MODE=--site-only; fi
           python daily.py $MODE 2>&1 | tee data/last_run.log
 
       - name: Save data (one commit, replaced each run - the repository doesn't grow)
