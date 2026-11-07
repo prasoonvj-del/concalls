@@ -519,7 +519,7 @@ def load_cache():
     c = json.loads(CACHE_FILE.read_text(encoding="utf-8")) if CACHE_FILE.exists() else {}
     if c.get("version") != 2:  # v1 recorded negative stories as neutral - start fresh
         c = {"next_id": c.get("next_id", 1), "ids": c.get("ids", {}), "version": 2}
-    for k in ("ids", "tags", "explain", "sections", "seen", "extract"):
+    for k in ("ids", "tags", "explain", "sections", "seen", "extract", "listed"):
         c.setdefault(k, {})
     c.setdefault("next_id", 1)
     return c

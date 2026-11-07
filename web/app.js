@@ -540,7 +540,7 @@
       ${b.big ? `<div class="card md"><h2>The big picture</h2><div id="bigp">${b.big}</div></div>` : ""}
       ${wl.length ? `<div class="card"><h2>Your watchlist <span class="m">${esc(wl.join(", "))}</span></h2>${
         wlStories.length ? `<div id="wlf"></div>` : `<div class="m">No news on your watchlist in this brief.</div>`}</div>` : ""}
-      <div id="pivw"></div>
+      <div id="pivw"></div><div id="wah"></div>
       ${top.length ? `<h2 style="margin:18px 0 10px">Top stories, explained</h2><div class="grid g2" id="topx">${top.map((t, ti) => {
         const s = byId[t.id];
         return `<div class="card explain"><h3 class="t" data-story="${s.id}" style="cursor:pointer">${esc(s.title)}</h3>
@@ -564,13 +564,20 @@
         <ul class="list">${b.failed.map((f) => `<li>${esc(f.name)} <span class="src">(${esc(f.folder)}) - ${esc(f.error)}</span></li>`).join("")}</ul></details>` : ""}`;
     $("#datesel").onchange = (e) => go("#today/" + e.target.value);
     if ($("#wlf")) storyFeed($("#wlf"), wlStories, { page: 6, ph: "Search watchlist news" });
+    clampBlock($("#bigp"), 620);
+    clampBlock($("#topx"), 900);
+    clampBlock(view.querySelector(".secs2"), 520);
     loadCtx().then(() => {
       const PV = ((window.DESK_TRACK || {}).trackers || {}).pivots || [];
       const wk = new Date(b.date + "T00:00"); wk.setDate(wk.getDate() - 7);
-      const recentP = PV.filter((r) => r.date >= wk.toISOString().slice(0, 10) && r.date <= b.date)
+      const recentP = PV.filter((r) => !/\b(drhp|ipo|public issue|sebi nod|listing on|lists on|files? (for|draft))\b/i.test(r.what) && r.date >= wk.toISOString().slice(0, 10) && r.date <= b.date)
         .sort((x, y) => (isWatch(y.company) - isWatch(x.company)) || (y.imp || 0) - (x.imp || 0) || (x.date < y.date ? 1 : -1)).slice(0, 10);
-      if ($("#pivw") && recentP.length) $("#pivw").innerHTML = `<div class="card"><h2>Pivots of the week <span class="m">company-changing news that can re-rate or de-rate a stock · <a href="#trackers/pivots">all ${PV.length}</a></span></h2>
-        <div class="pvg">${recentP.map((r) => pivotLine(r)).join("")}</div></div>`;
+      if ($("#pivw") && recentP.length) {
+        $("#pivw").innerHTML = `<div class="card"><h2>Pivots of the week <span class="m">company-changing news that can re-rate or de-rate a stock · <a href="#trackers/pivots">all ${PV.length}</a></span></h2>
+          <div class="pvg" id="pvgw">${recentP.map((r) => pivotLine(r)).join("")}</div></div>`;
+        clampBlock($("#pvgw"), 330);
+      }
+      if ($("#wah")) { renderWeekAhead($("#wah")); clampBlock($("#wal"), 430); }
       view.querySelectorAll(".ctxs").forEach((d) => { d.innerHTML = JSON.parse(d.dataset.cos).map(ctxLine).join(""); });
       // "Stocks in focus": company names open the company page, with the tone of their last concall
       const bp = $("#bigp");
@@ -643,6 +650,19 @@
     host.querySelector(".fq").oninput = () => { shown = page; draw(); };
     if (rated) { host.querySelector(".fs").onchange = draw; host.querySelector(".fo").onchange = draw; }
     draw();
+  }
+  /** Show the first part of a long block, with one tap to see the rest (and to fold it back). */
+  function clampBlock(el, px) {
+    if (!el || el.scrollHeight <= px + 120) return;
+    el.classList.add("clamped"); el.style.maxHeight = px + "px";
+    const btn = document.createElement("button"); btn.className = "unclamp"; btn.textContent = "Show all ▾";
+    btn.onclick = () => {
+      const open = el.classList.toggle("clamped");
+      el.style.maxHeight = open ? px + "px" : "none";
+      btn.textContent = open ? "Show all ▾" : "Show less ▴";
+      if (open) el.scrollIntoView({ block: "nearest" });
+    };
+    el.after(btn);
   }
   /** Turn the h3 sections of a write-up into fold-outs; sections matching `keepOpen` stay open. */
   function foldSections(root, keepOpen) {
@@ -746,10 +766,11 @@
             <option value="deck" ${st.has === "deck" ? "selected" : ""}>With an investor deck</option><option value="res" ${st.has === "res" ? "selected" : ""}>With results this season</option></select>
           <select id="co"><option value="news">Most in the news</option><option value="az" ${st.sort === "az" ? "selected" : ""}>A–Z</option>
             <option value="pos" ${st.sort === "pos" ? "selected" : ""}>Most positive news</option><option value="neg" ${st.sort === "neg" ? "selected" : ""}>Most negative news</option>
-            <option value="call" ${st.sort === "call" ? "selected" : ""}>Latest concall first</option></select></div>
+            <option value="call" ${st.sort === "call" ? "selected" : ""}>Latest concall first</option></select><button id="coclr" class="clr" hidden>✕ Clear filters</button></div>
         <div class="card tw"><table class="tt co" id="cl"></table></div>`;
       const draw = () => {
         Object.assign(st, { q: $("#cq").value, sec: $("#cs").value, has: $("#ch").value, sort: $("#co").value }); store.set("colist", st);
+        $("#coclr").hidden = !(st.q || st.sec || st.has);
         const q = st.q.toLowerCase();
         const sorters = { news: (a, b) => b.m - a.m || a.n.localeCompare(b.n), az: (a, b) => a.n.localeCompare(b.n), pos: (a, b) => b.pos - a.pos || b.m - a.m,
           neg: (a, b) => b.neg - a.neg || b.m - a.m, call: (a, b) => ((b.call ? b.call.date : "") > (a.call ? a.call.date : "") ? 1 : -1) };
@@ -767,6 +788,7 @@
         const mb = $("#cmore"); if (mb) mb.onclick = () => { shown += 100; draw(); };
       };
       let shown = 60;
+      $("#coclr").onclick = () => { ["cq", "cs", "ch"].forEach((id) => { $("#" + id).value = ""; }); shown = 60; draw(); };
       ["cq", "cs", "ch", "co"].forEach((id) => $("#" + id).addEventListener(id === "cq" ? "input" : "change", () => { shown = 60; draw(); })); draw();
       return;
     }
@@ -888,12 +910,13 @@
       <div class="filters"><select id="ks"><option value="">All sectors</option>${secs.slice().sort().map((x) => `<option>${esc(x)}</option>`).join("")}</select>
         <select id="kq"><option value="">All quarters</option>${quarters.map((q) => `<option>${esc(q)}</option>`).join("")}</select>
         <select id="kt"><option value="">Any tone</option>${TONES.map((t) => `<option>${t}</option>`).join("")}</select>
-        <input type="search" id="kf" placeholder="Search company or any word (cotton, capex, tariff…)"></div>
+        <input type="search" id="kf" placeholder="Search company or any word (cotton, capex, tariff…)"><button id="cclr" class="clr" hidden>✕ Clear filters</button></div>
       <div id="kov"></div><div class="card" style="padding:4px 8px"><div id="kl"></div></div>`;
     let shown = 40, seq = 0;
     const draw = async () => {
       const my = ++seq;
       Object.assign(st, { s: $("#ks").value, q: $("#kq").value, t: $("#kt").value, f: $("#kf").value.toLowerCase() });
+      $("#cclr").hidden = !(st.s || st.q || st.t || st.f);
       const TX = st.f ? await ccText() : {};
       if (my !== seq) return;
       view.querySelectorAll(".stile").forEach((b) => b.classList.toggle("on", b.dataset.s === st.s));
@@ -916,6 +939,7 @@
     view.querySelectorAll(".stile").forEach((b) => b.addEventListener("click", () => { $("#ks").value = $("#ks").value === b.dataset.s ? "" : b.dataset.s; shown = 40; draw(); }));
     ["ks", "kq", "kt"].forEach((id) => { $("#" + id).onchange = () => { shown = 40; draw(); }; });
     $("#kf").oninput = () => { shown = 40; draw(); };
+    $("#cclr").onclick = () => { ["ks", "kq", "kt", "kf"].forEach((id) => { $("#" + id).value = ""; }); shown = 40; draw(); };
     draw();
   }
 
@@ -1042,23 +1066,10 @@
     storyFeed($("#tl"), t.stories, { ph: "Search " + t.name.toLowerCase() + " stories", page: 12 });
   }
 
-  /* ------------------------------------------------------------ markets */
-  async function pageMarkets() {
-    const D = await getTrack();
-    const M = (D.markets && D.markets.series) || [], T = D.trackers || {}, WK = (D.weekly && D.weekly.reviews) || [];
-    const PER = { "1W": 7, "1M": 30, "3M": 91, "6M": 182, "1Y": 366 };
-    let per = store.get("mkper", "3M"); if (!PER[per]) per = "3M";
-    const known = new Set(M.map((x) => x.sym));
-    let sel = store.get("mksel", ["^NSEI", "BZ=F", "CT=F", "INR=X"]).filter((x) => known.has(x));
-    const lastDate = M.reduce((a, x) => (x.pts.length && x.pts[x.pts.length - 1][0] > a ? x.pts[x.pts.length - 1][0] : a), "");
-    const startOf = () => { const d = new Date(lastDate || Date.now()); d.setDate(d.getDate() - PER[per]); return d.toISOString().slice(0, 10); };
-    const baseAt = (se, from) => { let b = se.pts[0]; for (const p of se.pts) { if (p[0] <= from) b = p; else break; } return b; };
-    const chg = (se, from) => { const b = baseAt(se, from), l = se.pts[se.pts.length - 1]; return b && l && b[1] ? (l[1] / b[1] - 1) * 100 : null; };
-    const day = (se) => { const n = se.pts.length; return n > 1 ? (se.pts[n - 1][1] / se.pts[n - 2][1] - 1) * 100 : null; };
-    const fmtP = (v) => (Math.abs(v) >= 1000 ? fmt(Math.round(v)) : Math.abs(v) >= 10 ? (Math.round(v * 10) / 10).toLocaleString("en-IN") : (Math.round(v * 100) / 100).toString());
+  /** Week ahead: what can move Indian stocks in the next two weeks (shown on Today). */
+  function renderWeekAhead(host) {
+    const T = (window.DESK_TRACK || {}).trackers || {};
     const today = new Date().toISOString().slice(0, 10);
-    const groups = [...new Set(M.map((x) => x.group))];
-
     const ahead = new Date(); ahead.setDate(ahead.getDate() + 14);
     const aheadS = ahead.toISOString().slice(0, 10);
     // agenda: India policy & data, global data, foreign companies with Indian links, big Indian companies
@@ -1082,7 +1093,8 @@
     const same = (a, b) => { const x = tok(a), y = tok(b); let n = 0; x.forEach((w) => { if (y.has(w)) n++; }); return n / Math.max(1, Math.min(x.size, y.size)) >= 0.6; };
     const items = [];
     (T.agenda || []).filter((e) => e.when >= today && e.when <= aheadS).forEach((e) => items.push(e));
-    (T.events || []).filter((e) => e.when >= today && e.when <= aheadS && e.what).forEach((e) => {
+    // news events: only things still ahead of the day they were reported (otherwise it's the news itself)
+    (T.events || []).filter((e) => e.when >= today && e.when <= aheadS && e.what && e.when > (e.date || "")).forEach((e) => {
       if (e.kind === "company" && !big(e.what) && !(e.impact || "").length) return;
       if (!e.kind && /results?\b/i.test(e.what) && !big(e.what)) return;   // older facts: skip small-company results
       if (items.some((x) => x.when === e.when && same(x.what, e.what))) return;
@@ -1096,20 +1108,9 @@
     const cal = (T.calendar || []).filter((e) => e.when >= today && e.when <= aheadS);
     const daysA = [...new Set(items.map((e) => e.when).concat(cal.map((e) => e.when)))].sort();
     const kf = store.get("wakind", "");
-    view.innerHTML = `<h1>Markets</h1>
-      <div class="sub">Indices, commodities, the rupee and yields${D.markets && D.markets.updated ? " · prices as of " + esc(D.markets.updated.replace("T", " ")) : ""} · tap any tile to add it to the comparison</div>
-      <div class="filters seg" id="per">${Object.keys(PER).map((k) => `<button class="${k === per ? "on" : ""}" data-p="${k}">${k}</button>`).join("")}</div>
-      ${M.length ? `<div class="card"><h2>Compare <span class="m">rebased to 100 at the start of the period</span></h2><div id="mleg"></div><div id="mc"></div></div>
-      <div class="card"><h2>Indian sector indices <span class="m">change over ${per} · tap to see that sector's peers</span></h2><div id="ms"></div></div>
-      ${groups.filter((g) => g !== "India indices").map((g) => `<div class="card"><h2>${esc(g)}</h2><div class="tiles mk" data-g="${esc(g)}"></div></div>`).join("")}
-      <div class="card"><h2>India indices</h2><div class="tiles mk" data-g="India indices"></div></div>` : `<div class="card m">Prices haven't been collected yet - they arrive with the next update.</div>`}
-      <div class="card"><h2>Week ahead <span class="m">next two weeks · what can move Indian stocks</span></h2>
+    host.innerHTML = `<div class="card"><h2>Week ahead <span class="m">next two weeks · what can move Indian stocks</span></h2>
         <div class="filters seg" id="wak">${[["", "All"], ["india", "India policy & data"], ["global", "Global"], ["co", "Companies"]].map(([k, l]) => `<button data-k="${k}" class="${k === kf ? "on" : ""}">${l}</button>`).join("")}</div>
-        <div id="wal"></div></div>
-      ${WK.length ? `<div class="card md"><h2>Week in review <span class="m">${esc(WK[0].start)} to ${esc(WK[0].end)}</span></h2>
-        ${WK[0].one ? `<p><b>${esc(WK[0].one)}</b></p>` : ""}${WK[0].html}
-        ${WK.length > 1 ? `<details><summary>Earlier weeks</summary>${WK.slice(1).map((w) => `<h3>${esc(w.start)} to ${esc(w.end)}</h3>${w.one ? `<p><b>${esc(w.one)}</b></p>` : ""}${w.html}`).join("")}</details>` : ""}</div>` : ""}`;
-
+        <div id="wal"></div></div>`;
     const drawAgenda = () => {
       const k = store.get("wakind", "");
       const keep = (e) => !k || (k === "india" ? /^india/.test(e.kind) : k === "global" ? e.kind === "global" : /co|company/.test(e.kind));
@@ -1132,6 +1133,36 @@
     drawAgenda();
     $("#wak").onclick = (e) => { const b2 = e.target.closest("button"); if (!b2) return; store.set("wakind", b2.dataset.k);
       $("#wak").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b2)); drawAgenda(); };
+  }
+
+  /* ------------------------------------------------------------ markets */
+  async function pageMarkets() {
+    const D = await getTrack();
+    const M = (D.markets && D.markets.series) || [], T = D.trackers || {}, WK = (D.weekly && D.weekly.reviews) || [];
+    const PER = { "1W": 7, "1M": 30, "3M": 91, "6M": 182, "1Y": 366 };
+    let per = store.get("mkper", "3M"); if (!PER[per]) per = "3M";
+    const known = new Set(M.map((x) => x.sym));
+    let sel = store.get("mksel", ["^NSEI", "BZ=F", "CT=F", "INR=X"]).filter((x) => known.has(x));
+    const lastDate = M.reduce((a, x) => (x.pts.length && x.pts[x.pts.length - 1][0] > a ? x.pts[x.pts.length - 1][0] : a), "");
+    const startOf = () => { const d = new Date(lastDate || Date.now()); d.setDate(d.getDate() - PER[per]); return d.toISOString().slice(0, 10); };
+    const baseAt = (se, from) => { let b = se.pts[0]; for (const p of se.pts) { if (p[0] <= from) b = p; else break; } return b; };
+    const chg = (se, from) => { const b = baseAt(se, from), l = se.pts[se.pts.length - 1]; return b && l && b[1] ? (l[1] / b[1] - 1) * 100 : null; };
+    const day = (se) => { const n = se.pts.length; return n > 1 ? (se.pts[n - 1][1] / se.pts[n - 2][1] - 1) * 100 : null; };
+    const fmtP = (v) => (Math.abs(v) >= 1000 ? fmt(Math.round(v)) : Math.abs(v) >= 10 ? (Math.round(v * 10) / 10).toLocaleString("en-IN") : (Math.round(v * 100) / 100).toString());
+    const today = new Date().toISOString().slice(0, 10);
+    const groups = [...new Set(M.map((x) => x.group))];
+
+    view.innerHTML = `<h1>Markets</h1>
+      <div class="sub">Indices, commodities, the rupee and yields${D.markets && D.markets.updated ? " · prices as of " + esc(D.markets.updated.replace("T", " ")) : ""} · tap any tile to add it to the comparison</div>
+      <div class="filters seg" id="per">${Object.keys(PER).map((k) => `<button class="${k === per ? "on" : ""}" data-p="${k}">${k}</button>`).join("")}</div>
+      ${M.length ? `<div class="card"><h2>Compare <span class="m">rebased to 100 at the start of the period</span></h2><div id="mleg"></div><div id="mc"></div></div>
+      <div class="card"><h2>Indian sector indices <span class="m">change over ${per} · tap to see that sector's peers</span></h2><div id="ms"></div></div>
+      ${groups.filter((g) => g !== "India indices").map((g) => `<div class="card"><h2>${esc(g)}</h2><div class="tiles mk" data-g="${esc(g)}"></div></div>`).join("")}
+      <div class="card"><h2>India indices</h2><div class="tiles mk" data-g="India indices"></div></div>` : `<div class="card m">Prices haven't been collected yet - they arrive with the next update.</div>`}
+      ${WK.length ? `<div class="card md"><h2>Week in review <span class="m">${esc(WK[0].start)} to ${esc(WK[0].end)}</span></h2>
+        ${WK[0].one ? `<p><b>${esc(WK[0].one)}</b></p>` : ""}${WK[0].html}
+        ${WK.length > 1 ? `<details><summary>Earlier weeks</summary>${WK.slice(1).map((w) => `<h3>${esc(w.start)} to ${esc(w.end)}</h3>${w.one ? `<p><b>${esc(w.one)}</b></p>` : ""}${w.html}`).join("")}</details>` : ""}</div>` : ""}`;
+
     $("#per").onclick = (e) => { const b = e.target.closest("button"); if (b) { store.set("mkper", b.dataset.p); route(); } };
     if (!M.length) return;
     const from = startOf();
@@ -1185,7 +1216,8 @@
     const T = D.trackers || {};
     which = ["pivots", "results", "orders", "calls"].includes(which) ? which : "pivots";
     const names = { pivots: "Pivots", results: "Results", orders: "Order wins", calls: "Broker calls" };
-    const rows0 = T[which] || [];
+    const NOISE = /\b(drhp|ipo|public issue|sebi nod|listing on|lists on|files? (for|draft))\b/i;
+    const rows0 = (T[which] || []).filter((r) => which !== "pivots" || !NOISE.test(r.what));
     const secs = [...new Set(rows0.map((r) => r.sector || "Other"))].sort();
     const st = store.get("trk-" + which, { q: "", sec: "", w: false, days: 30 });
     view.innerHTML = `<h1>Trackers</h1>
@@ -1194,12 +1226,14 @@
       <div class="filters"><input type="search" id="kq" placeholder="Search company" value="${esc(st.q)}">
         <select id="ks"><option value="">All sectors</option>${secs.map((x) => `<option ${x === st.sec ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>
         <select id="kd">${[7, 30, 90, 120].map((d) => `<option value="${d}" ${d === st.days ? "selected" : ""}>Last ${d} days</option>`).join("")}</select>
-        <label class="m"><input type="checkbox" id="kw" ${st.w ? "checked" : ""}> Watchlist only</label></div>
+        <label class="m"><input type="checkbox" id="kw" ${st.w ? "checked" : ""}> Watchlist only</label>
+        <button id="kclr" class="clr" hidden>✕ Clear filters</button></div>
       <div id="kbody"></div>`;
     const draw = () => {
       redraws.length = 0;
       Object.assign(st, { q: $("#kq").value, sec: $("#ks").value, w: $("#kw").checked, days: Number($("#kd").value) });
       store.set("trk-" + which, st);
+      $("#kclr").hidden = !(st.q || st.sec || st.w);
       const cut = new Date(); cut.setDate(cut.getDate() - st.days); const cutS = cut.toISOString().slice(0, 10);
       const rows = rows0.filter((r) => r.date >= cutS && (!st.q || r.company.toLowerCase().includes(st.q.toLowerCase()))
         && (!st.sec || (r.sector || "Other") === st.sec) && (!st.w || isWatch(r.company)));
@@ -1272,6 +1306,7 @@
       }
     };
     ["kq", "ks", "kw", "kd"].forEach((id) => { $("#" + id).addEventListener(id === "kq" ? "input" : "change", () => { st.lim = 25; draw(); }); });
+    $("#kclr").onclick = () => { $("#kq").value = ""; $("#ks").value = ""; $("#kw").checked = false; st.lim = 25; draw(); };
     $("#kbody").addEventListener("click", (e) => { if (e.target.closest(".kmore")) { st.lim = 100000; draw(); } });
     draw();
   }
@@ -1291,7 +1326,7 @@
       <div class="card"><h2>Decks filed per day</h2><div id="pd"></div></div>
       <div class="card"><div class="filters"><input type="search" id="pq" placeholder="Search company or title">
         <select id="ps"><option value="">All sectors</option>${secs.map((x) => `<option>${esc(x)}</option>`).join("")}</select>
-        <label class="m"><input type="checkbox" id="pw"> Watchlist only</label></div>
+        <label class="m"><input type="checkbox" id="pw"> Watchlist only</label><button id="pclr" class="clr" hidden>✕ Clear filters</button></div>
         <ul class="list" id="pl"></ul></div>`;
     const box = $("#pd");
     const W = Math.max(280, box.clientWidth || 600), H = 120, bw = W / perDay.length;
@@ -1303,6 +1338,7 @@
     }).join("")}</svg>`;
     const draw = () => {
       const q = $("#pq").value.toLowerCase(), sec = $("#ps").value, wo = $("#pw").checked;
+      $("#pclr").hidden = !(q || sec || wo);
       const rows = all.filter((d) => (!q || (d.company + " " + d.title).toLowerCase().includes(q))
         && (!sec || (d.sector || "Unsorted") === sec) && (!wo || isW(d)))
         .sort((a, b) => (isW(b) - isW(a)) || (a.when < b.when ? 1 : -1));
@@ -1316,6 +1352,7 @@
       const pm = $("#pmore"); if (pm) pm.onclick = () => { shownP += 100; draw(); };
     };
     let shownP = 50;
+    $("#pclr").onclick = () => { $("#pq").value = ""; $("#ps").value = ""; $("#pw").checked = false; shownP = 50; draw(); };
     $("#pq").oninput = () => { shownP = 50; draw(); }; $("#ps").onchange = () => { shownP = 50; draw(); }; $("#pw").onchange = () => { shownP = 50; draw(); }; draw();
   }
 

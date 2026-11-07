@@ -50,6 +50,8 @@ Rules:
   a court / arbitration / tax-case win or loss, a regulatory approval or ban lifted, a shift in business model or product
   mix, an acquisition / demerger / stake sale, a big fund-raise or debt clean-up, a rating change, a key management change.
   Not routine results. An order can be both ORDER and PIVOT if it is transformational.
+  Only companies already LISTED in India: never IPO filings / SEBI approval for an IPO / listings, never unlisted
+  or foreign companies (OpenAI, a PSU subsidiary that isn't listed yet).
 - EVENT only for things happening on or after today with a clear date, and only if it can move Indian markets:
   government / RBI / SEBI / GST Council / ministry decisions, economic data, central banks abroad, OPEC, big IPOs,
   results or events of LARGE Indian companies, or of foreign companies with a clear Indian link
@@ -142,6 +144,39 @@ def extract(stories, pool, cache):
         time.sleep(pool.pause)
 
 
+LISTED_PROMPT = """Which of these names are companies whose shares are LISTED on India's NSE or BSE?
+Answer with one line per name, exactly: <name> | yes   or   <name> | no
+(Foreign companies, unlisted Indian companies and subsidiaries that aren't listed themselves are "no".)
+
+"""
+
+
+def check_listed(pivots, cache):
+    """Pivots are only for Indian-listed companies: one small request to the backup AI (Groq) for new names."""
+    known = cache.setdefault("listed", {})
+    names = sorted({r["company"] for r in pivots.values() if C.norm(r["company"]) not in known})
+    if names:
+        try:
+            ai = C.AI("backup")
+        except C.AIError:
+            ai = None
+        if ai:
+            for i in range(0, len(names), 60):
+                part = names[i:i + 60]
+                try:
+                    text = ai.ask(LISTED_PROMPT + "\n".join(part), label="checking which companies are listed")
+                except C.AIError as e:
+                    say(f"  listed-company check skipped: {str(e)[:80]}")
+                    break
+                for line in text.splitlines():
+                    if "|" in line:
+                        n, _, a = line.rpartition("|")
+                        known[C.norm(n.strip(" -*"))] = a.strip().lower().startswith("y")
+    for uid in list(pivots):
+        if known.get(C.norm(pivots[uid]["company"])) is False:
+            del pivots[uid]
+
+
 def sector_for(story, lib_sectors_by_name, company):
     if story["category"] in C.SECTORS:
         return story["category"]
@@ -226,6 +261,7 @@ def update(stories, pool, cache, now_utc):
             rec["uid"] = uid
             idx[KINDS[kind]][uid] = rec
             added += 1
+    check_listed(idx["pivots"], cache)
     cutoff = (now_utc.astimezone(IST) - dt.timedelta(days=KEEP_DAYS)).strftime("%Y-%m-%d")
     today = now_utc.astimezone(IST).strftime("%Y-%m-%d")
     for k in ("results", "orders", "calls", "pivots"):

@@ -204,3 +204,8 @@ a.badge{text-decoration:none}
 .pvg{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:0 22px}
 @media (max-width:520px){.pvg{grid-template-columns:1fr}}
 .cogrid .pvg{grid-template-columns:1fr}
+.clamped{overflow:hidden;position:relative}
+.clamped::after{content:"";position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(transparent,var(--bg))}
+.card .clamped::after{background:linear-gradient(transparent,var(--surface))}
+button.unclamp{display:block;margin:6px auto 14px;border:1px solid var(--line,rgba(127,127,127,.3));background:var(--surface);color:var(--accent);border-radius:999px;padding:6px 16px;font:inherit;cursor:pointer}
+button.clr{border:1px solid var(--neg);color:var(--neg);background:transparent;border-radius:999px;padding:5px 12px;font:inherit;cursor:pointer;white-space:nowrap}
