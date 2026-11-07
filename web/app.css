@@ -160,3 +160,29 @@ details.sim{display:inline}details.sim summary{display:inline;cursor:pointer;col
 .tt.co td{padding:5px 8px}
 .mb{display:inline-flex;width:56px;height:6px;border-radius:3px;overflow:hidden;background:var(--neu);vertical-align:middle;margin-left:4px}
 .mb i{display:block;height:100%}
+/* shared compact pieces */
+details.fold{border-top:1px solid var(--line,rgba(127,127,127,.18));padding:6px 0}
+details.fold>summary{cursor:pointer;font-weight:600;color:var(--accent);list-style:none}
+details.fold>summary::before{content:"▸ ";color:var(--muted)}details.fold[open]>summary::before{content:"▾ "}
+details.fold.sm{border:0;padding:2px 0}details.fold.sm>summary{font-weight:500;font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.mline{display:inline-flex;align-items:center;gap:8px;font-size:13px;text-decoration:none;color:inherit;margin:2px 0 6px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;margin-top:8px}
+.stile{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;text-align:left;font:inherit;color:inherit;background:var(--surface-2,rgba(127,127,127,.06));border:1px solid transparent;border-radius:8px;padding:6px 9px;cursor:pointer}
+.stile .sn{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stile .mb.wide{grid-column:1/-1;width:100%;margin:2px 0 0;height:6px}
+.stile.on{border-color:var(--s1);background:var(--accent-soft)}
+.tt.secs tr{cursor:pointer}.tt.secs td:first-child{width:34%;white-space:nowrap}
+.tt.secs tr:hover{background:var(--accent-soft)}
+.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13.5px}
+.clamp p{margin:0}
+@media (max-width:900px){
+  .side{grid-template-columns:1fr}
+  .side>.secnav{display:flex;max-height:none;overflow-x:auto;gap:4px;padding:6px}
+  .side>.secnav a{white-space:nowrap;flex:0 0 auto}
+}
+.secs2{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:0 18px}
+.srow{display:grid;grid-template-columns:170px 1fr;gap:10px;padding:7px 4px;border-top:1px solid var(--line,rgba(127,127,127,.15));cursor:pointer;border-radius:6px}
+.srow:hover{background:var(--accent-soft)}
+@media (max-width:520px){.secs2{grid-template-columns:1fr}.srow{grid-template-columns:120px 1fr}}
+#kl details.sum{margin:4px 0}#kl details.sum>summary{padding:7px 10px}
