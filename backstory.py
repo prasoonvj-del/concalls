@@ -33,12 +33,12 @@ Use ONLY the material below. Link a price move to a piece of news only when thei
 (say "around the same time" if loose); if no news explains a move, say the cause isn't clear from the
 headlines. Never invent numbers, dates or events. Prices are in Rs.
 
-Write Markdown, about 250 words:
+Leave out moves you can't explain, unless they are among the 2-3 biggest. Write Markdown, about 250 words:
 **In one line:** <the stock's story in one sentence, e.g. "Re-rated from Rs X to Rs Y as ... then ...">
 ### Re-rating factors
-(bullets: what lifted the stock - date, the news, the price reaction)
+(bullets: RISES only - what lifted the stock: date, the news, the price reaction)
 ### De-rating factors
-(bullets: what hurt it - date, the news, the price reaction. Skip if none.)
+(bullets: FALLS only - what hurt it: date, the news, the price reaction. Skip if none.)
 ### Pivots & turning points
 (bullets: strategy shifts, capacity, big orders, legal wins, approvals, management changes)
 ### What moves this stock
@@ -68,22 +68,34 @@ def short_name(name):
     return re.sub(r"\s+", " ", n).strip(" .,-")
 
 
+LAST_HTTP = {"status": None}
+
+
 def prices(sess, code):
-    for host in ("query1", "query2"):
-        try:
-            r = sess.get(f"https://{host}.finance.yahoo.com/v8/finance/chart/{code}.BO",
-                         params={"range": "2y", "interval": "1wk"}, timeout=25)
+    """Weekly closes for 2 years. Returns None if Yahoo has nothing; raises RuntimeError if Yahoo is refusing us."""
+    for attempt in range(3):
+        for host in ("query1", "query2"):
+            try:
+                r = sess.get(f"https://{host}.finance.yahoo.com/v8/finance/chart/{code}.BO",
+                             params={"range": "2y", "interval": "1wk"}, timeout=25)
+            except Exception as e:
+                LAST_HTTP["status"] = str(e)[:60]
+                continue
+            LAST_HTTP["status"] = r.status_code
+            if r.status_code == 404:
+                return None
             if r.status_code != 200:
                 continue
-            res = r.json()["chart"]["result"][0]
+            try:
+                res = r.json()["chart"]["result"][0]
+            except Exception:
+                return None
             closes = res["indicators"]["quote"][0].get("close") or []
             pts = [[dt.datetime.fromtimestamp(t, IST).strftime("%Y-%m-%d"), round(c, 2)]
                    for t, c in zip(res.get("timestamp") or [], closes) if c]
-            if len(pts) > 20:
-                return pts
-        except Exception:
-            continue
-    return None
+            return pts if len(pts) > 20 else None
+        time.sleep(5 * (attempt + 1))
+    raise RuntimeError(f"Yahoo Finance not answering (last: {LAST_HTTP['status']})")
 
 
 def big_moves(pts, window=4, limit=6):
@@ -168,6 +180,8 @@ def step(mode="full"):
         return
     lib = C.load_lib()
     store = load()
+    for k in [k for k, v in store.items() if v.get("status") == "no-price" and not v.get("v")]:
+        del store[k]  # from the first run, when Yahoo was refusing requests
     n_max, minutes = ALLOWANCE[mode]
     latest = {}
     for c in lib["calls"].values():
@@ -200,9 +214,14 @@ def step(mode="full"):
         if made >= n_max or time.time() > deadline:
             break
         code = c["code"]
-        pts = prices(sess, code)
+        try:
+            pts = prices(sess, code)
+        except RuntimeError as e:
+            say(f"  {e} - stopping here, the rest continue next update")
+            break
+        time.sleep(1.5)
         if not pts:
-            store[code] = {"status": "no-price", "at": today.isoformat(), "company": c["company"]}
+            store[code] = {"status": "no-price", "at": today.isoformat(), "company": c["company"], "v": 2}
             continue
         moves = big_moves(pts)
         news = headlines(c["company"])
