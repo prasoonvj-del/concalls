@@ -564,9 +564,9 @@
         <ul class="list">${b.failed.map((f) => `<li>${esc(f.name)} <span class="src">(${esc(f.folder)}) - ${esc(f.error)}</span></li>`).join("")}</ul></details>` : ""}`;
     $("#datesel").onchange = (e) => go("#today/" + e.target.value);
     if ($("#wlf")) storyFeed($("#wlf"), wlStories, { page: 6, ph: "Search watchlist news" });
-    clampBlock($("#bigp"), 620);
-    clampBlock($("#topx"), 900);
-    clampBlock(view.querySelector(".secs2"), 520);
+    clampBlock($("#bigp"), 620, "bigpicture");
+    clampBlock($("#topx"), 900, "explained");
+    clampBlock(view.querySelector(".secs2"), 520, "sectors");
     loadCtx().then(() => {
       const PV = ((window.DESK_TRACK || {}).trackers || {}).pivots || [];
       const wk = new Date(b.date + "T00:00"); wk.setDate(wk.getDate() - 7);
@@ -575,9 +575,9 @@
       if ($("#pivw") && recentP.length) {
         $("#pivw").innerHTML = `<div class="card"><h2>Pivots of the week <span class="m">company-changing news that can re-rate or de-rate a stock · <a href="#trackers/pivots">all ${PV.length}</a></span></h2>
           <div class="pvg" id="pvgw">${recentP.map((r) => pivotLine(r)).join("")}</div></div>`;
-        clampBlock($("#pvgw"), 330);
+        clampBlock($("#pvgw"), 330, "pivots");
       }
-      if ($("#wah")) { renderWeekAhead($("#wah")); clampBlock($("#wal"), 430); }
+      if ($("#wah")) { renderWeekAhead($("#wah")); clampBlock($("#wal"), 430, "weekahead"); }
       view.querySelectorAll(".ctxs").forEach((d) => { d.innerHTML = JSON.parse(d.dataset.cos).map(ctxLine).join(""); });
       // "Stocks in focus": company names open the company page, with the tone of their last concall
       const bp = $("#bigp");
@@ -652,17 +652,20 @@
     draw();
   }
   /** Show the first part of a long block, with one tap to see the rest (and to fold it back). */
-  function clampBlock(el, px) {
+  function clampBlock(el, px, key) {
     if (!el || el.scrollHeight <= px + 120) return;
-    el.classList.add("clamped"); el.style.maxHeight = px + "px";
-    const btn = document.createElement("button"); btn.className = "unclamp"; btn.textContent = "Show all ▾";
-    btn.onclick = () => {
-      const open = el.classList.toggle("clamped");
-      el.style.maxHeight = open ? px + "px" : "none";
-      btn.textContent = open ? "Show all ▾" : "Show less ▴";
-      if (open) el.scrollIntoView({ block: "nearest" });
+    // remembered per section: once you choose "Show all", it stays open on every visit until you tap "Show less"
+    const k = "open-" + (key || el.id || "block");
+    const btn = document.createElement("button"); btn.className = "unclamp";
+    const set = (open, save) => {
+      el.classList.toggle("clamped", !open);
+      el.style.maxHeight = open ? "none" : px + "px";
+      btn.textContent = open ? "Show less ▴" : "Show all ▾";
+      if (save) store.set(k, open);
     };
+    btn.onclick = () => { const open = el.classList.contains("clamped"); set(open, true); if (!open) el.scrollIntoView({ block: "nearest" }); };
     el.after(btn);
+    set(!!store.get(k, false), false);
   }
   /** Turn the h3 sections of a write-up into fold-outs; sections matching `keepOpen` stay open. */
   function foldSections(root, keepOpen) {
@@ -1372,6 +1375,9 @@
         <input type="text" id="wl" style="width:100%" placeholder="e.g. Trident, Apollo Hospitals, KPR Mill" value="${esc(watchlist().join(", "))}">
         <div style="margin-top:10px"><button class="primary" id="wls">Save</button> <span class="m" id="wlm"></span></div></div>
       <div class="card"><h2>Appearance</h2><select id="th"><option value="auto">Match my device</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+      <div class="card"><h2>Today page: show in full</h2><p class="help">Ticked sections always open in full; unticked ones show the first part with "Show all". Tapping "Show all" or "Show less" on the page changes this too.</p>
+        ${[["bigpicture", "The big picture"], ["pivots", "Pivots of the week"], ["weekahead", "Week ahead"], ["explained", "Top stories, explained"], ["sectors", "Sector by sector"]]
+          .map(([k, l]) => `<label style="display:block;margin:6px 0"><input type="checkbox" data-open="${k}" ${store.get("open-" + k, false) ? "checked" : ""}> ${l}</label>`).join("")}</div>
       <div class="card"><h2>Swiping between tabs</h2><p class="help">On a tablet or phone, swipe sideways anywhere on the page to move to the next or previous tab.</p>
         <select id="swd"><option value="right-next">Swipe right → next tab, swipe left → previous</option><option value="left-next">Swipe left → next tab, swipe right → previous</option></select></div>
       <div class="card help"><h2>About</h2>
@@ -1383,6 +1389,7 @@
       const v = $("#wl").value.split(",").map((x) => x.trim()).filter(Boolean);
       store.set("watchlist", v); $("#wlm").textContent = "Saved.";
     };
+    view.querySelectorAll("[data-open]").forEach((c) => { c.onchange = () => store.set("open-" + c.dataset.open, c.checked); });
     $("#swd").value = store.get("swipe", "right-next");
     $("#swd").onchange = (e) => store.set("swipe", e.target.value);
     $("#th").value = store.get("theme", "auto");
