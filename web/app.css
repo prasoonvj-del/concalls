@@ -195,3 +195,6 @@ details.fold.sm{border:0;padding:2px 0}details.fold.sm>summary{font-weight:500;f
 .crow .ch .r2{margin-left:auto;display:flex;gap:6px;align-items:center}
 .crow .cp{font-size:13.5px;color:var(--text-2,inherit);margin-top:3px;line-height:1.45}
 a.badge{text-decoration:none}
+@keyframes slideL{from{opacity:.3;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes slideR{from{opacity:.3;transform:translateX(-40px)}to{opacity:1;transform:none}}
+#view.slide-l{animation:slideL .22s ease-out}#view.slide-r{animation:slideR .22s ease-out}

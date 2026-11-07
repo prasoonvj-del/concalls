@@ -1253,6 +1253,8 @@
         <input type="text" id="wl" style="width:100%" placeholder="e.g. Trident, Apollo Hospitals, KPR Mill" value="${esc(watchlist().join(", "))}">
         <div style="margin-top:10px"><button class="primary" id="wls">Save</button> <span class="m" id="wlm"></span></div></div>
       <div class="card"><h2>Appearance</h2><select id="th"><option value="auto">Match my device</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+      <div class="card"><h2>Swiping between tabs</h2><p class="help">On a tablet or phone, swipe sideways anywhere on the page to move to the next or previous tab.</p>
+        <select id="swd"><option value="right-next">Swipe right → next tab, swipe left → previous</option><option value="left-next">Swipe left → next tab, swipe right → previous</option></select></div>
       <div class="card help"><h2>About</h2>
         <p>The site is rebuilt automatically every morning: news from your RSS feeds (last 24 hours), and summaries of new concall transcripts filed on BSE.</p>
         <p>Last update: <b>${esc((IDX.updated || "").replace("T", " "))}</b> · ${plural(IDX.briefs.length, "brief")} · ${plural(IDX.concalls || 0, "concall summary")}.</p>
@@ -1262,6 +1264,8 @@
       const v = $("#wl").value.split(",").map((x) => x.trim()).filter(Boolean);
       store.set("watchlist", v); $("#wlm").textContent = "Saved.";
     };
+    $("#swd").value = store.get("swipe", "right-next");
+    $("#swd").onchange = (e) => store.set("swipe", e.target.value);
     $("#th").value = store.get("theme", "auto");
     $("#th").onchange = (e) => {
       store.set("theme", e.target.value);
@@ -1278,6 +1282,8 @@
     const arg = rest.join("/");
     const key = tab === "tab" ? "tab-" + arg : tab === "presentations" ? "concalls" : tab;
     document.querySelectorAll("#tabs a").forEach((a) => a.classList.toggle("on", a.dataset.tab === key));
+    const on = document.querySelector("#tabs a.on");
+    if (on) on.scrollIntoView({ block: "nearest", inline: "center" });
     try {
       if (tab === "today") await pageToday(arg || null);
       else if (tab === "sectors") await pageSectors(arg || null);
@@ -1304,5 +1310,40 @@
     arch.parentNode.insertBefore(a, arch);
   });
   addEventListener("hashchange", route);
+
+  /* ------------------------------------------------------------ swipe between tabs (tablet / phone) */
+  const navTabs = () => [...document.querySelectorAll("#tabs a")].filter((a) => a.dataset.tab !== "settings");
+  const scrollsSideways = (el) => {
+    for (let n = el; n && n !== document.body; n = n.parentElement) {
+      if (n.scrollWidth > n.clientWidth + 4) {
+        const ox = getComputedStyle(n).overflowX;
+        if (ox === "auto" || ox === "scroll") return true;
+      }
+    }
+    return false;
+  };
+  let sw = null;
+  addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1 || !pop.hidden) { sw = null; return; }
+    const t = e.target;
+    if (t.closest("input, select, textarea, svg, #tabs") || scrollsSideways(t)) { sw = null; return; }
+    sw = { x: e.touches[0].clientX, y: e.touches[0].clientY, at: Date.now() };
+  }, { passive: true });
+  addEventListener("touchend", (e) => {
+    if (!sw) return;
+    const dx = e.changedTouches[0].clientX - sw.x, dy = e.changedTouches[0].clientY - sw.y, ms = Date.now() - sw.at;
+    sw = null;
+    if (Math.abs(dx) < 80 || Math.abs(dy) > Math.abs(dx) * 0.6 || ms > 800) return;
+    const tabs = navTabs(), i = tabs.findIndex((a) => a.classList.contains("on"));
+    if (i < 0) return;
+    // default: finger moving right -> next tab (can be flipped in Settings)
+    const forward = store.get("swipe", "right-next") === "right-next" ? dx > 0 : dx < 0;
+    const j = i + (forward ? 1 : -1);
+    if (j < 0 || j >= tabs.length) return;
+    view.classList.remove("slide-l", "slide-r"); void view.offsetWidth;
+    view.classList.add(forward ? "slide-l" : "slide-r");
+    location.hash = tabs[j].getAttribute("href");
+  }, { passive: true });
+
   route();
 })();
