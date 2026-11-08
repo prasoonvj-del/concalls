@@ -38,8 +38,9 @@ The REAL weekly share price (use these numbers for price moves, not numbers from
 Our notes from its recent earnings calls:
 {concalls}
 
-Write Markdown, 250-350 words, plain and specific (dates, Rs, %). No filler, no "cause unclear" lines - if you
-can't explain a move, leave it out.
+Write Markdown, 250-350 words, plain and specific (dates, Rs, %). Bullet points only - never tables. No citation
+markers. No filler, no "cause unclear" lines - if you can't explain a move, leave it out. The direction of every
+price move must match the real price data (don't call a fall "stabilising").
 
 **In one line:** <the stock's story in one sentence: re-rated / de-rated / round trip, from Rs X to Rs Y, because ...>
 ### How the story unfolded
@@ -264,11 +265,16 @@ def requested():
     for it in _gh("GET", "/issues", params={"state": "open", "per_page": 50}) or []:
         m = re.match(r"\s*story:\s*(\d{5,6})", it.get("title", ""), re.I)
         if m and "pull_request" not in it:
-            out[m.group(1)] = it["number"]
+            out.setdefault(m.group(1), []).append(it["number"])
     return out
 
 
-def close_request(num, company, ok=True):
+def close_request(nums, company, ok=True):
+    for num in nums:
+        _close_one(num, company, ok)
+
+
+def _close_one(num, company, ok=True):
     msg = (f"Done - 'The story so far' for {company} is on the website after this update." if ok
            else f"Couldn't write it for {company} this time (no share-price data found).")
     _gh("POST", f"/issues/{num}/comments", json={"body": msg})
@@ -357,6 +363,8 @@ def step(mode="full"):
         except C.AIError as e:
             say(f"  {c['company']}: {str(e)[:140]}")
             continue
+        text = re.sub(r"【[^】]*】", "", text)  # inline citation markers from the search tool
+        text = re.sub(r"\[\d+(?:†[^\]]*)?\]", "", text)
         src = ""
         m = re.search(r"(?im)^\**sources?:?\**\s*(.+)$", text)
         if m:
