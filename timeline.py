@@ -132,6 +132,13 @@ def update():
                 n += add(code, f"bs|{code}|{b['at']}", b["at"], "story", f"Share-price story: {b['one']}")
     except Exception:
         pass
+    # facts the trackers merged away as repeats (still inside their 4-month window) go from the timeline too
+    live = {r["uid"] for k in ("pivots", "results", "orders", "calls") for r in T.get(k, [])}
+    oldest = min([r["date"] for k in ("pivots", "results", "orders", "calls") for r in T.get(k, [])] or ["9999"])
+    for k2 in list(cos):
+        cos[k2] = [e for e in cos[k2] if e["k"] not in ("pivot", "result", "order", "broker") or e["u"] in live or e["d"] < oldest]
+        if not cos[k2]:
+            del cos[k2]
     # tidy: newest first, capped
     for k, lst in cos.items():
         lst.sort(key=lambda e: e["d"], reverse=True)
