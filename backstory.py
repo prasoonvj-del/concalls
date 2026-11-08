@@ -411,6 +411,7 @@ def step(mode="full"):
         try:
             text, src, used = ask_gemini_search(body)
         except C.AIError as e:  # Gemini out for today: a requested company still gets done with Groq's browser search
+            say(f"  Gemini search: {str(e)[:220]}")
             if code not in asked:
                 say(f"  {e}" if isinstance(e, C.QuotaOver) else f"  {c['company']}: {str(e)[:140]}")
                 if isinstance(e, C.QuotaOver):
