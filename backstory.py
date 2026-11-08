@@ -197,36 +197,50 @@ def concall_notes(lib, code):
     return rows[-6:]
 
 
-COMPOUND = "groq/compound"
+# Groq models that can search the web themselves, best first. The last one is GPT-OSS with Groq's
+# built-in browser-search tool. The first that works for this key is remembered for the run.
+SEARCHERS = [("groq/compound", None), ("groq/compound-mini", None), ("compound-beta", None),
+             ("openai/gpt-oss-120b", [{"type": "browser_search"}])]
+COMPOUND = SEARCHERS[0][0]
+_working = {}
 
 
 def ask_compound(ai, prompt):
-    """Groq's compound system: an LLM that runs its own web searches. Free tier ~250 requests/day."""
+    """Ask a Groq model that runs its own web searches (free tier: a few hundred requests a day)."""
     import requests
+    global COMPOUND
     url = ai.url.rstrip("/") + "/chat/completions"
-    for attempt in range(4):
-        try:
-            r = requests.post(url, headers={"Authorization": f"Bearer {ai.key}"}, timeout=180,
-                              json={"model": COMPOUND, "messages": [{"role": "user", "content": prompt}], "temperature": 0.3})
-        except Exception as e:
-            if attempt == 3:
-                raise C.AIError(f"no answer from Groq ({str(e)[:60]})")
-            time.sleep(10)
-            continue
-        if r.status_code == 200:
-            return r.json()["choices"][0]["message"]["content"]
-        body = r.text[:300]
-        if r.status_code == 429:
-            if "per day" in body or "RPD" in body or "TPD" in body:
-                raise C.QuotaOver("Groq's daily allowance for web-search answers is used up - the rest continue tomorrow")
-            wait = float(r.headers.get("retry-after", 20) or 20)
-            time.sleep(min(wait, 90))
-            continue
-        if r.status_code in (500, 502, 503) and attempt < 3:
-            time.sleep(15)
-            continue
-        raise C.AIError(f"Groq {r.status_code}: {body[:140]}")
-    raise C.AIError("Groq kept asking us to wait")
+    order = [_working["m"]] if "m" in _working else SEARCHERS
+    last = ""
+    for model, tools in order:
+        payload = {"model": model, "messages": [{"role": "user", "content": prompt}], "temperature": 0.3}
+        if tools:
+            payload["tools"] = tools
+        for attempt in range(4):
+            try:
+                r = requests.post(url, headers={"Authorization": f"Bearer {ai.key}"}, timeout=240, json=payload)
+            except Exception as e:
+                last = str(e)[:80]
+                time.sleep(10)
+                continue
+            if r.status_code == 200:
+                _working["m"] = (model, tools)
+                COMPOUND = model + (" + browser search" if tools else "")
+                return r.json()["choices"][0]["message"]["content"]
+            body = r.text[:300]
+            last = f"{model}: {r.status_code} {body[:120]}"
+            if r.status_code == 429:
+                if "per day" in body or "RPD" in body or "TPD" in body:
+                    raise C.QuotaOver("Groq's daily allowance for web-search answers is used up - the rest continue tomorrow")
+                time.sleep(min(float(r.headers.get("retry-after", 20) or 20), 90))
+                continue
+            if r.status_code in (500, 502, 503) and attempt < 3:
+                time.sleep(15)
+                continue
+            break  # 400/404: this model isn't available for the key - try the next one
+        if "m" in _working:
+            break
+    raise C.AIError(f"no web-search model answered ({last})")
 
 
 # ---- requests from the website ("Write the story for this company" -> a GitHub issue titled "Story: <code> <name>")
