@@ -94,9 +94,22 @@
   /* ------------------------------------------------------------ helpers */
   const norm = (s) => String(s || "").toLowerCase().replace(/&/g, " and ").replace(/['.]/g, "")
     .replace(/\b(limited|ltd|the)\b/g, "").replace(/[^a-z0-9]+/g, "");
+  // same rules as names.py: a name may only extend another by a generic tail ("Prestige Estates" = "Prestige Estates
+  // Projects"), never by a business word ("Mahindra & Mahindra" is not "Mahindra & Mahindra Financial Services")
+  const GENERIC_TAIL = new Set(["projects", "industries", "industry", "india", "corporation", "corp", "company", "co", "inc", "group",
+    "andspecialeconomiczone", "specialeconomiczone", "sez", "technologies", "technology", "tech", "enterprise", "international",
+    "global", "incorporated", "indiaprivate", "indialimited", "infra"]);
+  const ALIAS = { mandm: "mahindraandmahindra", mahindra: "mahindraandmahindra", landt: "larsenandtoubro", lt: "larsenandtoubro",
+    sbi: "statebankofindia", ril: "relianceindustries", reliance: "relianceindustries", tcs: "tataconsultancyservices",
+    hul: "hindustanunilever", airtel: "bhartiairtel", infy: "infosys", hcltech: "hcltechnologies", maruti: "marutisuzukiindia",
+    zomato: "eternal", indigo: "interglobeaviation", adaniports: "adaniportsandspecialeconomiczone", kotak: "kotakmahindrabank" };
   function sameCo(a, b) {
-    const x = norm(a), y = norm(b);
-    return !!x && !!y && (x === y || (x.length > 3 && y.startsWith(x)) || (y.length > 3 && x.startsWith(y)));
+    let x = norm(a), y = norm(b);
+    if (!x || !y) return false;
+    x = ALIAS[x] || x; y = ALIAS[y] || y;
+    if (x === y) return true;
+    const [sh, lo] = x.length < y.length ? [x, y] : [y, x];
+    return sh.length > 3 && lo.startsWith(sh) && GENERIC_TAIL.has(lo.slice(sh.length));
   }
   const SENT = { "+": ["Positive", "p", "▲"], "-": ["Negative", "n", "▼"], "=": ["Neutral", "z", "•"] };
   const sentChip = (s) => { const t = SENT[s] || SENT["="]; return `<span class="sent ${t[1]}">${t[2]} ${t[0]}</span>`; };
@@ -908,7 +921,10 @@
       : bsCode ? `<div class="card"><h2>The story so far</h2><div class="m">Not written yet for this company${(() => { const M = window.DESK_BSIDX.meta || {}; const i = (M.next || []).findIndex((n) => sameCo(n, key)); return i >= 0 ? ` - it's number ${i + 1} in the queue` : ""; })()}.</div>
         <p><a class="btn" href="${requestLink(bsCode, call ? call.company : key)}" target="_blank" rel="noopener">Write it now</a></p>
         <div class="m">Opens a one-line request on GitHub - press "Submit" and the story appears here in about 10 minutes.</div></div>` : "";
-    const sideCards = `${storyCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
+    const myNotes = getNotes().filter((n2) => n2.company && sameCo(n2.company, key));
+    const notesCard = `<div class="card"><h2>My notes <span class="m">${myNotes.length ? plural(myNotes.length, "note") : "only you see these"}</span></h2>
+        ${myNotes.map((n2) => noteHtml(n2, false)).join("")}<button id="conote">✎ Add a note on ${esc(key)}</button></div>`;
+    const sideCards = `${notesCard}${storyCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
       <div class="card"><h2>In the news <span class="m">${plural(items.length, "story")} · ${pz}▲ ${nz}▼</span></h2>
         ${items.length >= 4 ? `<div id="cod"></div>` : ""}
         ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>`;
@@ -916,6 +932,8 @@
       ? `<div class="cogrid"><div>${concallCard}${deckCard}${tlCard}</div><div>${sideCards}</div></div>`
       : `<div class="grid g2" style="align-items:start">${sideCards}${tlCard}</div>`;
     clampBlock($("#tlb"), 520, "timeline");
+    if ($("#conote")) $("#conote").onclick = () => openNote({ company: key });
+    bindNoteActions(body);
     if (items.length >= 4) divergingChart($("#cod"), perDay.filter((r) => r.total));
     if (story && story.pts) {
       const xs = story.pts.map((p) => p[0]), idxOf = (d) => Math.max(0, xs.findIndex((x) => x >= d));
@@ -1215,6 +1233,104 @@
     draw(0);
   }
 
+  /* ------------------------------------------------------------ notes (kept in this browser; export / import to move them) */
+  const getNotes = () => store.get("notes", []);
+  const putNotes = (list) => store.set("notes", list);
+  let noteCtx = null, notePick = "";
+  function pageContext() {
+    const h = location.hash || "#today";
+    const h1 = (view.querySelector("h1") || {}).textContent || "";
+    let company = "";
+    const m = /^#companies\/(.+)$/.exec(h);
+    if (m) company = decodeURIComponent(m[1]);
+    let label = h1, link = h;
+    if (!pop.hidden) { const t = pop.querySelector("h2, .t, b"); if (t) label = "Story: " + t.textContent.trim().slice(0, 120); }
+    return { label: label.trim() || h, link, company };
+  }
+  function openNote(prefill = {}) {
+    noteCtx = Object.assign(pageContext(), prefill);
+    $("#nctx").textContent = "From: " + noteCtx.label;
+    const q = (prefill.quote != null ? prefill.quote : notePick).trim();
+    $("#nquote").hidden = !q; $("#nquote").textContent = q;
+    noteCtx.quote = q;
+    $("#ntext").value = prefill.text || "";
+    $("#nco").value = noteCtx.company || "";
+    $("#notepanel").hidden = false;
+    setTimeout(() => $("#ntext").focus(), 50);
+  }
+  function closeNote() { $("#notepanel").hidden = true; noteCtx = null; notePick = ""; }
+  const grabSel = () => { const t = String(window.getSelection ? window.getSelection() : "").trim(); if (t) notePick = t.slice(0, 1500); };
+  $("#notebtn").addEventListener("mousedown", grabSel);
+  $("#notebtn").addEventListener("touchstart", grabSel, { passive: true });
+  $("#notebtn").addEventListener("click", () => openNote());
+  $("#ncancel").addEventListener("click", closeNote);
+  $("#notepanel").addEventListener("click", (e) => { if (e.target.id === "notepanel") closeNote(); });
+  $("#nsave").addEventListener("click", () => {
+    const text = $("#ntext").value.trim();
+    if (!text && !noteCtx.quote) { closeNote(); return; }
+    const list = getNotes();
+    if (noteCtx.id) {
+      const n = list.find((x) => x.id === noteCtx.id);
+      if (n) { n.text = text; n.company = $("#nco").value.trim(); n.edited = new Date().toISOString(); }
+    } else {
+      list.unshift({ id: Date.now().toString(36), at: new Date().toISOString(), text, quote: noteCtx.quote || "",
+        label: noteCtx.label, link: noteCtx.link, company: $("#nco").value.trim() });
+    }
+    putNotes(list);
+    closeNote();
+    if (/^#(notes|companies\/)/.test(location.hash)) route();
+  });
+  const noteHtml = (n, showCo = true) => `<div class="note" data-id="${esc(n.id)}">
+      <div class="m">${esc(new Date(n.at).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }))}
+        · <a href="${esc(n.link)}">${esc(n.label || n.link)}</a>${showCo && n.company && n.company !== n.label ? ` · <a href="#companies/${encodeURIComponent(n.company)}">${esc(n.company)}</a>` : ""}</div>
+      ${n.quote ? `<blockquote>${esc(n.quote)}</blockquote>` : ""}${n.text ? `<div class="nt">${esc(n.text).replace(/\n/g, "<br>")}</div>` : ""}
+      <div class="nact"><button data-edit="${esc(n.id)}">Edit</button> <button data-del="${esc(n.id)}">Delete</button></div></div>`;
+  function bindNoteActions(root) {
+    root.querySelectorAll("[data-edit]").forEach((b) => b.onclick = () => {
+      const n = getNotes().find((x) => x.id === b.dataset.edit); if (!n) return;
+      openNote({ id: n.id, text: n.text, quote: n.quote, company: n.company, label: n.label, link: n.link });
+    });
+    root.querySelectorAll("[data-del]").forEach((b) => b.onclick = () => {
+      if (!confirm("Delete this note?")) return;
+      putNotes(getNotes().filter((x) => x.id !== b.dataset.del)); route();
+    });
+  }
+  function pageNotes() {
+    const all = getNotes();
+    const cos = [...new Set(all.map((n) => n.company).filter(Boolean))].sort();
+    view.innerHTML = `<h1>Notes</h1><div class="sub">${plural(all.length, "note")} · saved in this browser - use Export / Import to move them between your tablet and laptop</div>
+      <div class="filters"><input type="search" id="nq" placeholder="Search your notes">
+        <select id="nc"><option value="">All companies</option>${cos.map((c) => `<option>${esc(c)}</option>`).join("")}</select>
+        <button class="primary" id="nnew">✎ New note</button> <button id="nexp">Export</button> <button id="nmd">Copy as text</button>
+        <label class="btnlike">Import<input type="file" id="nimp" accept=".json" hidden></label></div>
+      <div class="card" id="nl"></div>`;
+    const draw = () => {
+      const q = $("#nq").value.toLowerCase(), c = $("#nc").value;
+      const xs = all.filter((n) => (!c || n.company === c) && (!q || (n.text + " " + n.quote + " " + n.label + " " + n.company).toLowerCase().includes(q)));
+      $("#nl").innerHTML = xs.map((n) => noteHtml(n)).join("") || `<div class="m">${all.length ? "Nothing matches." : "No notes yet. Tap ✎ Note (bottom right) on any page - select some text first to quote it."}</div>`;
+      bindNoteActions($("#nl"));
+    };
+    $("#nq").oninput = draw; $("#nc").onchange = draw; draw();
+    $("#nnew").onclick = () => openNote();
+    $("#nexp").onclick = () => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(getNotes(), null, 1)], { type: "application/json" }));
+      a.download = "market-desk-notes-" + new Date().toISOString().slice(0, 10) + ".json"; a.click();
+    };
+    $("#nmd").onclick = async () => {
+      const md = getNotes().map((n) => `## ${n.at.slice(0, 10)} · ${n.company || n.label}\n${n.quote ? "> " + n.quote.replace(/\n/g, "\n> ") + "\n\n" : ""}${n.text}`).join("\n\n");
+      try { await navigator.clipboard.writeText(md); $("#nmd").textContent = "Copied ✓"; } catch (e) { alert("Couldn't copy - use Export instead."); }
+    };
+    $("#nimp").onchange = async (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      try {
+        const inc = JSON.parse(await f.text()), have = getNotes(), ids = new Set(have.map((n) => n.id));
+        const merged = have.concat(inc.filter((n) => n && n.id && !ids.has(n.id))).sort((a, b) => (a.at < b.at ? 1 : -1));
+        putNotes(merged); alert(`Imported ${merged.length - have.length} notes.`); route();
+      } catch (err) { alert("That file isn't a Market Desk notes export."); }
+    };
+  }
+
   /* ------------------------------------------------------------ markets */
   async function pageMarkets() {
     const D = await getTrack();
@@ -1299,6 +1415,7 @@
     const rows0 = (T[which] || []).filter((r) => which !== "pivots" || !NOISE.test(r.what));
     const secs = [...new Set(rows0.map((r) => r.sector || "Other"))].sort();
     const st = store.get("trk-" + which, { q: "", sec: "", w: false, days: 30 });
+    st.kind = "";
     view.innerHTML = `<h1>Trackers</h1>
       <div class="sub">Pulled from the news by AI and kept for four months${T.updated ? " · updated " + esc(T.updated.replace("T", " ")) : ""} · check figures in the linked story before acting</div>
       <div class="cotabs">${Object.keys(names).map((k) => `<button data-go="#trackers/${k}" class="${k === which ? "on" : ""}">${names[k]} <span class="m">${(T[k] || []).length}</span></button>`).join("")}</div>
@@ -1312,10 +1429,11 @@
       redraws.length = 0;
       Object.assign(st, { q: $("#kq").value, sec: $("#ks").value, w: $("#kw").checked, days: Number($("#kd").value) });
       store.set("trk-" + which, st);
-      $("#kclr").hidden = !(st.q || st.sec || st.w);
+      $("#kclr").hidden = !(st.q || st.sec || st.w || st.kind);
       const cut = new Date(); cut.setDate(cut.getDate() - st.days); const cutS = cut.toISOString().slice(0, 10);
-      const rows = rows0.filter((r) => r.date >= cutS && (!st.q || r.company.toLowerCase().includes(st.q.toLowerCase()))
+      const allRows = rows0.filter((r) => r.date >= cutS && (!st.q || r.company.toLowerCase().includes(st.q.toLowerCase()))
         && (!st.sec || (r.sector || "Other") === st.sec) && (!st.w || isWatch(r.company)));
+      const rows = allRows.filter((r) => !st.kind || (PIVOT_LBL[r.type] || "Other") === st.kind);
       const body = $("#kbody");
       const open = (c) => () => go("#companies/" + encodeURIComponent(c));
       const src = (r) => `<a class="m" href="${esc(r.link)}" target="_blank" rel="noopener" title="${esc(r.title)}">source</a>`;
@@ -1323,12 +1441,15 @@
       const full = rows; let lim = st.lim || 25;
       if (which === "pivots") {
         const byType = {}, bySec = {};
-        rows.forEach((r) => { const t = PIVOT_LBL[r.type] || "Other"; byType[t] = (byType[t] || 0) + 1; const k = r.sector || "Other"; bySec[k] = (bySec[k] || 0) + 1; });
-        body.innerHTML = `<div class="grid g2" style="align-items:start"><div class="card"><h2>Pivots by kind</h2><div id="kp1"></div></div>
+        allRows.forEach((r) => { const t = PIVOT_LBL[r.type] || "Other"; byType[t] = (byType[t] || 0) + 1; });
+        rows.forEach((r) => { const k = r.sector || "Other"; bySec[k] = (bySec[k] || 0) + 1; });
+        body.innerHTML = `<div class="grid g2" style="align-items:start"><div class="card"><h2>Pivots by kind <span class="m">tap to filter</span></h2><div id="kp1"></div></div>
             <div class="card"><h2>Pivots by sector <span class="m">tap to filter</span></h2><div id="kp2"></div></div></div>
-          <div class="card"><h2>${plural(rows.length, "pivot")} <span class="m">strategy shifts, capacity, big orders, legal wins, approvals, M&A, funding, ratings</span></h2>
+          <div class="card"><h2>${plural(rows.length, "pivot")} ${st.kind || st.sec ? `<span class="chip link" id="kfil">${esc([st.kind, st.sec].filter(Boolean).join(" · "))} ✕</span>` : `<span class="m">strategy shifts, capacity, big orders, legal wins, approvals, M&A, funding, ratings</span>`}</h2>
           <div class="pvg">${rows.slice(0, lim).map((r) => pivotLine(r)).join("")}</div>${full.length > lim ? `<button class="kmore">Show all ${full.length}</button>` : ""}</div>`;
-        barChart($("#kp1"), Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: k, value: v })), "pivot");
+        barChart($("#kp1"), Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: k, value: v,
+          onclick: () => { st.kind = st.kind === k ? "" : k; draw(); } })), "pivot");
+        if ($("#kfil")) $("#kfil").onclick = () => { st.kind = ""; $("#ks").value = ""; draw(); };
         barChart($("#kp2"), Object.entries(bySec).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => ({ label: k, value: v, onclick: () => { $("#ks").value = k; draw(); } })), "pivot");
       } else if (which === "results") {
         const both = rows.filter((r) => r.rev_yoy != null && r.pat_yoy != null);
@@ -1385,7 +1506,7 @@
       }
     };
     ["kq", "ks", "kw", "kd"].forEach((id) => { $("#" + id).addEventListener(id === "kq" ? "input" : "change", () => { st.lim = 25; draw(); }); });
-    $("#kclr").onclick = () => { $("#kq").value = ""; $("#ks").value = ""; $("#kw").checked = false; st.lim = 25; draw(); };
+    $("#kclr").onclick = () => { $("#kq").value = ""; $("#ks").value = ""; $("#kw").checked = false; st.kind = ""; st.lim = 25; draw(); };
     $("#kbody").addEventListener("click", (e) => { if (e.target.closest(".kmore")) { st.lim = 100000; draw(); } });
     draw();
   }
@@ -1503,6 +1624,7 @@
       else if (tab === "trackers") await pageTrackers(arg || null);
       else if (tab === "tab") await pageTab(arg);
       else if (tab === "archive") await pageArchive();
+      else if (tab === "notes") pageNotes();
       else if (tab === "settings") pageSettings();
       else await pageToday(null);
     } catch (e) {

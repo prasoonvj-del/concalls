@@ -215,3 +215,11 @@ a.btn{display:inline-block;background:var(--s1);color:#fff;text-decoration:none;
 .tl .tlm{font-weight:700;margin:12px 0 4px;color:var(--accent)}.tl .tlm:first-child{margin-top:0}
 .tle{display:grid;grid-template-columns:26px auto 1fr;gap:8px;align-items:baseline;padding:4px 0;font-size:13.5px;line-height:1.45;border-top:1px solid var(--line-2,rgba(127,127,127,.1))}
 .tle .kc{margin:0;white-space:nowrap}
+.notebtn{position:fixed;right:18px;bottom:22px;z-index:40;background:var(--s1);color:#fff;border:0;border-radius:999px;padding:11px 18px;font:inherit;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer}
+.notecard textarea,.notecard input{width:100%;box-sizing:border-box;font:inherit;margin:8px 0;padding:10px;border-radius:8px;border:1px solid var(--line,rgba(127,127,127,.3));background:var(--surface);color:var(--text)}
+.notecard blockquote,.note blockquote{margin:8px 0;padding:6px 12px;border-left:3px solid var(--s1);color:var(--text-2,inherit);font-size:13.5px;white-space:pre-wrap}
+.nbtns{display:flex;gap:8px;justify-content:flex-end}
+.note{padding:10px 0;border-top:1px solid var(--line,rgba(127,127,127,.15))}.note:first-child{border-top:0}
+.note .nt{margin:4px 0;line-height:1.5}.nact{display:flex;gap:6px;margin-top:4px}.nact button{font-size:12px;padding:3px 10px}
+.btnlike{display:inline-block;border:1px solid var(--line,rgba(127,127,127,.3));border-radius:8px;padding:6px 12px;cursor:pointer}
+@media print{.notebtn{display:none}}

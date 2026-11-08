@@ -20,11 +20,18 @@
     <a href="#concalls" data-tab="concalls">Concalls</a>
     <a href="#peers" data-tab="peers">Peers</a>
     <a href="#trackers" data-tab="trackers">Trackers</a>
+    <a href="#notes" data-tab="notes">Notes</a>
     <a href="#archive" data-tab="archive">Archive</a>
     <a href="#settings" data-tab="settings" title="Watchlist &amp; settings" aria-label="Settings">⚙</a>
   </nav>
 </header>
 <main id="view" aria-live="polite"><div class="loading">Loading…</div></main>
+<button id="notebtn" class="notebtn" title="Add a note (select text first to quote it)">✎ Note</button>
+<div id="notepanel" class="pop" hidden role="dialog" aria-modal="true"><div class="pop-card notecard">
+  <h2>Add a note</h2><div class="m" id="nctx"></div><blockquote id="nquote" hidden></blockquote>
+  <textarea id="ntext" rows="6" placeholder="Your thoughts - thesis, questions, things to check, levels to watch…"></textarea>
+  <input type="text" id="nco" placeholder="Company (optional) - links the note to its company page">
+  <div class="nbtns"><button class="primary" id="nsave">Save note</button> <button id="ncancel">Cancel</button></div></div></div>
 <div id="pop" class="pop" hidden role="dialog" aria-modal="true"><div class="pop-card" id="pop-card"></div></div>
 <div id="tip" class="tip" hidden></div>
 <script src="data/index.js"></script>

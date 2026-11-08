@@ -262,6 +262,7 @@ def update(stories, pool, cache, now_utc):
             idx[KINDS[kind]][uid] = rec
             added += 1
     check_listed(idx["pivots"], cache)
+    tidy(idx, cache)
     cutoff = (now_utc.astimezone(IST) - dt.timedelta(days=KEEP_DAYS)).strftime("%Y-%m-%d")
     today = now_utc.astimezone(IST).strftime("%Y-%m-%d")
     for k in ("results", "orders", "calls", "pivots"):
@@ -273,6 +274,110 @@ def update(stories, pool, cache, now_utc):
     data["updated"] = now_utc.astimezone(IST).isoformat(timespec="minutes")
     C.DATA.mkdir(parents=True, exist_ok=True)
     TRACK_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+
+# ============================================================================ one name, one sector, no repeats
+
+STOP = {"acquired", "acquiring", "acquire", "acquisition", "stake", "crore", "percent", "company", "plans", "plan",
+        "launch", "launches", "launched", "order", "orders", "worth", "with", "from", "into", "after", "over", "will",
+        "secures", "secured", "wins", "bags", "receives", "received", "announces", "announced", "share", "shares", "india",
+        "indian", "limited", "this", "that", "their", "billion", "million", "lakh", "stock", "rs", "for", "the", "and"}
+
+
+def _tokens(t):
+    out = set()
+    for w in re.findall(r"[A-Za-z][A-Za-z\-]{3,}|\d[\d,.]*", t or ""):
+        if w[0].isdigit():
+            try:
+                v = float(w.replace(",", ""))
+                if v >= 10:
+                    out.add(f"#{round(v)}")
+            except ValueError:
+                pass
+        elif w.lower() not in STOP:
+            out.add(w.lower())
+    return out
+
+
+def norm_quarter(q, date):
+    m = re.search(r"Q\s*([1-4])\D{0,6}?FY\s*'?(\d{2,4})", q or "", re.I)
+    if m:
+        return f"Q{m.group(1)} FY{int(m.group(2)) % 100:02d}"
+    d = dt.date.fromisoformat(date)
+    m2 = re.search(r"(june|september|sept|december|march)\s+quarter", q or "", re.I)
+    if m2:
+        end = {"june": 6, "september": 9, "sept": 9, "december": 12, "march": 3}[m2.group(1).lower()]
+    else:  # the quarter that just ended before the report
+        end = {1: 12, 2: 12, 3: 12, 4: 3, 5: 3, 6: 3, 7: 6, 8: 6, 9: 6, 10: 9, 11: 9, 12: 9}[d.month]
+    year = d.year - (1 if end == 12 and d.month < 12 else 0)
+    qn = {6: 1, 9: 2, 12: 3, 3: 4}[end]
+    fy = year + (1 if end in (6, 9, 12) else 0)
+    return f"Q{qn} FY{fy % 100:02d}"
+
+
+def _days(a, b):
+    return abs((dt.date.fromisoformat(a) - dt.date.fromisoformat(b)).days)
+
+
+def tidy(idx, cache):
+    """Canonical company names + sectors; repeated facts merged (also cleans what was stored before)."""
+    from names import Resolver
+    R = Resolver(cache)
+    every = [r for k in ("results", "orders", "calls", "pivots") for r in idx[k].values()]
+    R.classify_unknown([r["company"] for r in every])
+    for r in every:
+        name, code = R.resolve(r["company"])
+        r["company"], r["code"] = name, code
+        r["sector"] = R.sector(name, fallback=r.get("sector", ""))
+    key = lambda r: r["code"] or C.norm(r["company"])
+    # results: one per company and quarter, gaps filled from the other copies
+    best = {}
+    for uid, r in sorted(idx["results"].items(), key=lambda kv: kv[1]["date"]):
+        r["quarter"] = norm_quarter(r.get("quarter", ""), r["date"])
+        k = (key(r), r["quarter"])
+        if k in best:
+            keep = best[k]
+            for f, v in r.items():
+                if keep.get(f) in (None, "") and v not in (None, ""):
+                    keep[f] = v
+            del idx["results"][uid]
+        else:
+            best[k] = r
+    # orders: same company, same value, within 15 days
+    seen = []
+    for uid, r in sorted(idx["orders"].items(), key=lambda kv: kv[1]["date"]):
+        v = round(r["value"]) if r.get("value") else None
+        if any(key(o) == key(r) and v and v == ov and _days(o["date"], r["date"]) <= 15 for o, ov in seen) or \
+           any(key(o) == key(r) and not v and len(_tokens(o.get("what")) & _tokens(r.get("what"))) >= 2 for o, ov in seen):
+            del idx["orders"][uid]
+        else:
+            seen.append((r, v))
+    # broker calls: same broker on the same company within a week - keep the latest
+    latest = {}
+    for uid, r in sorted(idx["calls"].items(), key=lambda kv: kv[1]["date"], reverse=True):
+        k = (C.norm(r.get("broker", "")), key(r))
+        if k in latest and _days(latest[k]["date"], r["date"]) <= 7:
+            del idx["calls"][uid]
+        else:
+            latest[k] = r
+    # pivots: the same event reported on several days / in different words
+    kept = []
+    for uid, r in sorted(idx["pivots"].items(), key=lambda kv: (kv[1]["date"], -(kv[1].get("imp") or 0))):
+        tr = _tokens(r["what"]) | _tokens(r.get("why"))
+        dup = None
+        for o in kept:
+            if key(o) == key(r) and _days(o["date"], r["date"]) <= 10:
+                shared = _tokens(o["what"]) & _tokens(r["what"])
+                if len(shared) >= 2 or (len(shared) >= 1 and o.get("type") == r.get("type")) or \
+                   len((_tokens(o["what"]) | _tokens(o.get("why"))) & tr) >= 3:
+                    dup = o
+                    break
+        if dup:
+            if (r.get("imp") or 0) > (dup.get("imp") or 0):
+                dup["imp"] = r["imp"]
+            del idx["pivots"][uid]
+        else:
+            kept.append(r)
 
 
 # ============================================================================ results calendar (BSE)
