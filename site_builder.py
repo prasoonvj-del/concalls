@@ -137,9 +137,23 @@ def build(quiet=False):
             have[code] = b["at"]
     meta = json.loads(BS.META.read_text(encoding="utf-8")) if BS.META.exists() else {}
     (data / "bsindex.js").write_text(_js("DESK_BSIDX", None, {"have": have, "meta": meta}), encoding="utf-8")
+    import timeline as TL
+    tl = TL.load()
+    (data / "tl").mkdir(exist_ok=True)
+    tlidx = {}
+    for k, lst in tl.get("companies", {}).items():
+        if not lst:
+            continue
+        fk = re.sub(r"[^a-z0-9]", "_", k.lower())
+        (data / "tl" / f"{fk}.js").write_text(_js("DESK_TL", fk, lst), encoding="utf-8")
+        tlidx[fk] = {"name": tl.get("names", {}).get(k, ""), "code": k if not k.startswith("n:") else "", "n": len(lst)}
+    (data / "tlindex.js").write_text(_js("DESK_TLIDX", None, tlidx), encoding="utf-8")
     import trackers as TK
     track = {"trackers": TK.load(TK.TRACK_FILE, {}), "markets": TK.load(TK.MARKET_FILE, {"series": []}),
              "weekly": TK.load(TK.WEEKLY_FILE, {"reviews": []})}
+    arch_path = C.DATA / "news_archive.json"
+    arch = json.loads(arch_path.read_text(encoding="utf-8")) if arch_path.exists() else []
+    (data / "newsarchive.js").write_text(_js("DESK_NEWSARCH", None, arch), encoding="utf-8")
     (data / "trackers.js").write_text(_js("DESK_TRACK", None, track), encoding="utf-8")
     tabs = []
     if files:
@@ -158,6 +172,8 @@ def build(quiet=False):
     js = js.replace('"data/brief-" + date + ".js"', '"data/brief-" + date + ".js?v=' + stamp + '"')
     js = js.replace('loadScript("data/concalls.js")', 'loadScript("data/concalls.js?v=' + stamp + '")')
     js = js.replace('const CCV = ""', 'const CCV = "?v=' + stamp + '"')
+    js = js.replace('loadScript("data/newsarchive.js")', 'loadScript("data/newsarchive.js?v=' + stamp + '")')
+    js = js.replace('loadScript("data/tlindex.js")', 'loadScript("data/tlindex.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/bsindex.js")', 'loadScript("data/bsindex.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/conews.js")', 'loadScript("data/conews.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/trackers.js")', 'loadScript("data/trackers.js?v=' + stamp + '")')

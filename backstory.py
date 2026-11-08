@@ -39,6 +39,9 @@ The REAL weekly share price (use these numbers for price moves, not numbers from
 Our notes from its recent earnings calls:
 {concalls}
 
+Our own dated record of the company (orders, pivots, results, broker calls) - use it, and check the web for more:
+{record}
+
 Write Markdown, 250-350 words, plain and specific (dates, Rs, %). Bullet points only - never tables. No citation
 markers. No filler, no "cause unclear" lines - if you can't explain a move, leave it out. The direction of every
 price move must match the real price data (don't call a fall "stabilising").
@@ -355,6 +358,14 @@ def _close_one(num, company, ok=True):
     _gh("PATCH", f"/issues/{num}", json={"state": "closed"})
 
 
+def _record(code, name):
+    try:
+        import timeline
+        return timeline.context(code=code, name=name, limit=20) or "(nothing yet)"
+    except Exception:
+        return "(nothing yet)"
+
+
 def step(mode="full"):
     try:
         ai = C.AI("backup")
@@ -427,7 +438,7 @@ def step(mode="full"):
         notes = concall_notes(lib, code)
         body = PROMPT.format(company=c["company"], code=code, sym=f", {sym}" if not sym[0].isdigit() else "",
                              sector=lib["sectors"].get(code, "") or "-", start=start, price=price_text(pts, moves),
-                             concalls="\n".join(notes[-4:]) or "(none)")
+                             concalls="\n".join(notes[-4:]) or "(none)", record=_record(code, c["company"]))
         src, text = "", None
         if not _working.get("gemini_off"):
             try:
@@ -452,9 +463,9 @@ def step(mode="full"):
             src = src or m.group(1).strip()
             text = text[:m.start()].rstrip()
         one = ""
-        m = re.search(r"\*\*In one line:\*\*\s*(.+)", text)
+        m = re.search(r"(?im)^\s*\**\s*(?:in one line|one[\s\-‑]line story)\s*:?\s*\**\s*:?\s*(.+)$", text)
         if m:
-            one = m.group(1).strip()
+            one = re.sub(r"\*\*", "", m.group(1)).strip()
             text = text.replace(m.group(0), "")
         store[code] = {"status": "ok", "at": today.isoformat(), "call_date": c["date"], "company": c["company"], "sym": sym,
                        "one": one, "html": C.md(text), "pts": pts, "moves": moves, "sources": src[:300], "v": 4,

@@ -280,6 +280,11 @@ def main():
             backstory.step("full" if conf["concalls"] else "news")
         except Exception:
             say(f"\n!! 'Story so far' failed:\n{traceback.format_exc()}")
+    try:
+        import timeline
+        timeline.update()
+    except Exception:
+        say(f"\n!! Company timelines failed:\n{traceback.format_exc()}")
     say("\n================ WEBSITE ================")
     site_builder.build()
     say(f"\nAll done in {(time.time() - started) / 60:.0f} minutes.")

@@ -468,8 +468,86 @@ def weekly_review(pool=None):
         one = m.group(1).strip()
         text = text.replace(m.group(0), "")
     data["reviews"] = ([{"end": week_end.isoformat(), "start": start.isoformat(), "one": one,
-                         "html": C.md(text)}] + data["reviews"])[:12]
+                         "html": C.md(text)}] + data["reviews"])[:104]
     WEEKLY_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+
+PERIOD_PROMPT = """You are a senior Indian equity strategist writing the {kind} REVIEW for {label}, using only the notes
+below (weekly / monthly reviews in time order, then the company pivots recorded in the period).
+
+Markdown, 300-400 words:
+**The {unit} in one line:** <...>
+### What moved markets
+(4-6 bullets)
+### Themes that built up
+(bullets: stories that developed over the {unit} - how they started, where they stand now)
+### Sectors: who gained, who lost
+(bullets)
+### Companies that re-rated or de-rated
+(bullets from the pivots: company, what changed, why it matters. Skip if none.)
+### Into the next {unit}
+(bullets: what to watch)
+
+NOTES:
+"""
+
+
+def _plain(html):
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html or "")).strip()
+
+
+def period_reviews(pool=None):
+    """After a month ends: a monthly review from that month's weekly reviews + pivots. After a quarter: a quarterly
+    one from its monthly reviews. One AI request each, ~12 + 4 a year."""
+    data = load(WEEKLY_FILE, {"reviews": []})
+    data.setdefault("monthly", [])
+    data.setdefault("quarterly", [])
+    today = dt.datetime.now(IST).date()
+    last_month_end = today.replace(day=1) - dt.timedelta(days=1)
+    m_start = last_month_end.replace(day=1)
+    m_key = m_start.strftime("%Y-%m")
+    T = load(TRACK_FILE, {})
+    import news
+    if not any(r["key"] == m_key for r in data["monthly"]):
+        weeks = [r for r in reversed(data["reviews"]) if m_start.isoformat() <= r["end"] <= last_month_end.isoformat()
+                 or m_start.isoformat() <= r["start"] <= last_month_end.isoformat()]
+        if len(weeks) >= 2:
+            notes = [f"### Week {r['start']} to {r['end']}\n{r.get('one', '')}\n{_plain(r['html'])[:3000]}" for r in weeks]
+            piv = [p for p in T.get("pivots", []) if m_key == p["date"][:7]]
+            if piv:
+                notes.append("### Pivots recorded this month\n" + "\n".join(
+                    f"- {p['date']} {p['company']}: {p['what']}" + (f" ({p['why']})" if p.get("why") else "") for p in piv[:60]))
+            pool = pool or C.Pool()
+            label = m_start.strftime("%B %Y")
+            say(f"\nWriting the monthly review for {label} ...")
+            text = news.ask_fitted(pool, PERIOD_PROMPT.format(kind="MONTHLY", label=label, unit="month"), notes, label="monthly review")
+            one, text = _split_one(text, "month")
+            data["monthly"].insert(0, {"key": m_key, "label": label, "one": one, "html": C.md(text)})
+            WEEKLY_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    # quarter just finished (Indian FY quarters: Apr-Jun = Q1)
+    if last_month_end.month in (3, 6, 9, 12) and today.day <= 20:
+        y0, m0 = last_month_end.year, last_month_end.month
+        q_months = [f"{y0 if m0 - k > 0 else y0 - 1}-{(m0 - k - 1) % 12 + 1:02d}" for k in (2, 1, 0)]
+        fy = last_month_end.year + (1 if last_month_end.month > 3 else 0)
+        qn = {6: 1, 9: 2, 12: 3, 3: 4}[last_month_end.month]
+        q_key = f"Q{qn} FY{fy % 100:02d}"
+        if not any(r["key"] == q_key for r in data["quarterly"]):
+            months = [r for r in reversed(data["monthly"]) if r["key"] in q_months]
+            if len(months) >= 2:
+                notes = [f"### {r['label']}\n{r.get('one', '')}\n{_plain(r['html'])[:3500]}" for r in months]
+                pool = pool or C.Pool()
+                say(f"\nWriting the quarterly review for {q_key} ...")
+                text = news.ask_fitted(pool, PERIOD_PROMPT.format(kind="QUARTERLY", label=q_key, unit="quarter"), notes, label="quarterly review")
+                one, text = _split_one(text, "quarter")
+                data["quarterly"].insert(0, {"key": q_key, "label": q_key, "one": one, "html": C.md(text)})
+                WEEKLY_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+
+def _split_one(text, unit):
+    m = re.search(rf"\*\*The {unit} in one line:\*\*\s*(.+)", text)
+    if not m:
+        return "", text
+    return m.group(1).strip(), text.replace(m.group(0), "")
 
 
 # ============================================================================ agenda: what's coming that can move Indian stocks
@@ -634,3 +712,7 @@ def step(pool=None):
         weekly_review(pool)
     except Exception as e:
         say(f"  week in review skipped: {str(e)[:150]}")
+    try:
+        period_reviews(pool)
+    except Exception as e:
+        say(f"  monthly/quarterly review skipped: {str(e)[:150]}")

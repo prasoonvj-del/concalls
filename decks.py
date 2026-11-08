@@ -174,13 +174,20 @@ def step(pool, mode="full"):
                 done[d["id"]] = rec
                 continue
             hint = concall_hint(lib, d["code"])
+            try:
+                import timeline
+                rec = timeline.context(code=d["code"], name=d["company"], before=d["when"][:10], limit=8)
+            except Exception:
+                rec = ""
             prompt = DECK_PROMPT.format(
                 company=d["company"],
                 concall=(f"Its last concall ({hint[0]['quarter']}) was summed up as: \"{hint[1][:400]}\"\n" if hint else ""),
                 extra=("### Beyond the concall\n(1-3 bullets: what the deck shows that the concall line above doesn't. Skip if nothing.)\n"
                        if hint else ""))
             try:
-                out, ai = pool.ask(prompt + text, label=f"deck {made + 1}: {d['company'][:30]}")
+                rec_txt = (f"\n\nOUR RECORD OF EARLIER EVENTS (if the deck continues or changes one of these, say so in one bullet):\n{rec}"
+                           if rec else "")
+                out, ai = pool.ask(prompt + text + rec_txt, label=f"deck {made + 1}: {d['company'][:30]}")
             except C.QuotaOver as e:
                 say(f"  {e}")
                 break

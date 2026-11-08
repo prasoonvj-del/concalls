@@ -847,6 +847,17 @@ def build_summary(ai, call, text, prev):
     if prev:
         head += COMPARE_INSTRUCTIONS.format(pq=prev["quarter"])
         tail = f"\n\nPREVIOUS QUARTER SUMMARY ({prev['quarter']}):\n{prev['text']}"
+    try:  # our permanent record of the company: lets the summary spot patterns across quarters
+        import timeline
+        rec = timeline.context(code=call.get("code"), name=call["company"], before=call["date"], limit=12)
+    except Exception:
+        rec = ""
+    if rec:
+        head += ("\nBelow the transcript is OUR RECORD of earlier events for this company (orders, pivots, results, "
+                 "past calls). Where the call continues or breaks a pattern in that record (e.g. a third capacity "
+                 "addition, a legal case still pending, guidance missed again), say so in one line under Highlights "
+                 "or Risks. Do not repeat the record otherwise.\n")
+        tail += f"\n\nOUR RECORD (oldest first):\n{rec}"
     text = text[:ai.max_chars]
     budget = ai.max_input_tokens
     if not budget or est_tokens(head + text + tail) <= budget:

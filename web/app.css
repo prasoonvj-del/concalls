@@ -212,3 +212,6 @@ button.clr{border:1px solid var(--neg);color:var(--neg);background:transparent;b
 .prog{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 14px;font-size:14px}
 .pbar{display:inline-block;width:160px;height:8px;border-radius:4px;background:var(--neu);overflow:hidden}.pbar i{display:block;height:100%;background:var(--s1)}
 a.btn{display:inline-block;background:var(--s1);color:#fff;text-decoration:none;border-radius:999px;padding:7px 16px;font-weight:600}
+.tl .tlm{font-weight:700;margin:12px 0 4px;color:var(--accent)}.tl .tlm:first-child{margin-top:0}
+.tle{display:grid;grid-template-columns:26px auto 1fr;gap:8px;align-items:baseline;padding:4px 0;font-size:13.5px;line-height:1.45;border-top:1px solid var(--line-2,rgba(127,127,127,.1))}
+.tle .kc{margin:0;white-space:nowrap}

@@ -686,7 +686,18 @@ def build(conf=None, log_failed=True):
     BRIEF_DIR.mkdir(parents=True, exist_ok=True)
     path = BRIEF_DIR / f"{brief['date']}.json"
     path.write_text(json.dumps(brief, ensure_ascii=False), encoding="utf-8")
-    for old in sorted(BRIEF_DIR.glob("*.json"))[:-90]:  # keep ~3 months
+    for old in sorted(BRIEF_DIR.glob("*.json"))[:-90]:  # full briefs: ~3 months; their big picture is kept for good
+        try:
+            ob = json.loads(old.read_text(encoding="utf-8"))
+            arch_path = C.DATA / "news_archive.json"
+            arch = json.loads(arch_path.read_text(encoding="utf-8")) if arch_path.exists() else []
+            if not any(a["date"] == ob["date"] for a in arch):
+                arch.append({"date": ob["date"], "label": ob.get("label", ob["date"]), "big": ob.get("big", ""),
+                             "stories": ob.get("stats", {}).get("relevant", 0),
+                             "top": [s["title"] for s in sorted(ob.get("stories", []), key=lambda x: -(x.get("imp") or 0))[:8]]})
+                arch_path.write_text(json.dumps(sorted(arch, key=lambda a: a["date"]), ensure_ascii=False), encoding="utf-8")
+        except Exception:
+            pass
         old.unlink()
     say(f"\nSaved the brief: data/news/{path.name}")
     return brief

@@ -47,6 +47,31 @@
     if (!window.DESK_BSIDX || Array.isArray(window.DESK_BSIDX)) window.DESK_BSIDX = { have: {}, meta: {} };
     return window.DESK_BSIDX;
   }
+  async function getTimeline(codes, name) {
+    if (!window.DESK_TLIDX) { try { await loadScript("data/tlindex.js"); } catch (e) { window.DESK_TLIDX = {}; } }
+    const I = window.DESK_TLIDX;
+    const keys = Object.keys(I).filter((k) => (I[k].code && codes.includes(I[k].code)) || (!I[k].code && I[k].name && sameCo(I[k].name, name)));
+    window.DESK_TL = window.DESK_TL || {};
+    let all = [];
+    for (const k of keys) {
+      if (!window.DESK_TL[k]) { try { await loadScript("data/tl/" + k + ".js" + CCV); } catch (e) { /* none */ } }
+      all = all.concat(window.DESK_TL[k] || []);
+    }
+    const seen = new Set();
+    return all.filter((e) => !seen.has(e.u) && seen.add(e.u)).sort((a, b) => (a.d < b.d ? 1 : -1));
+  }
+  const TLK = { concall: ["Concall", "--s1"], deck: ["Deck", "--s3"], pivot: ["Pivot", "--s5"], result: ["Results", "--s2"],
+    order: ["Order", "--s4"], broker: ["Broker", "--neu"], story: ["Price story", "--caution"] };
+  function timelineHtml(list) {
+    let month = "";
+    return list.map((e) => {
+      const m = new Date(e.d + "T00:00").toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+      const head = m !== month ? `<div class="tlm">${m}</div>` : ""; month = m;
+      const [lbl, col] = TLK[e.k] || [e.k, "--neu"];
+      return `${head}<div class="tle"><span class="m tld">${esc(e.d.slice(8))}</span><span class="kc" style="background:var(${e.s === "-" ? "--neg" : col})">${lbl}</span>
+        <span>${esc(e.t)}${e.l ? ` <a class="m" href="${esc(e.l)}" target="_blank" rel="noopener">source</a>` : ""}</span></div>`;
+    }).join("");
+  }
   const REPO = "prasoonvj-del/concalls";
   const requestLink = (code, name) => `https://github.com/${REPO}/issues/new?title=${encodeURIComponent("Story: " + code + " " + name)}&body=${encodeURIComponent("Requested from the Market Desk website. Just press Submit - the story is written within about 10 minutes and this issue closes itself.")}`;
   async function getConcalls() {
@@ -205,7 +230,7 @@
       const every = Math.ceil(xs.length / Math.max(2, Math.floor((W - L - R) / 70)));
       xs.forEach((d, i) => {
         if (i % every === 0 || i === xs.length - 1)
-          el("text", { x: x(i), y: H - 6, "text-anchor": "middle" }, s, xs.length > 120 ? d.slice(5, 7) + "/" + d.slice(2, 4) : d.slice(8) + "/" + d.slice(5, 7));
+          el("text", { x: x(i), y: H - 6, "text-anchor": "middle" }, s, !/^\d{4}-\d\d-\d\d/.test(d) ? d : xs.length > 120 ? d.slice(5, 7) + "/" + d.slice(2, 4) : d.slice(8) + "/" + d.slice(5, 7));
       });
       series.forEach((se) => {
         const pts = se.values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
@@ -358,7 +383,7 @@
       const every = Math.ceil(xs.length / Math.max(2, Math.floor((W - L - R) / 70)));
       xs.forEach((d, i) => {
         if (i % every === 0 || i === xs.length - 1)
-          el("text", { x: x(i), y: H - 6, "text-anchor": "middle" }, s, xs.length > 120 ? d.slice(5, 7) + "/" + d.slice(2, 4) : d.slice(8) + "/" + d.slice(5, 7));
+          el("text", { x: x(i), y: H - 6, "text-anchor": "middle" }, s, !/^\d{4}-\d\d-\d\d/.test(d) ? d : xs.length > 120 ? d.slice(5, 7) + "/" + d.slice(2, 4) : d.slice(8) + "/" + d.slice(5, 7));
       });
       series.forEach((se) => {
         let path = "", pen = false;
@@ -853,6 +878,8 @@
         ${tk[2].map((r) => `<li><div class="t">${esc(r.broker)}: ${esc(r.rating)}${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}${r.action ? " (" + esc(r.action) + ")" : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}</ul>`;
     const body = $("#cobody");
     const callHtml = call ? await ccHtml(call) : "";
+    const tlist = await getTimeline([call && call.code, ...decks.map((d) => d.code)].filter(Boolean), key);
+    const tlCard = tlist.length ? `<div class="card"><h2>Timeline <span class="m">everything on record for ${esc(key)} - kept for good · ${plural(tlist.length, "entry")}</span></h2><div id="tlb" class="tl">${timelineHtml(tlist)}</div></div>` : "";
     const bsCode = call ? call.code : decks[0] ? decks[0].code : null;
     await getBsIdx();
     let story = null;
@@ -886,8 +913,9 @@
         ${items.length >= 4 ? `<div id="cod"></div>` : ""}
         ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>`;
     body.innerHTML = call || decks.length
-      ? `<div class="cogrid"><div>${concallCard}${deckCard}</div><div>${sideCards}</div></div>`
-      : `<div class="grid g2" style="align-items:start">${sideCards}</div>`;
+      ? `<div class="cogrid"><div>${concallCard}${deckCard}${tlCard}</div><div>${sideCards}</div></div>`
+      : `<div class="grid g2" style="align-items:start">${sideCards}${tlCard}</div>`;
+    clampBlock($("#tlb"), 520, "timeline");
     if (items.length >= 4) divergingChart($("#cod"), perDay.filter((r) => r.total));
     if (story && story.pts) {
       const xs = story.pts.map((p) => p[0]), idxOf = (d) => Math.max(0, xs.findIndex((x) => x >= d));
@@ -943,7 +971,18 @@
       if (my !== seq) return;
       view.querySelectorAll(".stile").forEach((b) => b.classList.toggle("on", b.dataset.s === st.s));
       const ov = st.s ? cc.overviews.filter((o) => o.sector === st.s && (!st.q || o.quarter === st.q)).sort((a, b) => (a.quarter < b.quarter ? 1 : -1))[0] : null;
-      $("#kov").innerHTML = ov ? `<div class="card md"><h2>${esc(st.s)} - what managements are saying <span class="m">${esc(ov.quarter)} · ${ov.companies.length} companies</span></h2>${marketLine(st.s)}<div id="kovb">${await ovHtml(ov)}</div></div>` : "";
+      const qk = (q) => { const m = /Q(\d) FY(\d+)/.exec(q || ""); return m ? Number(m[2]) * 10 + Number(m[1]) : 0; };
+      const pool = cc.calls.filter((c) => (!st.s || c.sector === st.s) && c.tone);
+      const qs = [...new Set(pool.map((c) => c.quarter))].filter((q) => pool.filter((c) => c.quarter === q).length >= 3).sort((a, b) => qk(a) - qk(b));
+      const trend = qs.length >= 2 ? `<div class="card"><h2>Management tone over time <span class="m">${esc(st.s || "all sectors")} · share of calls by quarter</span></h2>${legend([["Positive", cssv("--pos")], ["Cautious or negative", cssv("--neg")]])}<div id="ktr"></div></div>` : "";
+      $("#kov").innerHTML = trend + (ov ? `<div class="card md"><h2>${esc(st.s)} - what managements are saying <span class="m">${esc(ov.quarter)} · ${ov.companies.length} companies</span></h2>${marketLine(st.s)}<div id="kovb">${await ovHtml(ov)}</div></div>` : "");
+      if (qs.length >= 2) {
+        const share = (q, f) => { const xs = pool.filter((c) => c.quarter === q); return (100 * xs.filter(f).length) / xs.length; };
+        indexChart($("#ktr"), qs, [
+          { name: "Positive", color: cssv("--pos"), values: qs.map((q) => share(q, (c) => c.tone === "Positive")) },
+          { name: "Cautious or negative", color: cssv("--neg"), values: qs.map((q) => share(q, (c) => c.tone === "Cautious" || c.tone === "Negative")) },
+        ], "%", null, 200);
+      }
       if (my !== seq) return;
       const calls = cc.calls.filter((c) => (!st.s || c.sector === st.s) && (!st.q || c.quarter === st.q) && (!st.t || c.tone === st.t) &&
         (!st.f || c.company.toLowerCase().includes(st.f) || (TX[c.k] || "").includes(st.f))).sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -1157,6 +1196,25 @@
       $("#wak").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b2)); drawAgenda(); };
   }
 
+  /** Week / month / quarter reviews - the long memory of the market story. */
+  function renderReviews(host, W) {
+    const sets = { week: (W.reviews || []).map((r) => ({ key: r.end, label: `${r.start} to ${r.end}`, one: r.one, html: r.html })),
+      month: W.monthly || [], quarter: W.quarterly || [] };
+    if (!sets.week.length && !sets.month.length) { host.innerHTML = ""; return; }
+    let kind = store.get("revkind", "week"); if (!sets[kind].length) kind = "week";
+    const draw = (i) => {
+      const list = sets[kind], r = list[i] || list[0];
+      host.innerHTML = `<div class="card md"><h2>In review</h2>
+        <div class="filters seg" id="revk">${[["week", "Week"], ["month", "Month"], ["quarter", "Quarter"]].filter(([k]) => sets[k].length)
+          .map(([k, l]) => `<button data-k="${k}" class="${k === kind ? "on" : ""}">${l} <span class="m">${sets[k].length}</span></button>`).join("")}
+          ${list.length > 1 ? `<select id="revp">${list.map((x, j) => `<option value="${j}" ${j === i ? "selected" : ""}>${esc(x.label)}</option>`).join("")}</select>` : ""}</div>
+        ${r ? `${r.one ? `<p><b>${esc(r.one)}</b></p>` : ""}${r.html}` : `<div class="m">None yet.</div>`}</div>`;
+      $("#revk").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; kind = b.dataset.k; store.set("revkind", kind); draw(0); };
+      if ($("#revp")) $("#revp").onchange = (e) => draw(Number(e.target.value));
+    };
+    draw(0);
+  }
+
   /* ------------------------------------------------------------ markets */
   async function pageMarkets() {
     const D = await getTrack();
@@ -1181,11 +1239,10 @@
       <div class="card"><h2>Indian sector indices <span class="m">change over ${per} · tap to see that sector's peers</span></h2><div id="ms"></div></div>
       ${groups.filter((g) => g !== "India indices").map((g) => `<div class="card"><h2>${esc(g)}</h2><div class="tiles mk" data-g="${esc(g)}"></div></div>`).join("")}
       <div class="card"><h2>India indices</h2><div class="tiles mk" data-g="India indices"></div></div>` : `<div class="card m">Prices haven't been collected yet - they arrive with the next update.</div>`}
-      ${WK.length ? `<div class="card md"><h2>Week in review <span class="m">${esc(WK[0].start)} to ${esc(WK[0].end)}</span></h2>
-        ${WK[0].one ? `<p><b>${esc(WK[0].one)}</b></p>` : ""}${WK[0].html}
-        ${WK.length > 1 ? `<details><summary>Earlier weeks</summary>${WK.slice(1).map((w) => `<h3>${esc(w.start)} to ${esc(w.end)}</h3>${w.one ? `<p><b>${esc(w.one)}</b></p>` : ""}${w.html}`).join("")}</details>` : ""}</div>` : ""}`;
+      <div id="revw"></div>`;
 
     $("#per").onclick = (e) => { const b = e.target.closest("button"); if (b) { store.set("mkper", b.dataset.p); route(); } };
+    renderReviews($("#revw"), D.weekly || {});
     if (!M.length) return;
     const from = startOf();
     const color = (i) => cssv(PAL[i % PAL.length]);
@@ -1378,14 +1435,20 @@
     $("#pq").oninput = () => { shownP = 50; draw(); }; $("#ps").onchange = () => { shownP = 50; draw(); }; $("#pw").onchange = () => { shownP = 50; draw(); }; draw();
   }
 
-  function pageArchive() {
+  async function pageArchive() {
     if (!IDX.briefs.length) { view.innerHTML = empty("No briefs yet."); return; }
-    view.innerHTML = `<h1>Archive</h1><div class="sub">Every morning brief (about three months are kept)</div>
+    if (!window.DESK_NEWSARCH) { try { await loadScript("data/newsarchive.js"); } catch (e) { window.DESK_NEWSARCH = []; } }
+    const have = new Set(IDX.briefs.map((b) => b.date));
+    const older = window.DESK_NEWSARCH.filter((a) => !have.has(a.date)).reverse();
+    view.innerHTML = `<h1>Archive</h1><div class="sub">Full briefs for about three months; after that each day's big picture and top headlines are kept for good</div>
       <div class="card archive">${IDX.briefs.slice().reverse().map((b) => {
         const top = Object.entries(b.cats).sort((x, y) => y[1] - x[1]).slice(0, 3).map((x) => x[0]).join(", ");
         return `<a href="#today/${b.date}"><span><b>${esc(b.label)}</b><br><span class="m">${esc(top)}</span></span>
           <span class="m" style="text-align:right">${plural(b.stats.relevant, "story")}<br>${fmt(b.stats.articles)} articles</span></a>`;
-      }).join("")}</div>`;
+      }).join("")}</div>
+      ${older.length ? `<h2 style="margin:18px 0 8px">Older briefs</h2><div class="card">${older.map((a) => `<details class="sum"><summary><span class="n">${esc(a.label)}</span>
+        <span class="m">${esc((a.top || [])[0] || "")}</span></summary><div class="b md">${a.big}
+        ${(a.top || []).length ? `<h3>Top headlines</h3><ul>${a.top.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}</div></details>`).join("")}</div>` : ""}`;
   }
 
   function pageSettings() {
@@ -1439,7 +1502,7 @@
       else if (tab === "markets") await pageMarkets();
       else if (tab === "trackers") await pageTrackers(arg || null);
       else if (tab === "tab") await pageTab(arg);
-      else if (tab === "archive") pageArchive();
+      else if (tab === "archive") await pageArchive();
       else if (tab === "settings") pageSettings();
       else await pageToday(null);
     } catch (e) {
