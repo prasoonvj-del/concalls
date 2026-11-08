@@ -253,7 +253,25 @@ def ask_gemini_search(prompt):
     import requests
     key = C.AI("ai").key
     last, out_of_quota = "", 0
-    order = GEMINI_MODELS[GEMINI_MODELS.index(_working["g"]):] if _working.get("g") in GEMINI_MODELS else GEMINI_MODELS
+    if "models" not in _working:  # the Gemini line-up changes; use what this key can see, the model in daily use first
+        names = []
+        try:
+            wm = (C.DATA / "working_model.txt").read_text(encoding="utf-8").strip().replace("models/", "")
+            names.append(wm)
+        except OSError:
+            pass
+        try:
+            js = requests.get("https://generativelanguage.googleapis.com/v1beta/models", params={"key": key, "pageSize": 200}, timeout=30).json()
+            avail = [m["name"].replace("models/", "") for m in js.get("models", [])
+                     if "generateContent" in m.get("supportedGenerationMethods", []) and "flash" in m["name"]
+                     and not re.search(r"image|tts|audio|live|thinking|exp", m["name"])]
+            avail.sort(key=lambda n: ("lite" in n, "preview" in n, [-int(x) for x in re.findall(r"\d+", n)[:2]]))
+            names += avail
+        except Exception:
+            pass
+        names += GEMINI_MODELS
+        _working["models"] = list(dict.fromkeys(n for n in names if n))
+    order = _working["models"]
     for model in order:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
         for attempt in range(3):
@@ -278,10 +296,11 @@ def ask_gemini_search(prompt):
                     t = ((ch.get("web") or {}).get("title") or "").strip()
                     if t and t not in srcs:
                         srcs.append(t)
-                _working["g"] = model
+                _working["models"] = [model] + [m for m in _working["models"] if m != model]
                 return text, ", ".join(srcs[:6]), model
-            body = r.text[:300]
-            last = f"{model}: {r.status_code} {body[:120]}"
+            body = r.text[:600]
+            last = f"{model}: {r.status_code} {re.sub(chr(10) + '|  +', ' ', body)[:160]}"
+            say(f"    {last}")
             if r.status_code == 429:
                 if "PerDay" in body or "per day" in body.lower():
                     out_of_quota += 1
