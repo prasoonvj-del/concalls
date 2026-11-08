@@ -9,8 +9,9 @@ Grounded, not guessed: the AI gets
   * our own concall summaries (tone + one line per quarter), latest deck summary, tracker facts
 and is told to link a price move to news only when the dates line up.
 
-AI: Groq's "compound" system (an LLM that does its own web searches) on the Groq key, so Gemini stays free.
-Free tier allows ~250 such requests a day; we use about 50.
+AI: Gemini with Google Search grounding, capped at ~15 companies a day (+ requests from the website) so the
+concall and news summaries keep most of Gemini's free allowance. If Gemini is out for the day, a requested
+company is written with Groq's GPT-OSS + browser search instead.
 Each company is written once and refreshed only after ~45 days or when a new concall arrives.
 """
 import datetime as dt
@@ -25,7 +26,7 @@ say = C.say
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 STORE = C.DATA / "backstories.json"
 REFRESH_DAYS = 45
-ALLOWANCE = {"full": (12, 12), "news": (6, 7), "request": (5, 8)}  # (companies, minutes) per update
+ALLOWANCE = {"full": (5, 10), "news": (1, 4), "request": (5, 10)}  # (companies, minutes) per update: ~15 a day
 
 PROMPT = """Research the Indian listed company {company} (BSE {code}{sym}, sector: {sector}) using web search, then
 explain the last two years of its share price to an investor who wants to learn WHICH KIND OF NEWS RE-RATES OR
@@ -244,6 +245,58 @@ def ask_compound(ai, prompt):
     raise C.AIError(f"no web-search model answered ({last})")
 
 
+GEMINI_MODELS = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.0-flash"]
+
+
+def ask_gemini_search(prompt):
+    """Gemini with Google Search grounding (the same way the reports you pasted were made). Returns (text, sources)."""
+    import requests
+    key = C.AI("ai").key
+    last, out_of_quota = "", 0
+    order = GEMINI_MODELS[GEMINI_MODELS.index(_working["g"]):] if _working.get("g") in GEMINI_MODELS else GEMINI_MODELS
+    for model in order:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        for attempt in range(3):
+            try:
+                r = requests.post(url, params={"key": key}, timeout=240, json={
+                    "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                    "tools": [{"google_search": {}}], "generationConfig": {"temperature": 0.3}})
+            except Exception as e:
+                last = str(e)[:80]
+                time.sleep(10)
+                continue
+            if r.status_code == 200:
+                js = r.json()
+                cand = (js.get("candidates") or [{}])[0]
+                text = "".join(p.get("text", "") for p in (cand.get("content") or {}).get("parts", []))
+                if not text.strip():
+                    last = f"{model}: empty answer"
+                    break
+                chunks = (cand.get("groundingMetadata") or {}).get("groundingChunks") or []
+                srcs = []
+                for ch in chunks:
+                    t = ((ch.get("web") or {}).get("title") or "").strip()
+                    if t and t not in srcs:
+                        srcs.append(t)
+                _working["g"] = model
+                return text, ", ".join(srcs[:6]), model
+            body = r.text[:300]
+            last = f"{model}: {r.status_code} {body[:120]}"
+            if r.status_code == 429:
+                if "PerDay" in body or "per day" in body.lower():
+                    out_of_quota += 1
+                    break  # this model is done for today - try the next
+                time.sleep(30)
+                continue
+            if r.status_code in (500, 502, 503):
+                time.sleep(20)
+                continue
+            break  # 400/404: try the next model
+    if out_of_quota:
+        raise C.QuotaOver("Gemini's daily free allowance for searched answers is used up - the rest continue tomorrow")
+    raise C.AIError(f"Gemini search didn't answer ({last})")
+
+
 # ---- requests from the website ("Write the story for this company" -> a GitHub issue titled "Story: <code> <name>")
 def _gh(method, path, **kw):
     import os
@@ -285,8 +338,7 @@ def step(mode="full"):
     try:
         ai = C.AI("backup")
     except C.AIError:
-        say("  story so far: no backup AI key (Groq) - skipped to keep Gemini free")
-        return
+        ai = None
     lib = C.load_lib()
     store = load()
     for k in [k for k, v in store.items() if v.get("status") == "no-price" and v.get("v", 0) < 3]:
@@ -326,7 +378,7 @@ def step(mode="full"):
     if not todo:
         say("  story so far: nothing waiting")
         return
-    say(f"\nWriting 'the story so far' with Groq + web search: {len(todo)} waiting, up to {n_max} this update ...")
+    say(f"\nWriting 'the story so far' with Gemini + Google Search: {len(todo)} waiting, up to {n_max} this update ...")
     from trackers import _session
     sess = _session()
     deadline = time.time() + minutes * 60
@@ -355,20 +407,27 @@ def step(mode="full"):
         body = PROMPT.format(company=c["company"], code=code, sym=f", {sym}" if not sym[0].isdigit() else "",
                              sector=lib["sectors"].get(code, "") or "-", start=start, price=price_text(pts, moves),
                              concalls="\n".join(notes[-4:]) or "(none)")
+        src = ""
         try:
-            text = ask_compound(ai, body)
-        except C.QuotaOver as e:
-            say(f"  {e}")
-            break
-        except C.AIError as e:
-            say(f"  {c['company']}: {str(e)[:140]}")
-            continue
+            text, src, used = ask_gemini_search(body)
+        except C.AIError as e:  # Gemini out for today: a requested company still gets done with Groq's browser search
+            if code not in asked:
+                say(f"  {e}" if isinstance(e, C.QuotaOver) else f"  {c['company']}: {str(e)[:140]}")
+                if isinstance(e, C.QuotaOver):
+                    break
+                continue
+            if ai is None:
+                continue
+            try:
+                text, used = ask_compound(ai, body), COMPOUND
+            except C.AIError as e2:
+                say(f"  {c['company']}: {str(e2)[:140]}")
+                continue
         text = re.sub(r"【[^】]*】", "", text)  # inline citation markers from the search tool
         text = re.sub(r"\[\d+(?:†[^\]]*)?\]", "", text)
-        src = ""
         m = re.search(r"(?im)^\**sources?:?\**\s*(.+)$", text)
         if m:
-            src = m.group(1).strip()
+            src = src or m.group(1).strip()
             text = text[:m.start()].rstrip()
         one = ""
         m = re.search(r"\*\*In one line:\*\*\s*(.+)", text)
@@ -377,7 +436,7 @@ def step(mode="full"):
             text = text.replace(m.group(0), "")
         store[code] = {"status": "ok", "at": today.isoformat(), "call_date": c["date"], "company": c["company"], "sym": sym,
                        "one": one, "html": C.md(text), "pts": pts, "moves": moves, "sources": src[:300], "v": 4,
-                       "model": COMPOUND}
+                       "model": used}
         made += 1
         STORE.write_text(json.dumps(store, ensure_ascii=False), encoding="utf-8")
         if code in asked:
