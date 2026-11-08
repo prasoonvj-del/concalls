@@ -9,7 +9,8 @@ Grounded, not guessed: the AI gets
   * our own concall summaries (tone + one line per quarter), latest deck summary, tracker facts
 and is told to link a price move to news only when the dates line up.
 
-AI limits: runs on the BACKUP provider (Groq) so Gemini stays free for concalls and news.
+AI: Groq's "compound" system (an LLM that does its own web searches) on the Groq key, so Gemini stays free.
+Free tier allows ~250 such requests a day; we use about 50.
 Each company is written once and refreshed only after ~45 days or when a new concall arrives.
 """
 import datetime as dt
@@ -24,35 +25,34 @@ say = C.say
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 STORE = C.DATA / "backstories.json"
 REFRESH_DAYS = 45
-ALLOWANCE = {"full": (12, 10), "news": (6, 5)}  # (companies, minutes) per update
+ALLOWANCE = {"full": (12, 12), "news": (6, 7), "request": (5, 8)}  # (companies, minutes) per update
 
-PROMPT = """You are a sell-side analyst explaining a stock's last two years to an investor who wants to learn
-WHAT KIND OF NEWS MOVES THIS STOCK. Company: {company} ({sector}).
+PROMPT = """Research the Indian listed company {company} (BSE {code}{sym}, sector: {sector}) using web search, then
+explain the last two years of its share price to an investor who wants to learn WHICH KIND OF NEWS RE-RATES OR
+DE-RATES THIS STOCK. Search for its results, management commentary, capacity / order / legal / regulatory news,
+pivots and analyst views from {start} to today.
 
-Use ONLY the material below. Link a price move to a piece of news only when their dates line up
-(say "around the same time" if loose); if no news explains a move, say the cause isn't clear from the
-headlines. Never invent numbers, dates or events. Prices are in Rs.
-
-Leave out moves you can't explain, unless they are among the 2-3 biggest. Write Markdown, about 250 words:
-**In one line:** <the stock's story in one sentence - "Re-rated from Rs X to Rs Y as ..." if it rose over the period,
-"De-rated from Rs X to Rs Y as ..." if it fell, or "Round trip: ..." if it rose and fell back>
-### Re-rating factors
-(bullets: RISES only - what lifted the stock: date, the news, the price reaction)
-### De-rating factors
-(bullets: FALLS only - what hurt it: date, the news, the price reaction. Skip if none.)
-### Pivots & turning points
-(bullets: strategy shifts, capacity, big orders, legal wins, approvals, management changes)
-### What moves this stock
-(2-3 bullets: the kinds of news the market has rewarded or punished here)
-
-SHARE PRICE (weekly, Rs):
+The REAL weekly share price (use these numbers for price moves, not numbers from the web):
 {price}
 
-OUR CONCALL NOTES:
+Our notes from its recent earnings calls:
 {concalls}
 
-HEADLINES (date - headline):
-{news}
+Write Markdown, 250-350 words, plain and specific (dates, Rs, %). No filler, no "cause unclear" lines - if you
+can't explain a move, leave it out.
+
+**In one line:** <the stock's story in one sentence: re-rated / de-rated / round trip, from Rs X to Rs Y, because ...>
+### How the story unfolded
+(3-5 phases in time order. Each: **<Mon YYYY - Mon YYYY>: <short phase title>** - what changed in the business or
+the news, and what the stock did in that phase, using the real price data above)
+### What re-rated it
+(2-4 bullets: the triggers the market rewarded)
+### What de-rated it
+(1-3 bullets: what the market punished. Skip the section if nothing.)
+### News that moves this stock
+(2-3 bullets: the kind of announcement to watch for next, e.g. "large defence orders", "USFDA clearances")
+
+End with one line: Sources: <3-5 site names you used>
 """
 
 
@@ -197,6 +197,70 @@ def concall_notes(lib, code):
     return rows[-6:]
 
 
+COMPOUND = "groq/compound"
+
+
+def ask_compound(ai, prompt):
+    """Groq's compound system: an LLM that runs its own web searches. Free tier ~250 requests/day."""
+    import requests
+    url = ai.url.rstrip("/") + "/chat/completions"
+    for attempt in range(4):
+        try:
+            r = requests.post(url, headers={"Authorization": f"Bearer {ai.key}"}, timeout=180,
+                              json={"model": COMPOUND, "messages": [{"role": "user", "content": prompt}], "temperature": 0.3})
+        except Exception as e:
+            if attempt == 3:
+                raise C.AIError(f"no answer from Groq ({str(e)[:60]})")
+            time.sleep(10)
+            continue
+        if r.status_code == 200:
+            return r.json()["choices"][0]["message"]["content"]
+        body = r.text[:300]
+        if r.status_code == 429:
+            if "per day" in body or "RPD" in body or "TPD" in body:
+                raise C.QuotaOver("Groq's daily allowance for web-search answers is used up - the rest continue tomorrow")
+            wait = float(r.headers.get("retry-after", 20) or 20)
+            time.sleep(min(wait, 90))
+            continue
+        if r.status_code in (500, 502, 503) and attempt < 3:
+            time.sleep(15)
+            continue
+        raise C.AIError(f"Groq {r.status_code}: {body[:140]}")
+    raise C.AIError("Groq kept asking us to wait")
+
+
+# ---- requests from the website ("Write the story for this company" -> a GitHub issue titled "Story: <code> <name>")
+def _gh(method, path, **kw):
+    import os
+    import requests
+    tok, repo = os.environ.get("GH_TOKEN"), os.environ.get("GITHUB_REPOSITORY")
+    if not tok or not repo:
+        return None
+    try:
+        r = requests.request(method, f"https://api.github.com/repos/{repo}{path}", timeout=20,
+                             headers={"Authorization": f"Bearer {tok}", "Accept": "application/vnd.github+json"}, **kw)
+        return r.json() if r.status_code < 300 else None
+    except Exception:
+        return None
+
+
+def requested():
+    """{code: issue_number} for open "Story: <code> ..." issues."""
+    out = {}
+    for it in _gh("GET", "/issues", params={"state": "open", "per_page": 50}) or []:
+        m = re.match(r"\s*story:\s*(\d{5,6})", it.get("title", ""), re.I)
+        if m and "pull_request" not in it:
+            out[m.group(1)] = it["number"]
+    return out
+
+
+def close_request(num, company, ok=True):
+    msg = (f"Done - 'The story so far' for {company} is on the website after this update." if ok
+           else f"Couldn't write it for {company} this time (no share-price data found).")
+    _gh("POST", f"/issues/{num}/comments", json={"body": msg})
+    _gh("PATCH", f"/issues/{num}", json={"state": "closed"})
+
+
 def step(mode="full"):
     try:
         ai = C.AI("backup")
@@ -206,35 +270,48 @@ def step(mode="full"):
     lib = C.load_lib()
     store = load()
     for k in [k for k, v in store.items() if v.get("status") == "no-price" and v.get("v", 0) < 3]:
-        del store[k]  # from the first run, when Yahoo was refusing requests
-    n_max, minutes = ALLOWANCE[mode]
+        del store[k]
+    n_max, minutes = ALLOWANCE.get(mode, (5, 8))
     latest = {}
     for c in lib["calls"].values():
         if c.get("summary") and c.get("code"):
             if c["code"] not in latest or c["date"] > latest[c["code"]]["date"]:
                 latest[c["code"]] = c
+    pres = json.loads(C.PRES_FILE.read_text(encoding="utf-8")) if C.PRES_FILE.exists() else []
+    asked = requested()
+    for code in asked:  # a requested company may have only a deck, no concall yet
+        if code not in latest:
+            d = next((d for d in pres if d["code"] == code), None)
+            latest[code] = {"code": code, "company": d["company"] if d else code, "date": "", "quarter": ""}
     import daily
     watch = daily.watchlist()
     today = dt.date.today()
 
     def due(code, c):
-        s = store.get(code)
-        if not s:
+        s1 = store.get(code)
+        if code in asked:
             return True
-        if s.get("status") == "no-price" and (today - dt.date.fromisoformat(s["at"])).days < 20:
-            return False
-        return (today - dt.date.fromisoformat(s["at"])).days > REFRESH_DAYS or c["date"] > s.get("call_date", "")
+        if not s1 or s1.get("v", 1) < 4:  # v4 = written with web search
+            return True
+        if s1.get("status") == "no-price":
+            return (today - dt.date.fromisoformat(s1["at"])).days > 20
+        return (today - dt.date.fromisoformat(s1["at"])).days > REFRESH_DAYS or c["date"] > s1.get("call_date", "")
 
     todo = [c for code, c in latest.items() if due(code, c)]
-    todo.sort(key=lambda c: (any(w in c["company"].lower() for w in watch), c["date"]), reverse=True)
+    todo.sort(key=lambda c: (c["code"] in asked, any(w in c["company"].lower() for w in watch),
+                             c["code"] not in store, c["date"]), reverse=True)
+    if mode == "request":
+        todo = [c for c in todo if c["code"] in asked]
+    write_meta(store, latest, todo, n_max)
     if not todo:
-        say("  story so far: all companies up to date")
+        say("  story so far: nothing waiting")
         return
-    say(f"\nWriting 'the story so far' with {ai.provider}: {len(todo)} waiting, up to {n_max} this update ...")
+    say(f"\nWriting 'the story so far' with Groq + web search: {len(todo)} waiting, up to {n_max} this update ...")
     from trackers import _session
     sess = _session()
     deadline = time.time() + minutes * 60
     made = 0
+    start = (today - dt.timedelta(days=730)).strftime("%b %Y")
     for c in todo:
         if made >= n_max or time.time() > deadline:
             break
@@ -249,35 +326,51 @@ def step(mode="full"):
             break
         time.sleep(1.5)
         if not pts:
-            store[code] = {"status": "no-price", "at": today.isoformat(), "company": c["company"], "v": 3, "sym": sym}
+            store[code] = {"status": "no-price", "at": today.isoformat(), "company": c["company"], "v": 4, "sym": sym}
+            if code in asked:
+                close_request(asked[code], c["company"], ok=False)
             continue
         moves = big_moves(pts)
-        news = headlines(c["company"])
         notes = concall_notes(lib, code)
-        body = PROMPT.format(company=c["company"], sector=lib["sectors"].get(code, ""), price=price_text(pts, moves),
-                             concalls="\n".join(notes) or "(none)",
-                             news="\n".join(f"{d} - {t}" for d, t in news[-90:]) or "(no headlines found)")
-        if ai.max_input_tokens and C.est_tokens(body) > ai.max_input_tokens:
-            keep = news[-60:]
-            body = PROMPT.format(company=c["company"], sector=lib["sectors"].get(code, ""), price=price_text(pts, moves),
-                                 concalls="\n".join(notes[-3:]) or "(none)", news="\n".join(f"{d} - {t}" for d, t in keep))
+        body = PROMPT.format(company=c["company"], code=code, sym=f", {sym}" if not sym[0].isdigit() else "",
+                             sector=lib["sectors"].get(code, "") or "-", start=start, price=price_text(pts, moves),
+                             concalls="\n".join(notes[-4:]) or "(none)")
         try:
-            text = ai.ask(body, label=f"story so far: {c['company'][:30]}")
+            text = ask_compound(ai, body)
+        except C.QuotaOver as e:
+            say(f"  {e}")
+            break
         except C.AIError as e:
-            say(f"  {c['company']}: {str(e)[:120]}")
-            if isinstance(e, C.QuotaOver):
-                break
+            say(f"  {c['company']}: {str(e)[:140]}")
             continue
+        src = ""
+        m = re.search(r"(?im)^\**sources?:?\**\s*(.+)$", text)
+        if m:
+            src = m.group(1).strip()
+            text = text[:m.start()].rstrip()
         one = ""
         m = re.search(r"\*\*In one line:\*\*\s*(.+)", text)
         if m:
             one = m.group(1).strip()
             text = text.replace(m.group(0), "")
         store[code] = {"status": "ok", "at": today.isoformat(), "call_date": c["date"], "company": c["company"], "sym": sym,
-                       "one": one, "html": C.md(text), "pts": pts, "moves": moves, "n_news": len(news),
-                       "model": getattr(ai, "model", "")}
+                       "one": one, "html": C.md(text), "pts": pts, "moves": moves, "sources": src[:300], "v": 4,
+                       "model": COMPOUND}
         made += 1
         STORE.write_text(json.dumps(store, ensure_ascii=False), encoding="utf-8")
-        time.sleep(3)
+        if code in asked:
+            close_request(asked[code], c["company"])
+        time.sleep(4)
     STORE.write_text(json.dumps(store, ensure_ascii=False), encoding="utf-8")
-    say(f"  story so far: {made} written, {sum(1 for v in store.values() if v.get('status') == 'ok')} companies in total")
+    write_meta(store, latest, [c for c in todo if not (store.get(c["code"], {}).get("v", 0) >= 4 and store[c["code"]].get("at") == today.isoformat())], n_max)
+    say(f"  story so far: {made} written, {sum(1 for v in store.values() if v.get('status') == 'ok' and v.get('v', 0) >= 4)} companies in total")
+
+
+META = C.DATA / "backstory_meta.json"
+
+
+def write_meta(store, latest, todo, n_max):
+    ok = [k for k, v in store.items() if v.get("status") == "ok" and v.get("v", 0) >= 4]
+    META.write_text(json.dumps({"done": len(ok), "total": len(latest), "per_update": n_max,
+                                "next": [c["company"] for c in todo[:12]],
+                                "at": dt.datetime.now(IST).isoformat(timespec="minutes")}, ensure_ascii=False), encoding="utf-8")

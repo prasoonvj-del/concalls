@@ -42,6 +42,13 @@
     if (!window.DESK_CCTEXT) { try { await loadScript("data/cctext.js" + CCV); } catch (e) { window.DESK_CCTEXT = {}; } }
     return window.DESK_CCTEXT;
   }
+  async function getBsIdx() {
+    if (!window.DESK_BSIDX || Array.isArray(window.DESK_BSIDX)) { try { await loadScript("data/bsindex.js"); } catch (e) { /* none yet */ } }
+    if (!window.DESK_BSIDX || Array.isArray(window.DESK_BSIDX)) window.DESK_BSIDX = { have: {}, meta: {} };
+    return window.DESK_BSIDX;
+  }
+  const REPO = "prasoonvj-del/concalls";
+  const requestLink = (code, name) => `https://github.com/${REPO}/issues/new?title=${encodeURIComponent("Story: " + code + " " + name)}&body=${encodeURIComponent("Requested from the Market Desk website. Just press Submit - the story is written within about 10 minutes and this issue closes itself.")}`;
   async function getConcalls() {
     if (!window.DESK_CONCALLS) {
       try { await loadScript("data/concalls.js"); } catch (e) { window.DESK_CONCALLS = { calls: [], overviews: [] }; }
@@ -753,20 +760,27 @@
     const latestCall = (n) => cc.calls.filter((c) => sameCo(c.company, n)).sort((a, c) => (a.date < c.date ? 1 : -1))[0];
 
     if (!name) {
+      const BSI = await getBsIdx();
       const rows = Object.keys(mentions).map((n) => {
         const m = mentions[n], call = latestCall(n);
         const deck = call ? deckFor(call) || P.find((d) => d.code === call.code) : P.find((d) => sameCo(d.company, n));
         const res = (TK.results || []).find((r) => sameCo(r.company, n));
         return { n, m: m.length, pos: m.filter((x) => x.s.sent === "+").length, neg: m.filter((x) => x.s.sent === "-").length,
+          story: (() => { const cd = call ? call.code : deck ? deck.code : null; return cd && BSI.have[cd] ? BSI.have[cd] : null; })(),
           call, deck, res, sector: call ? call.sector : (deck && deck.sector) || (res && res.sector) || ((m.find((x) => !/Markets|Macro|Economy|Policy|Global|IPO/i.test(x.s.cat)) || {}).s || {}).cat || "" };
       });
       const secs = [...new Set(rows.map((r) => r.sector).filter(Boolean))].sort();
       const st = store.get("colist", { q: "", sec: "", sort: "news", has: "" });
+      const BM = BSI.meta || {};
       view.innerHTML = `<h1>Companies</h1><div class="sub">${plural(rows.length, "company")} · news from the last ${plural(briefs.length, "brief")}, concall summaries, decks and results in one row each</div>
+        ${BM.total ? `<div class="card prog"><b>The story so far:</b> ${BM.done || 0} of ${BM.total} concall companies written
+          <span class="pbar"><i style="width:${Math.round((100 * (BM.done || 0)) / BM.total)}%"></i></span>
+          <span class="m">up to ${BM.per_update || 6} more each update${BM.next && BM.next.length ? " · next: " + BM.next.slice(0, 6).map(esc).join(", ") + (BM.next.length > 6 ? "…" : "") : ""}</span></div>` : ""}
         <div class="filters"><input type="search" id="cq" placeholder="Search a company" value="${esc(st.q)}">
           <select id="cs"><option value="">All sectors</option>${secs.map((x) => `<option ${x === st.sec ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>
           <select id="ch"><option value="">Everything</option><option value="call" ${st.has === "call" ? "selected" : ""}>With a concall summary</option>
-            <option value="deck" ${st.has === "deck" ? "selected" : ""}>With an investor deck</option><option value="res" ${st.has === "res" ? "selected" : ""}>With results this season</option></select>
+            <option value="deck" ${st.has === "deck" ? "selected" : ""}>With an investor deck</option>
+            <option value="story" ${st.has === "story" ? "selected" : ""}>With "the story so far"</option><option value="res" ${st.has === "res" ? "selected" : ""}>With results this season</option></select>
           <select id="co"><option value="news">Most in the news</option><option value="az" ${st.sort === "az" ? "selected" : ""}>A–Z</option>
             <option value="pos" ${st.sort === "pos" ? "selected" : ""}>Most positive news</option><option value="neg" ${st.sort === "neg" ? "selected" : ""}>Most negative news</option>
             <option value="call" ${st.sort === "call" ? "selected" : ""}>Latest concall first</option></select><button id="coclr" class="clr" hidden>✕ Clear filters</button></div>
@@ -778,16 +792,17 @@
         const sorters = { news: (a, b) => b.m - a.m || a.n.localeCompare(b.n), az: (a, b) => a.n.localeCompare(b.n), pos: (a, b) => b.pos - a.pos || b.m - a.m,
           neg: (a, b) => b.neg - a.neg || b.m - a.m, call: (a, b) => ((b.call ? b.call.date : "") > (a.call ? a.call.date : "") ? 1 : -1) };
         const list = rows.filter((r) => (!q || r.n.toLowerCase().includes(q)) && (!st.sec || r.sector === st.sec)
-          && (!st.has || (st.has === "call" ? r.call : st.has === "deck" ? r.deck : r.res))).sort(sorters[st.sort] || sorters.news);
+          && (!st.has || (st.has === "call" ? r.call : st.has === "deck" ? r.deck : st.has === "story" ? r.story : r.res))).sort(sorters[st.sort] || sorters.news);
         const bar = (r) => r.m ? `<span class="mb" title="${r.pos} positive, ${r.neg} negative, ${r.m - r.pos - r.neg} neutral"><i style="width:${(100 * r.pos) / r.m}%;background:var(--pos)"></i><i style="width:${(100 * r.neg) / r.m}%;background:var(--neg)"></i></span>` : "";
-        $("#cl").innerHTML = `<tr><th>Company</th><th>News</th><th>Concall</th><th>Results</th><th>Deck</th></tr>` + list.slice(0, shown).map((r) => `<tr>
+        $("#cl").innerHTML = `<tr><th>Company</th><th>News</th><th>Concall</th><th>Results</th><th>Deck</th><th>Story</th></tr>` + list.slice(0, shown).map((r) => `<tr>
           <td><a href="#companies/${encodeURIComponent(r.n)}">${isWatch(r.n) ? "★ " : ""}${esc(r.n)}</a><div class="m">${esc(r.sector || "")}</div></td>
           <td>${r.m ? `${r.m} ${bar(r)}` : `<span class="m">–</span>`}</td>
           <td>${r.call ? `${esc(r.call.quarter)} ${r.call.tone ? `<span class="tone ${esc(r.call.tone)}">${esc(r.call.tone)}</span>` : ""}` : `<span class="m">–</span>`}</td>
           <td>${r.res ? `profit <span class="${pctCls(r.res.pat_yoy)}">${pct(r.res.pat_yoy)}</span>` : `<span class="m">–</span>`}</td>
-          <td>${r.deck ? `<a href="${esc(r.deck.pdf)}" target="_blank" rel="noopener">PDF</a>${r.deck.one ? " ✦" : ""}` : `<span class="m">–</span>`}</td></tr>`).join("")
-          + (list.length ? "" : `<tr><td colspan="5" class="m">No match.</td></tr>`)
-          + (list.length > shown ? `<tr><td colspan="5"><button id="cmore">Show ${Math.min(100, list.length - shown)} more of ${list.length - shown}</button></td></tr>` : "");
+          <td>${r.deck ? `<a href="${esc(r.deck.pdf)}" target="_blank" rel="noopener">PDF</a>${r.deck.one ? " ✦" : ""}` : `<span class="m">–</span>`}</td>
+          <td>${r.story ? `<a href="#companies/${encodeURIComponent(r.n)}">✓ ${esc(new Date(r.story + "T00:00").toLocaleDateString("en-IN", { day: "2-digit", month: "short" }))}</a>` : `<span class="m">–</span>`}</td></tr>`).join("")
+          + (list.length ? "" : `<tr><td colspan="6" class="m">No match.</td></tr>`)
+          + (list.length > shown ? `<tr><td colspan="6"><button id="cmore">Show ${Math.min(100, list.length - shown)} more of ${list.length - shown}</button></td></tr>` : "");
         const mb = $("#cmore"); if (mb) mb.onclick = () => { shown += 100; draw(); };
       };
       let shown = 60;
@@ -839,9 +854,9 @@
     const body = $("#cobody");
     const callHtml = call ? await ccHtml(call) : "";
     const bsCode = call ? call.code : decks[0] ? decks[0].code : null;
-    if (!window.DESK_BSIDX) { try { await loadScript("data/bsindex.js"); } catch (e) { window.DESK_BSIDX = []; } }
+    await getBsIdx();
     let story = null;
-    if (bsCode && window.DESK_BSIDX.includes(bsCode)) {
+    if (bsCode && window.DESK_BSIDX.have[bsCode]) {
       window.DESK_BS = window.DESK_BS || {};
       if (!window.DESK_BS[bsCode]) { try { await loadScript("data/bs/" + bsCode + ".js" + CCV); } catch (e) { /* none */ } }
       story = window.DESK_BS[bsCode] || null;
@@ -861,7 +876,11 @@
     const storyCard = story ? `<div class="card md"><h2>The story so far <span class="m">last 2 years · share price & what moved it</span></h2>
         ${story.one ? `<p><b>${esc(story.one)}</b></p>` : ""}<div id="bspx"></div>
         ${story.moves && story.moves.length ? `<div class="m" style="margin:2px 0 8px">Shaded: biggest 4-week moves - ${story.moves.map((m) => `<span class="${m.pct >= 0 ? "up" : "dn"}">${esc(m.from.slice(2, 7))} ${m.pct > 0 ? "+" : ""}${Math.round(m.pct)}%</span>`).join(" · ")}</div>` : ""}
-        ${story.html}<div class="m">Written ${esc(story.at)} from ${story.n_news} dated headlines, the price history and our concall notes. Check before acting.</div></div>` : "";
+        ${story.html}<div class="m">Researched on the web ${esc(story.at)}${story.sources ? " · sources: " + esc(story.sources) : ""} · price moves from real share-price data. Check before acting ·
+        <a href="${requestLink(bsCode, story.company)}" target="_blank" rel="noopener">refresh it</a></div></div>`
+      : bsCode ? `<div class="card"><h2>The story so far</h2><div class="m">Not written yet for this company${(() => { const M = window.DESK_BSIDX.meta || {}; const i = (M.next || []).findIndex((n) => sameCo(n, key)); return i >= 0 ? ` - it's number ${i + 1} in the queue` : ""; })()}.</div>
+        <p><a class="btn" href="${requestLink(bsCode, call ? call.company : key)}" target="_blank" rel="noopener">Write it now</a></p>
+        <div class="m">Opens a one-line request on GitHub - press "Submit" and the story appears here in about 10 minutes.</div></div>` : "";
     const sideCards = `${storyCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
       <div class="card"><h2>In the news <span class="m">${plural(items.length, "story")} · ${pz}▲ ${nz}▼</span></h2>
         ${items.length >= 4 ? `<div id="cod"></div>` : ""}

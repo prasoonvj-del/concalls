@@ -20,12 +20,15 @@ on:
         type: boolean
   push:
     paths: ["run-now.txt"]
+  issues:  # "Write the story for this company" on the website opens an issue titled "Story: <code> <name>"
+    types: [opened]
   schedule:
     # 30 min after each IST slot (times in UTC): 05:40, 07:40, 10:40, 14:40, 16:40, 19:40, 22:40 IST
     - cron: "10 0,2,5,9,11,14,17 * * *"
 
 permissions:
   contents: write
+  issues: write
   pages: write
   id-token: write
 
@@ -55,7 +58,10 @@ jobs:
             H=$(date -u +%H); if [ "$H" != "00" ] && [ "$H" != "09" ]; then MODE=news-only; fi
           fi
           GO=true
-          if [ "${{ inputs.force }}" != "true" ]; then
+          if [ "$EVENT" = "issues" ]; then
+            TITLE="${{ github.event.issue.title }}"
+            case "$TITLE" in [Ss]tory:*) MODE=story-only ;; *) GO=false ;; esac
+          elif [ "${{ inputs.force }}" != "true" ]; then
             LAST=$(gh api repos/${{ github.repository }}/commits/data --jq .commit.committer.date 2>/dev/null || echo "")
             if [ -n "$LAST" ]; then
               AGE=$(( ($(date -u +%s) - $(date -u -d "$LAST" +%s)) / 60 ))
@@ -101,12 +107,14 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GROK_API_KEY: ${{ secrets.GROK_API_KEY }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
           PYTHONUNBUFFERED: "1"
         run: |
           mkdir -p data
           MODE=
           if [ "${{ needs.gate.outputs.mode }}" = "news-only" ]; then MODE=--news-only; fi
           if [ "${{ needs.gate.outputs.mode }}" = "site-only" ]; then MODE=--site-only; fi
+          if [ "${{ needs.gate.outputs.mode }}" = "story-only" ]; then MODE=--story-only; fi
           python daily.py $MODE 2>&1 | tee data/last_run.log
 
       - name: Save data (one commit, replaced each run - the repository doesn't grow)

@@ -130,12 +130,13 @@ def build(quiet=False):
     (data / "presentations.js").write_text(_js("DESK_PRES", None, pres), encoding="utf-8")
     import backstory as BS
     (data / "bs").mkdir(exist_ok=True)
-    have = []
+    have = {}
     for code, b in BS.load().items():
-        if b.get("status") == "ok":
+        if b.get("status") == "ok" and b.get("v", 0) >= 4:  # only the web-researched version
             (data / "bs" / f"{code}.js").write_text(_js("DESK_BS", code, b), encoding="utf-8")
-            have.append(code)
-    (data / "bsindex.js").write_text(_js("DESK_BSIDX", None, have), encoding="utf-8")
+            have[code] = b["at"]
+    meta = json.loads(BS.META.read_text(encoding="utf-8")) if BS.META.exists() else {}
+    (data / "bsindex.js").write_text(_js("DESK_BSIDX", None, {"have": have, "meta": meta}), encoding="utf-8")
     import trackers as TK
     track = {"trackers": TK.load(TK.TRACK_FILE, {}), "markets": TK.load(TK.MARKET_FILE, {"series": []}),
              "weekly": TK.load(TK.WEEKLY_FILE, {"reviews": []})}

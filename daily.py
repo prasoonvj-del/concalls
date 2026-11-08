@@ -252,6 +252,14 @@ def main():
         conf["news"] = False
     if "--site-only" in sys.argv:  # started again soon after an update: just rebuild the pages
         conf["news"] = conf["concalls"] = False
+    story_only = "--story-only" in sys.argv  # a company was requested on the website
+    if story_only:
+        conf["news"] = conf["concalls"] = False
+        try:
+            import backstory
+            backstory.step("request")
+        except Exception:
+            say(f"\n!! 'Story so far' failed:\n{traceback.format_exc()}")
     started = time.time()
     for name, enabled, fn in (("news", conf["news"], step_news),
                               ("concalls", conf["concalls"], lambda: step_concalls(conf))):
