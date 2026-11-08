@@ -26,7 +26,7 @@ say = C.say
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 STORE = C.DATA / "backstories.json"
 REFRESH_DAYS = 45
-ALLOWANCE = {"full": (5, 10), "news": (1, 4), "request": (5, 10)}  # (companies, minutes) per update: ~15 a day
+ALLOWANCE = {"full": (4, 10), "news": (1, 5), "request": (5, 10)}  # (companies, minutes) per update
 
 PROMPT = """Research the Indian listed company {company} (BSE {code}{sym}, sector: {sector}) using web search, then
 explain the last two years of its share price to an investor who wants to learn WHICH KIND OF NEWS RE-RATES OR
@@ -201,8 +201,8 @@ def concall_notes(lib, code):
 
 # Groq models that can search the web themselves, best first. The last one is GPT-OSS with Groq's
 # built-in browser-search tool. The first that works for this key is remembered for the run.
-SEARCHERS = [("groq/compound", None), ("groq/compound-mini", None), ("compound-beta", None),
-             ("openai/gpt-oss-120b", [{"type": "browser_search"}])]
+SEARCHERS = [("groq/compound", None), ("groq/compound-mini", None),
+             ("openai/gpt-oss-120b", [{"type": "browser_search"}]), ("openai/gpt-oss-20b", [{"type": "browser_search"}])]
 COMPOUND = SEARCHERS[0][0]
 _working = {}
 
@@ -212,8 +212,8 @@ def ask_compound(ai, prompt):
     import requests
     global COMPOUND
     url = ai.url.rstrip("/") + "/chat/completions"
-    order = [_working["m"]] if "m" in _working else SEARCHERS
-    last = ""
+    order = [m for m in SEARCHERS if m[0] not in _working.setdefault("groq_off", set())]
+    last, quota = "", 0
     for model, tools in order:
         payload = {"model": model, "messages": [{"role": "user", "content": prompt}], "temperature": 0.3}
         if tools:
@@ -226,22 +226,24 @@ def ask_compound(ai, prompt):
                 time.sleep(10)
                 continue
             if r.status_code == 200:
-                _working["m"] = (model, tools)
                 COMPOUND = model + (" + browser search" if tools else "")
                 return r.json()["choices"][0]["message"]["content"]
             body = r.text[:300]
             last = f"{model}: {r.status_code} {body[:120]}"
             if r.status_code == 429:
                 if "per day" in body or "RPD" in body or "TPD" in body:
-                    raise C.QuotaOver("Groq's daily allowance for web-search answers is used up - the rest continue tomorrow")
+                    _working["groq_off"].add(model)
+                    quota += 1
+                    break  # this model is done for today - try the next
                 time.sleep(min(float(r.headers.get("retry-after", 20) or 20), 90))
                 continue
             if r.status_code in (500, 502, 503) and attempt < 3:
                 time.sleep(15)
                 continue
-            break  # 400/404: this model isn't available for the key - try the next one
-        if "m" in _working:
+            _working["groq_off"].add(model)  # 400/404: not available for this key
             break
+    if quota:
+        raise C.QuotaOver("Groq's daily allowance for web-search answers is used up - the rest continue tomorrow")
     raise C.AIError(f"no web-search model answered ({last})")
 
 
@@ -300,19 +302,19 @@ def ask_gemini_search(prompt):
                 return text, ", ".join(srcs[:6]), model
             body = r.text[:600]
             last = f"{model}: {r.status_code} {re.sub(chr(10) + '|  +', ' ', body)[:160]}"
-            say(f"    {last}")
             if r.status_code == 429:
-                if "PerDay" in body or "per day" in body.lower():
+                if "plan and billing" in body or "PerDay" in body or "per day" in body.lower():
                     out_of_quota += 1
-                    break  # this model is done for today - try the next
+                    break  # this model is done for today (or search isn't on the free plan) - try the next
                 time.sleep(30)
                 continue
             if r.status_code in (500, 502, 503):
                 time.sleep(20)
                 continue
             break  # 400/404: try the next model
+    _working["gemini_off"] = True  # don't keep knocking for the rest of this run
     if out_of_quota:
-        raise C.QuotaOver("Gemini's daily free allowance for searched answers is used up - the rest continue tomorrow")
+        raise C.QuotaOver("Gemini's Google-Search answers aren't available on the free allowance right now")
     raise C.AIError(f"Gemini search didn't answer ({last})")
 
 
@@ -397,7 +399,7 @@ def step(mode="full"):
     if not todo:
         say("  story so far: nothing waiting")
         return
-    say(f"\nWriting 'the story so far' with Gemini + Google Search: {len(todo)} waiting, up to {n_max} this update ...")
+    say(f"\nWriting 'the story so far' (web-searched): {len(todo)} waiting, up to {n_max} this update ...")
     from trackers import _session
     sess = _session()
     deadline = time.time() + minutes * 60
@@ -426,20 +428,20 @@ def step(mode="full"):
         body = PROMPT.format(company=c["company"], code=code, sym=f", {sym}" if not sym[0].isdigit() else "",
                              sector=lib["sectors"].get(code, "") or "-", start=start, price=price_text(pts, moves),
                              concalls="\n".join(notes[-4:]) or "(none)")
-        src = ""
-        try:
-            text, src, used = ask_gemini_search(body)
-        except C.AIError as e:  # Gemini out for today: a requested company still gets done with Groq's browser search
-            say(f"  Gemini search: {str(e)[:220]}")
-            if code not in asked:
-                say(f"  {e}" if isinstance(e, C.QuotaOver) else f"  {c['company']}: {str(e)[:140]}")
-                if isinstance(e, C.QuotaOver):
-                    break
-                continue
+        src, text = "", None
+        if not _working.get("gemini_off"):
+            try:
+                text, src, used = ask_gemini_search(body)
+            except C.AIError as e:
+                say(f"  Gemini search: {str(e)[:160]} - using Groq's web search")
+        if text is None:
             if ai is None:
-                continue
+                break
             try:
                 text, used = ask_compound(ai, body), COMPOUND
+            except C.QuotaOver as e2:
+                say(f"  {e2}")
+                break
             except C.AIError as e2:
                 say(f"  {c['company']}: {str(e2)[:140]}")
                 continue
