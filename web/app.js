@@ -132,8 +132,31 @@
     sbi: "statebankofindia", ril: "relianceindustries", reliance: "relianceindustries", tcs: "tataconsultancyservices",
     hul: "hindustanunilever", airtel: "bhartiairtel", infy: "infosys", hcltech: "hcltechnologies", maruti: "marutisuzukiindia",
     zomato: "eternal", indigo: "interglobeaviation", adaniports: "adaniportsandspecialeconomiczone", kotak: "kotakmahindrabank" };
+  // name matching runs millions of times on the Companies page: cache the normalised names
+  const _nc = new Map();
+  const normC = (s) => { let v = _nc.get(s); if (v === undefined) { v = norm(s); _nc.set(s, v); } return v; };
+  // a coarse bucket key (alias, then generic tails stripped) - names that sameCo() could match share a bucket
+  function coKey(n) {
+    let k = normC(n); k = ALIAS[k] || k;
+    for (let again = true; again;) {
+      again = false;
+      for (const t of GENERIC_TAIL) if (k.length - t.length > 3 && k.endsWith(t)) { k = k.slice(0, -t.length); again = true; break; }
+    }
+    return k;
+  }
+  // name -> values lookup that gives the same answers as scanning with sameCo(), without the scan
+  function coIndex(list, nameOf, val = (x) => x) {
+    const m = new Map();
+    const ix = {
+      add(n, v) { const k = coKey(n); let b = m.get(k); if (!b) m.set(k, (b = [])); b.push([n, v]); },
+      all(n) { return (m.get(coKey(n)) || []).filter(([x]) => sameCo(x, n)).map((e) => e[1]); },
+      first(n) { const b = m.get(coKey(n)); const e = b && b.find(([x]) => sameCo(x, n)); return e ? e[1] : undefined; },
+    };
+    (list || []).forEach((x) => ix.add(nameOf(x), val(x)));
+    return ix;
+  }
   function sameCo(a, b) {
-    let x = norm(a), y = norm(b);
+    let x = normC(a), y = normC(b);
     if (!x || !y) return false;
     x = ALIAS[x] || x; y = ALIAS[y] || y;
     if (x === y) return true;
@@ -489,12 +512,21 @@
   let ctxReady = null;
   const loadCtx = () => (ctxReady = ctxReady || Promise.all([getConcalls(), getPres(), getTrack()]));
   // the investor deck that goes with a concall: same company, filed within ~2 months of the call
-  function deckFor(call) {
+  let _presIx = null;
+  function presIx() {
     const P = window.DESK_PRES || [];
+    if (!_presIx || _presIx.P !== P) {
+      const byCode = new Map();
+      P.forEach((d) => { if (!byCode.has(d.code)) byCode.set(d.code, []); byCode.get(d.code).push(d); });
+      _presIx = { P, byCode, byName: coIndex(P, (d) => d.company) };
+    }
+    return _presIx;
+  }
+  function deckFor(call) {
+    const X = presIx();
     const t = new Date(call.date).getTime();
     let best = null, bd = 1e18;
-    P.forEach((d) => {
-      if (d.code !== call.code && !sameCo(d.company, call.company)) return;
+    new Set([...(X.byCode.get(call.code) || []), ...X.byName.all(call.company)]).forEach((d) => {
       const dd = Math.abs(new Date(d.when).getTime() - t);
       if (dd < 61 * 864e5 && dd < bd) { best = d; bd = dd; }
     });
@@ -819,14 +851,19 @@
     const P = window.DESK_PRES || [], TK = (window.DESK_TRACK || {}).trackers || {};
     if (!window.DESK_CONEWS) { try { await loadScript("data/conews.js"); } catch (e) { window.DESK_CONEWS = {}; } }
     const briefs = IDX.briefs.slice(-7).map((x) => ({ date: x.date }));
-    const mentions = {};
+    const mentions = {}, mIdx = coIndex([], null);
+    const mKey = (c) => { let k = mIdx.first(c); if (k === undefined) { k = c; mIdx.add(c, c); mentions[c] = mentions[c] || []; } return k; };
     Object.entries(window.DESK_CONEWS).forEach(([c, list]) => {
-      const k = Object.keys(mentions).find((m) => sameCo(m, c)) || c;
-      list.forEach((m) => (mentions[k] = mentions[k] || []).push({ s: { id: m.id, title: m.t, sent: m.s, imp: m.i, when: m.w, cat: m.c }, date: m.d }));
+      const k = mKey(c);
+      list.forEach((m) => mentions[k].push({ s: { id: m.id, title: m.t, sent: m.s, imp: m.i, when: m.w, cat: m.c }, date: m.d }));
     });
-    cc.calls.forEach((c) => { if (!Object.keys(mentions).some((m) => sameCo(m, c.company))) mentions[c.company] = mentions[c.company] || []; });
+    cc.calls.forEach((c) => mKey(c.company));
     const known = new Set(cc.calls.map((c) => c.code));
-    P.forEach((d) => { if (!known.has(d.code) && !Object.keys(mentions).some((m) => sameCo(m, d.company))) mentions[d.company] = []; });
+    P.forEach((d) => { if (!known.has(d.code)) mKey(d.company); });
+    const callIdx = coIndex(cc.calls, (c) => c.company);
+    const presByName = coIndex(P, (d) => d.company), presByCode = new Map();
+    P.forEach((d) => { if (!presByCode.has(d.code)) presByCode.set(d.code, d); });
+    const resIdx = coIndex(TK.results || [], (r) => r.company);
     const DIRL = await getDir();
     const dirByCode = new Map(DIRL.map((x) => [x[0], x]));
     const dirIdx = new Map(DIRL.map((x) => [norm(x[1]), x]));
@@ -836,7 +873,7 @@
       for (const t of GENERIC_TAIL) if (dirIdx.has(k + t)) return dirIdx.get(k + t);
       return null;
     };
-    const latestCall = (n) => cc.calls.filter((c) => sameCo(c.company, n)).sort((a, c) => (a.date < c.date ? 1 : -1))[0];
+    const latestCall = (n) => callIdx.all(n).sort((a, c) => (a.date < c.date ? 1 : -1))[0];
 
     if (!name) {
       const BSI = await getBsIdx();
@@ -847,8 +884,8 @@
       DIRL.forEach((x) => { if (!have.has(x[0]) && !taken.has(x[0])) mentions[x[1]] = mentions[x[1]] || []; });
       const rows = Object.keys(mentions).map((n) => {
         const m = mentions[n], call = latestCall(n);
-        const deck = call ? deckFor(call) || P.find((d) => d.code === call.code) : P.find((d) => sameCo(d.company, n));
-        const res = (TK.results || []).find((r) => sameCo(r.company, n));
+        const deck = call ? deckFor(call) || presByCode.get(call.code) : presByName.first(n);
+        const res = resIdx.first(n);
         return { n, m: m.length, pos: m.filter((x) => x.s.sent === "+").length, neg: m.filter((x) => x.s.sent === "-").length,
           story: (() => { const cd = call ? call.code : deck ? deck.code : (dirFor(n) || [])[0]; return cd && BSI.have[cd] ? BSI.have[cd] : null; })(),
           call, deck, res, sector: call ? call.sector : (deck && deck.sector) || (res && res.sector) || (dirFor(n) || [0, 0, ""])[2] || "" };
@@ -896,7 +933,7 @@
       return;
     }
 
-    const key = Object.keys(mentions).find((m) => sameCo(m, name)) || name;
+    const key = mIdx.first(name) || name;
     const dirE = dirFor(key);
     const seenT = new Set();
     const items = (mentions[key] || []).sort((a, c) => (a.s.when < c.s.when ? 1 : -1))
