@@ -51,7 +51,7 @@ def concall_data():
         prev = C.find_prev(lib, c)
         calls.append({"metrics": c.get("metrics") or {}, "unchecked": c.get("metrics_unchecked") or [],
                       "prev_tone": (prev or {}).get("tone", "") if prev and prev.get("summary") else "",
-                      "company": c["company"], "code": c["code"], "sector": C.sector_of(lib, c),
+                      "company": c["company"], "code": c["code"], "sector": C.sector_of(lib, c), "id": c["id"],
                       "quarter": c["quarter"], "date": c["date"], "tone": c.get("tone", ""),
                       "compared": bool(c.get("compared")), "checks": bad,
                       "pdf": c.get("pdf_url", C.BSE_PDF[0] + c["pdf"]), "html": html})
@@ -103,19 +103,23 @@ def build(quiet=False):
     # summaries are split out: the index (small) loads everywhere, each summary only when it's opened
     (data / "cc").mkdir(exist_ok=True)
     text = {}
-    for i, c in enumerate(cc["calls"]):
-        c["k"] = i
+    # each summary lives in a file named after its own call (never a position in a list), and carries its company
+    # name - so a page left open across an update can never show one company's summary on another's page
+    for c in cc["calls"]:
+        k = re.sub(r"[^A-Za-z0-9_-]", "", c.pop("id"))[:80]
+        c["k"] = k
         plain = re.sub(r"<[^>]+>", " ", c["html"])
         plain = re.sub(r"\s+", " ", plain).strip()
         m = re.search(r"<(?:li|p)>(.*?)</(?:li|p)>", c["html"], re.S)
         one = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", m.group(1) if m else plain)).strip()
         one = re.sub(r"^Tone:\s*\w+\s*[-–—:]\s*", "", one)
         c["one"] = one[:257] + "…" if len(one) > 260 else one
-        text[i] = plain.replace("&amp;", "&")
-        (data / "cc" / f"{i}.js").write_text(_js("DESK_CCH", i, c.pop("html")), encoding="utf-8")
-    for j, o in enumerate(cc["overviews"]):
-        o["k"] = j
-        (data / "cc" / f"ov{j}.js").write_text(_js("DESK_OVH", j, o.pop("html")), encoding="utf-8")
+        text[k] = plain.replace("&amp;", "&")
+        (data / "cc" / f"{k}.js").write_text(_js("DESK_CCH", k, {"c": c["company"], "h": c.pop("html")}), encoding="utf-8")
+    for o in cc["overviews"]:
+        k = "ov_" + re.sub(r"[^a-z0-9]+", "_", (o["sector"] + "_" + o["quarter"]).lower()).strip("_")
+        o["k"] = k
+        (data / "cc" / f"{k}.js").write_text(_js("DESK_OVH", k, {"c": o["sector"], "h": o.pop("html")}), encoding="utf-8")
     (data / "cctext.js").write_text(_js("DESK_CCTEXT", None, text), encoding="utf-8")
     (data / "concalls.js").write_text(_js("DESK_CONCALLS", None, cc), encoding="utf-8")
     pres = json.loads(C.PRES_FILE.read_text(encoding="utf-8")) if C.PRES_FILE.exists() else []
@@ -181,6 +185,8 @@ def build(quiet=False):
     js = js.replace('"data/brief-" + date + ".js"', '"data/brief-" + date + ".js?v=' + stamp + '"')
     js = js.replace('loadScript("data/concalls.js")', 'loadScript("data/concalls.js?v=' + stamp + '")')
     js = js.replace('const CCV = ""', 'const CCV = "?v=' + stamp + '"')
+    js = js.replace('const BUILD = ""', 'const BUILD = "' + stamp + '"')
+    (data / "build.js").write_text(f'window.DESK_BUILD_NOW = "{stamp}";', encoding="utf-8")
     js = js.replace('loadScript("data/newsarchive.js")', 'loadScript("data/newsarchive.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/search.js")', 'loadScript("data/search.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/tlindex.js")', 'loadScript("data/tlindex.js?v=' + stamp + '")')

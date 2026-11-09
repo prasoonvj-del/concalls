@@ -28,16 +28,39 @@
     return window.DESK_BRIEFS[date];
   }
   const CCV = "";
+  const BUILD = "";
+  // a summary is only shown if it belongs to the company asked for
   async function ccHtml(c) {
     window.DESK_CCH = window.DESK_CCH || {};
-    if (window.DESK_CCH[c.k] == null) { try { await loadScript("data/cc/" + c.k + ".js" + CCV); } catch (e) { return ""; } }
-    return window.DESK_CCH[c.k] || "";
+    if (window.DESK_CCH[c.k] == null) { try { await loadScript("data/cc/" + c.k + ".js" + CCV); } catch (e) { staleCheck(true); return ""; } }
+    const x = window.DESK_CCH[c.k];
+    if (!x || typeof x !== "object" || x.c !== c.company) { staleCheck(true); return ""; }
+    return x.h || "";
   }
   async function ovHtml(o) {
     window.DESK_OVH = window.DESK_OVH || {};
-    if (window.DESK_OVH[o.k] == null) { try { await loadScript("data/cc/ov" + o.k + ".js" + CCV); } catch (e) { return ""; } }
-    return window.DESK_OVH[o.k] || "";
+    if (window.DESK_OVH[o.k] == null) { try { await loadScript("data/cc/" + o.k + ".js" + CCV); } catch (e) { staleCheck(true); return ""; } }
+    const x = window.DESK_OVH[o.k];
+    if (!x || typeof x !== "object" || x.c !== o.sector) { staleCheck(true); return ""; }
+    return x.h || "";
   }
+  // the site is rebuilt several times a day; a page left open (tablet!) reloads itself when it is out of date
+  let staleBusy = false;
+  async function staleCheck(force) {
+    if (!BUILD || staleBusy) return;
+    staleBusy = true;
+    try {
+      await loadScript("data/build.js?t=" + Date.now());
+      if (window.DESK_BUILD_NOW && window.DESK_BUILD_NOW !== BUILD) {
+        const b = document.createElement("div"); b.className = "updbar"; b.textContent = "The site has just been updated - loading the new version…";
+        document.body.appendChild(b);
+        setTimeout(() => location.reload(), force ? 300 : 1200);
+      }
+    } catch (e) { /* offline - try later */ }
+    staleBusy = false;
+  }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) staleCheck(); });
+  setInterval(() => { if (!document.hidden) staleCheck(); }, 10 * 60 * 1000);
   async function ccText() {
     if (!window.DESK_CCTEXT) { try { await loadScript("data/cctext.js" + CCV); } catch (e) { window.DESK_CCTEXT = {}; } }
     return window.DESK_CCTEXT;

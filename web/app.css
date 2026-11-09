@@ -228,3 +228,4 @@ a.btn{display:inline-block;background:var(--s1);color:#fff;text-decoration:none;
 mark{background:#ffe58a;color:#222;border-radius:2px;padding:0 1px}
 .thc{padding:7px 0;border-top:1px solid var(--line-2,rgba(127,127,127,.12))}
 a.thchip{font-size:11px;border:1px solid var(--s5);color:var(--text);border-radius:999px;padding:0 7px;text-decoration:none;margin-left:4px;white-space:nowrap}
+.updbar{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--s1);color:#fff;text-align:center;padding:8px;font-weight:600}
