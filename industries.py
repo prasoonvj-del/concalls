@@ -100,7 +100,7 @@ def classify(lib, pool, limit=400, minutes=8):
     say(f"\nSorting {len(todo)} companies into industries ...")
     listing = "\n".join(f"{sec}: " + "; ".join(v) for sec, v in TAXONOMY.items())
     deadline = time.time() + minutes * 60
-    done = 0
+    done = miss = 0
     for i in range(0, len(todo), 40):
         if time.time() > deadline:
             break
@@ -117,10 +117,17 @@ def classify(lib, pool, limit=400, minutes=8):
         for line in text.splitlines():
             if "|" not in line:
                 continue
-            code, _, ind = line.partition("|")
-            code, ind = re.sub(r"\D", "", code), ind.strip(" *-")
-            ind = next((k for k in PARENT if k.lower() == ind.lower()), None) or \
-                next((k for k in PARENT if ind.lower().startswith(k.lower()[:12])), None)
+            m = re.search(r"\b(\d{6})\b", line)
+            code = m.group(1) if m else ""
+            rest = line.lower().split("|", 1)[-1]
+            # models echo the name, add the sector ("Banks: PSU banks") or bold it - take the longest industry named
+            hits = [k for k in PARENT if k.lower() in rest]
+            ind = max(hits, key=len) if hits else None
+            if not ind:
+                last = rest.split("|")[-1].split(":")[-1].strip(" *-`")
+                ind = next((k for k in PARENT if last and k.lower().startswith(last[:12])), None)
+            if code in names and not ind and miss < 3:
+                say(f"    unmatched: {line[:120]}"); miss += 1
             if code in names and ind:
                 inds[code] = ind
                 lib["sectors"][code] = PARENT[ind]  # sector follows the industry
