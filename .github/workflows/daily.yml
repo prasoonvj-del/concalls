@@ -146,4 +146,13 @@ jobs:
 
       - id: deploy
         if: always()
+        continue-on-error: true   # another start may still be publishing - wait and try once more
+        uses: actions/deploy-pages@v4
+
+      - name: Wait for the other publish to finish
+        if: always() && steps.deploy.outcome == 'failure'
+        run: sleep 120
+
+      - id: deploy_retry
+        if: always() && steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v4
