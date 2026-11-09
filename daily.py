@@ -141,9 +141,14 @@ def step_concalls(conf):
     days = conf["first_days"] if not lib["calls"] else conf["days"]
     if lib["calls"] and not lib.get("rescan_meet"):  # once: transcripts filed as "Analyst / Investor Meet"
         days = conf["first_days"]
-    C.download_list(days)
+    ok = True
+    try:
+        C.download_list(days)
+    except Exception as e:  # BSE hiccup: still summarise/sort what we already have
+        ok = False
+        say(f"  BSE list download failed this time ({str(e)[:120]}) - carrying on with the library")
     lib = C.load_lib()
-    if not lib.get("rescan_meet"):
+    if ok and not lib.get("rescan_meet"):
         lib["rescan_meet"] = True
         C.save_lib(lib)
     try:
