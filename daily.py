@@ -320,6 +320,10 @@ def main():
         except Exception:  # keep going - the site still gets built
             say(f"\n!! The {name} step failed:\n{traceback.format_exc()}")
     if conf["news"] or conf["concalls"]:
+        try:  # requests from the website that a busy queue may have pushed out of their own run
+            concall_requests()
+        except Exception:
+            say(f"\n!! Concall request failed:\n{traceback.format_exc()}")
         try:
             import decks
             decks.step(C.Pool(), "full" if conf["concalls"] else "news")
