@@ -64,7 +64,8 @@ TAXONOMY = {
 }
 PARENT = {ind: sec for sec, inds in TAXONOMY.items() for ind in inds}
 
-PROMPT = """Classify each Indian listed company into exactly ONE industry from this list (copy the name exactly).
+PROMPT = """Classify each Indian listed company into exactly ONE industry from this list. Copy the industry name exactly as written
+before the square brackets - never answer with the group in brackets.
 Use the hint (its latest earnings-call summary line) to decide what it mainly does.
 
 INDUSTRIES:
@@ -94,17 +95,28 @@ def classify(lib, pool, limit=400, minutes=8):
     names = {}
     for c in lib["calls"].values():
         names.setdefault(c["code"], c["company"])
+    if lib.get("ind_v") != 2:  # first pass mis-read sector answers as industries - start again
+        inds.clear()
+        lib["ind_v"] = 2
+        for k, o in list(lib.get("overviews", {}).items()):
+            if o.get("industry"):
+                try:
+                    (C.BASE / o["file"]).unlink() if o.get("file") else None
+                except Exception:
+                    pass
+                del lib["overviews"][k]
     todo = [code for code in names if code not in inds][:limit]
     if not todo:
         return 0
     say(f"\nSorting {len(todo)} companies into industries ...")
-    listing = "\n".join(f"{sec}: " + "; ".join(v) for sec, v in TAXONOMY.items())
+    listing = "\n".join(f"- {ind} [{sec}]" for sec, v in TAXONOMY.items() for ind in v)
     deadline = time.time() + minutes * 60
     done = miss = 0
-    for i in range(0, len(todo), 40):
+    SECTOR_NAMES = {x.lower() for x in TAXONOMY}
+    for i in range(0, len(todo), 30):
         if time.time() > deadline:
             break
-        part = todo[i:i + 40]
+        part = todo[i:i + 30]
         body = "\n".join(f"{code} | {names[code]} | hint: {_hint(lib, code)}" for code in part)
         try:
             text, _ = pool.ask(PROMPT.format(inds=listing) + body, label=f"industries {i + 1}-{i + len(part)} of {len(todo)}")
@@ -119,13 +131,15 @@ def classify(lib, pool, limit=400, minutes=8):
                 continue
             m = re.search(r"\b(\d{6})\b", line)
             code = m.group(1) if m else ""
-            rest = line.lower().split("|", 1)[-1]
-            # models echo the name, add the sector ("Banks: PSU banks") or bold it - take the longest industry named
-            hits = [k for k in PARENT if k.lower() in rest]
-            ind = max(hits, key=len) if hits else None
-            if not ind:
-                last = rest.split("|")[-1].split(":")[-1].strip(" *-`")
-                ind = next((k for k in PARENT if last and k.lower().startswith(last[:12])), None)
+            # judge only the answer field (an echoed company name like "Steel Strips Wheels" must not count)
+            last = re.sub(r"\[.*?\]", "", line.split("|")[-1]).split(":")[-1].strip(" *-`.").lower()
+            if last in SECTOR_NAMES:  # answered with the group, not an industry - leave it for the next run
+                ind = None
+            else:
+                ind = next((k for k in PARENT if k.lower() == last), None)
+                if not ind:
+                    hits = [k for k in PARENT if k.lower() in last]
+                    ind = max(hits, key=len) if hits else None
             if code in names and not ind and miss < 3:
                 say(f"    unmatched: {line[:120]}"); miss += 1
             if code in names and ind:
