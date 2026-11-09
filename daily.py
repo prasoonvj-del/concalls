@@ -105,9 +105,17 @@ def concall_requests():
         return
     say(f"\nConcall summaries requested from the website: {', '.join(asked)}")
     pool = C.Pool()
+    try:
+        import directory
+        dr = directory.load()
+    except Exception:
+        dr = {}
     for code, nums in asked.items():
         C.transcripts_for(code)
         lib = C.load_lib()
+        if not lib["sectors"].get(code) and (dr.get(code) or {}).get("s"):
+            lib["sectors"][code] = dr[code]["s"]
+            C.save_lib(lib)
         calls = sorted([c for c in lib["calls"].values() if c["code"] == code], key=lambda c: c["date"])
         if not calls:
             msg = "No earnings-call transcript from this company on BSE in the last ~7 months."
@@ -339,6 +347,11 @@ def main():
             pivot_sources.step(C.Pool(), "full" if conf["concalls"] else "news")
         except Exception:
             say(f"\n!! Pivots from summaries failed:\n{traceback.format_exc()}")
+    try:
+        import directory
+        directory.refresh_sectors()
+    except Exception:
+        pass
     try:
         import timeline
         timeline.update()

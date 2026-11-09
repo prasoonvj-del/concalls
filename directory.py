@@ -103,7 +103,15 @@ def refresh_sectors():
     if not d:
         return
     lib = C.load_lib()
+    filled = 0
     for code, v in d.items():
-        if code != "_meta" and lib["sectors"].get(code):
+        if code == "_meta":
+            continue
+        if lib["sectors"].get(code):
             v["s"] = lib["sectors"][code]
+        elif v.get("s") and any(c["code"] == code for c in lib["calls"].values()):
+            lib["sectors"][code] = v["s"]  # e.g. a concall summarised on request before the AI sorted it
+            filled += 1
     FILE.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+    if filled:
+        C.save_lib(lib)
