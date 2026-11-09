@@ -52,6 +52,12 @@ def step_news():
         C.fetch_presentations()
     except Exception as e:  # BSE is sometimes slow - the news brief is already saved
         say(f"  presentations skipped this time: {str(e)[:150]}")
+    try:
+        import directory
+        directory.update()
+        directory.refresh_sectors()
+    except Exception as e:
+        say(f"  company directory skipped: {str(e)[:120]}")
     say("\nPrices, results calendar, week in review ...")
     import trackers
     trackers.step()
@@ -86,12 +92,52 @@ def plan_concalls(lib, conf):
     return first + turns, is_watch
 
 
+def concall_requests():
+    """'Summarise its latest concall' from the website = a GitHub issue titled "Concall: <BSE code> <name>"."""
+    import re
+    import backstory
+    asked = {}
+    for it in backstory._gh("GET", "/issues", params={"state": "open", "per_page": 50}) or []:
+        m = re.match(r"\s*concall:\s*(\d{5,6})", it.get("title", ""), re.I)
+        if m and "pull_request" not in it:
+            asked.setdefault(m.group(1), []).append(it["number"])
+    if not asked:
+        return
+    say(f"\nConcall summaries requested from the website: {', '.join(asked)}")
+    pool = C.Pool()
+    for code, nums in asked.items():
+        C.transcripts_for(code)
+        lib = C.load_lib()
+        calls = sorted([c for c in lib["calls"].values() if c["code"] == code], key=lambda c: c["date"])
+        if not calls:
+            msg = "No earnings-call transcript from this company on BSE in the last ~7 months."
+        else:
+            c = calls[-1]
+            if not c.get("summary"):
+                prev = C.find_prev(lib, c)
+                try:
+                    C.summarise_one(c, lib, pool, prev if prev and prev.get("summary") else None)
+                    msg = f"Done - the {c['quarter']} concall of {c['company']} is summarised on the website after this update."
+                except C.AIError as e:
+                    msg = f"Couldn't summarise it this time ({str(e)[:120]}) - it stays in the queue."
+            else:
+                msg = f"The {c['quarter']} concall of {c['company']} was already summarised - it's on the website."
+        for n in nums:
+            backstory._gh("POST", f"/issues/{n}/comments", json={"body": msg})
+            backstory._gh("PATCH", f"/issues/{n}", json={"state": "closed"})
+
+
 def step_concalls(conf):
     say("\n================ CONCALLS ================")
     lib = C.load_lib()
     days = conf["first_days"] if not lib["calls"] else conf["days"]
+    if lib["calls"] and not lib.get("rescan_meet"):  # once: transcripts filed as "Analyst / Investor Meet"
+        days = conf["first_days"]
     C.download_list(days)
     lib = C.load_lib()
+    if not lib.get("rescan_meet"):
+        lib["rescan_meet"] = True
+        C.save_lib(lib)
     try:
         pool = C.Pool()
         pool.ask("Reply with exactly: OK", label="check", max_wait=45)
@@ -255,6 +301,10 @@ def main():
     story_only = "--story-only" in sys.argv  # a company was requested on the website
     if story_only:
         conf["news"] = conf["concalls"] = False
+        try:
+            concall_requests()
+        except Exception:
+            say(f"\n!! Concall request failed:\n{traceback.format_exc()}")
         try:
             import backstory
             backstory.step("request")

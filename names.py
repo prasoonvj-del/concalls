@@ -68,7 +68,16 @@ class Resolver:
         if C.PRES_FILE.exists():
             for d in json.loads(C.PRES_FILE.read_text(encoding="utf-8")):
                 self.canon.setdefault(n(d["company"]), (re.sub(r"\s+(Ltd\.?|Limited)$", "", d["company"]).strip(), d["code"]))
-        self.sectors = lib["sectors"]
+        self.sectors = dict(lib["sectors"])
+        try:
+            import directory
+            for code, v in directory.load().items():
+                if code != "_meta":
+                    self.canon.setdefault(n(v["n"]), (re.sub(r"\s+(Ltd\.?|Limited)$", "", v["n"]).strip(), code))
+                    if v.get("s") and not self.sectors.get(code):
+                        self.sectors[code] = v["s"]
+        except Exception:
+            pass
         self.cache = cache if cache is not None else {}
         self._memo = {}
 

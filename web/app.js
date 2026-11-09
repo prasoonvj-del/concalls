@@ -95,6 +95,12 @@
         <span>${esc(e.t)}${e.l ? ` <a class="m" href="${esc(e.l)}" target="_blank" rel="noopener">source</a>` : ""}</span></div>`;
     }).join("");
   }
+  async function getDir() {
+    if (!window.DESK_DIR) { try { await loadScript("data/directory.js"); } catch (e) { window.DESK_DIR = []; } }
+    return window.DESK_DIR;
+  }
+  const screenerLink = (code) => `https://www.screener.in/company/${code}/`;
+  const concallRequestLink = (code, name) => `https://github.com/prasoonvj-del/concalls/issues/new?title=${encodeURIComponent("Concall: " + code + " " + name)}&body=${encodeURIComponent("Requested from the Market Desk website. Just press Submit - the latest concall is found on BSE and summarised within about 10 minutes; this issue closes itself.")}`;
   const REPO = "prasoonvj-del/concalls";
   const requestLink = (code, name) => `https://github.com/${REPO}/issues/new?title=${encodeURIComponent("Story: " + code + " " + name)}&body=${encodeURIComponent("Requested from the Market Desk website. Just press Submit - the story is written within about 10 minutes and this issue closes itself.")}`;
   async function getConcalls() {
@@ -819,28 +825,42 @@
     cc.calls.forEach((c) => { if (!Object.keys(mentions).some((m) => sameCo(m, c.company))) mentions[c.company] = mentions[c.company] || []; });
     const known = new Set(cc.calls.map((c) => c.code));
     P.forEach((d) => { if (!known.has(d.code) && !Object.keys(mentions).some((m) => sameCo(m, d.company))) mentions[d.company] = []; });
+    const DIRL = await getDir();
+    const dirByCode = new Map(DIRL.map((x) => [x[0], x]));
+    const dirIdx = new Map(DIRL.map((x) => [norm(x[1]), x]));
+    const dirFor = (n) => {
+      const k0 = norm(n), k = ALIAS[k0] || k0;
+      if (dirIdx.has(k)) return dirIdx.get(k);
+      for (const t of GENERIC_TAIL) if (dirIdx.has(k + t)) return dirIdx.get(k + t);
+      return null;
+    };
     const latestCall = (n) => cc.calls.filter((c) => sameCo(c.company, n)).sort((a, c) => (a.date < c.date ? 1 : -1))[0];
 
     if (!name) {
       const BSI = await getBsIdx();
+      // every listed company is in the list, even before we have anything on it
+      const have = new Set([...cc.calls.map((c) => c.code), ...P.map((d) => d.code)]);
+      const keyNames = Object.keys(mentions);
+      const taken = new Set(keyNames.map((k) => (dirFor(k) || [null])[0]).filter(Boolean));
+      DIRL.forEach((x) => { if (!have.has(x[0]) && !taken.has(x[0])) mentions[x[1]] = mentions[x[1]] || []; });
       const rows = Object.keys(mentions).map((n) => {
         const m = mentions[n], call = latestCall(n);
         const deck = call ? deckFor(call) || P.find((d) => d.code === call.code) : P.find((d) => sameCo(d.company, n));
         const res = (TK.results || []).find((r) => sameCo(r.company, n));
         return { n, m: m.length, pos: m.filter((x) => x.s.sent === "+").length, neg: m.filter((x) => x.s.sent === "-").length,
-          story: (() => { const cd = call ? call.code : deck ? deck.code : null; return cd && BSI.have[cd] ? BSI.have[cd] : null; })(),
-          call, deck, res, sector: call ? call.sector : (deck && deck.sector) || (res && res.sector) || ((m.find((x) => !/Markets|Macro|Economy|Policy|Global|IPO/i.test(x.s.cat)) || {}).s || {}).cat || "" };
+          story: (() => { const cd = call ? call.code : deck ? deck.code : (dirFor(n) || [])[0]; return cd && BSI.have[cd] ? BSI.have[cd] : null; })(),
+          call, deck, res, sector: call ? call.sector : (deck && deck.sector) || (res && res.sector) || (dirFor(n) || [0, 0, ""])[2] || "" };
       });
       const secs = [...new Set(rows.map((r) => r.sector).filter(Boolean))].sort();
       const st = store.get("colist", { q: "", sec: "", sort: "news", has: "" });
       const BM = BSI.meta || {};
-      view.innerHTML = `<h1>Companies</h1><div class="sub">${plural(rows.length, "company")} · news from the last ${plural(briefs.length, "brief")}, concall summaries, decks and results in one row each</div>
+      view.innerHTML = `<h1>Companies</h1><div class="sub">${plural(rows.length, "company")} - every company listed on BSE · news from the last ${plural(briefs.length, "brief")}, concall summaries, decks and results in one row each</div>
         ${BM.total ? `<div class="card prog"><b>The story so far:</b> ${BM.done || 0} of ${BM.total} concall companies written
           <span class="pbar"><i style="width:${Math.round((100 * (BM.done || 0)) / BM.total)}%"></i></span>
           <span class="m">up to ${BM.per_update || 6} more each update${BM.next && BM.next.length ? " · next: " + BM.next.slice(0, 6).map(esc).join(", ") + (BM.next.length > 6 ? "…" : "") : ""}</span></div>` : ""}
         <div class="filters"><input type="search" id="cq" placeholder="Search a company" value="${esc(st.q)}">
           <select id="cs"><option value="">All sectors</option>${secs.map((x) => `<option ${x === st.sec ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>
-          <select id="ch"><option value="">Everything</option><option value="call" ${st.has === "call" ? "selected" : ""}>With a concall summary</option>
+          <select id="ch"><option value="">All listed companies</option><option value="data" ${st.has === "data" ? "selected" : ""}>With anything on file</option><option value="call" ${st.has === "call" ? "selected" : ""}>With a concall summary</option>
             <option value="deck" ${st.has === "deck" ? "selected" : ""}>With an investor deck</option>
             <option value="story" ${st.has === "story" ? "selected" : ""}>With "the story so far"</option><option value="res" ${st.has === "res" ? "selected" : ""}>With results this season</option></select>
           <select id="co"><option value="news">Most in the news</option><option value="az" ${st.sort === "az" ? "selected" : ""}>A–Z</option>
@@ -851,10 +871,11 @@
         Object.assign(st, { q: $("#cq").value, sec: $("#cs").value, has: $("#ch").value, sort: $("#co").value }); store.set("colist", st);
         $("#coclr").hidden = !(st.q || st.sec || st.has);
         const q = st.q.toLowerCase();
-        const sorters = { news: (a, b) => b.m - a.m || a.n.localeCompare(b.n), az: (a, b) => a.n.localeCompare(b.n), pos: (a, b) => b.pos - a.pos || b.m - a.m,
+        const score = (r) => (r.call ? 4 : 0) + (r.deck ? 2 : 0) + (r.res ? 1 : 0);
+        const sorters = { news: (a, b) => b.m - a.m || score(b) - score(a) || a.n.localeCompare(b.n), az: (a, b) => a.n.localeCompare(b.n), pos: (a, b) => b.pos - a.pos || b.m - a.m,
           neg: (a, b) => b.neg - a.neg || b.m - a.m, call: (a, b) => ((b.call ? b.call.date : "") > (a.call ? a.call.date : "") ? 1 : -1) };
         const list = rows.filter((r) => (!q || r.n.toLowerCase().includes(q)) && (!st.sec || r.sector === st.sec)
-          && (!st.has || (st.has === "call" ? r.call : st.has === "deck" ? r.deck : st.has === "story" ? r.story : r.res))).sort(sorters[st.sort] || sorters.news);
+          && (!st.has || (st.has === "data" ? (r.m || r.call || r.deck || r.res) : st.has === "call" ? r.call : st.has === "deck" ? r.deck : st.has === "story" ? r.story : r.res))).sort(sorters[st.sort] || sorters.news);
         const bar = (r) => r.m ? `<span class="mb" title="${r.pos} positive, ${r.neg} negative, ${r.m - r.pos - r.neg} neutral"><i style="width:${(100 * r.pos) / r.m}%;background:var(--pos)"></i><i style="width:${(100 * r.neg) / r.m}%;background:var(--neg)"></i></span>` : "";
         $("#cl").innerHTML = `<tr><th>Company</th><th>News</th><th>Concall</th><th>Results</th><th>Deck</th><th>Story</th></tr>` + list.slice(0, shown).map((r) => `<tr>
           <td><a href="#companies/${encodeURIComponent(r.n)}">${isWatch(r.n) ? "★ " : ""}${esc(r.n)}</a><div class="m">${esc(r.sector || "")}</div></td>
@@ -874,6 +895,7 @@
     }
 
     const key = Object.keys(mentions).find((m) => sameCo(m, name)) || name;
+    const dirE = dirFor(key);
     const seenT = new Set();
     const items = (mentions[key] || []).sort((a, c) => (a.s.when < c.s.when ? 1 : -1))
       .filter((x) => { const k = x.s.title.toLowerCase().replace(/\W+/g, ""); if (seenT.has(k)) return false; seenT.add(k); return true; });
@@ -882,7 +904,7 @@
     const tk = ["results", "orders", "calls", "pivots"].map((k) => (TK[k] || []).filter((r) => sameCo(r.company, name)));
     const decks = P.filter((d) => sameCo(d.company, name) || (call && d.code === call.code)).slice(0, 6);
     const nextRes = (TK.calendar || []).find((r) => (sameCo(r.company, name) || (call && r.code === call.code)) && r.when >= new Date().toISOString().slice(0, 10));
-    const sector = call ? call.sector : (decks[0] && decks[0].sector) || (items[0] ? items[0].s.cat : "");
+    const sector = call ? call.sector : (decks[0] && decks[0].sector) || (dirE && dirE[2]) || (items[0] ? items[0].s.cat : "");
     const pz = items.filter((x) => x.s.sent === "+").length, nz = items.filter((x) => x.s.sent === "-").length;
     const res = tk[0][0], brk = tk[2][0], ord = tk[1][0];
     const chips = [
@@ -900,7 +922,7 @@
       .filter((x) => x[1] != null).map((x) => `<div class="tile"><div class="v" style="font-size:19px">${fmtM(x[1])}</div><div class="k">${x[0]} · ${x[2]}</div></div>`).join("")}</div>`;
     const deckSum = decks.find((d) => d.one || d.html);
     view.innerHTML = `<div class="cohead"><h1>${esc(key)}</h1>
-        <div class="sub"><a href="#companies">All companies</a>${sector ? ` · <a href="#sectors/${encodeURIComponent(sector)}">${esc(sector)}</a>` : ""}${call ? ` · <a href="#peers/${encodeURIComponent(call.sector)}">peers</a> · <a href="${esc(call.pdf)}" target="_blank" rel="noopener">transcript</a>` : ""}${decks[0] ? ` · <a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">latest deck</a>` : ""}</div>
+        <div class="sub"><a href="#companies">All companies</a>${sector ? ` · <a href="#sectors/${encodeURIComponent(sector)}">${esc(sector)}</a>` : ""}${call ? ` · <a href="#peers/${encodeURIComponent(call.sector)}">peers</a> · <a href="${esc(call.pdf)}" target="_blank" rel="noopener">transcript</a>` : ""}${decks[0] ? ` · <a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">latest deck</a>` : ""}${(call || decks[0] || dirE) ? ` · <a href="${screenerLink(call ? call.code : decks[0] ? decks[0].code : dirE[0])}" target="_blank" rel="noopener">Screener</a>` : ""}</div>
         ${chips ? `<div class="chips">${chips}</div>` : ""}${figs}</div>
       <div id="cobody"></div>`;
     const newsLine = (g) => `<li class="nl"><div class="t" data-story-date="${g.x.date}" data-sid="${g.x.s.id}">${esc(g.x.s.title)}</div>
@@ -917,7 +939,7 @@
     const callHtml = call ? await ccHtml(call) : "";
     const tlist = await getTimeline([call && call.code, ...decks.map((d) => d.code)].filter(Boolean), key);
     const tlCard = tlist.length ? `<div class="card"><h2>Timeline <span class="m">everything on record for ${esc(key)} - kept for good · ${plural(tlist.length, "entry")}</span></h2><div id="tlb" class="tl">${timelineHtml(tlist)}</div></div>` : "";
-    const bsCode = call ? call.code : decks[0] ? decks[0].code : null;
+    const bsCode = call ? call.code : decks[0] ? decks[0].code : dirE ? dirE[0] : null;
     await getBsIdx();
     let story = null;
     if (bsCode && window.DESK_BSIDX.have[bsCode]) {
@@ -928,6 +950,9 @@
     const perDay = briefs.map((b) => { const xs = items.filter((x) => x.date === b.date); return { label: b.date.slice(5), pos: xs.filter((x) => x.s.sent === "+").length, neg: xs.filter((x) => x.s.sent === "-").length, neu: xs.filter((x) => x.s.sent !== "+" && x.s.sent !== "-").length }; })
       .map((r) => Object.assign(r, { total: r.pos + r.neg + r.neu, tip: `<b>${r.label}</b><br>${r.pos} positive · ${r.neg} negative · ${r.neu} neutral` }));
     const hasTk = tk[0].length + tk[1].length + tk[2].length + tk[3].length > 0;
+    const askCard = !call && bsCode ? `<div class="card"><h2>Concall</h2><div class="m">No concall summary for this company yet - it may file its transcript later, or under a heading we only started reading today.</div>
+        <p><a class="btn" href="${concallRequestLink(bsCode, key)}" target="_blank" rel="noopener">Summarise its latest concall</a></p>
+        <div class="m">Opens a one-line request on GitHub - press "Submit"; the transcript is found on BSE and summarised here in about 10 minutes.</div></div>` : "";
     const concallCard = call ? `<div class="card md"><h2>Concall ${esc(call.quarter)} <span class="m">filed ${esc(call.date)}</span></h2>
         <div style="margin-bottom:8px">${call.tone ? `<span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>` : ""} ${call.compared ? `<span class="badge">vs last quarter</span>` : ""}
         ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""}</div>
@@ -954,7 +979,7 @@
         ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>`;
     body.innerHTML = call || decks.length
       ? `<div class="cogrid"><div>${concallCard}${deckCard}${tlCard}</div><div>${sideCards}</div></div>`
-      : `<div class="grid g2" style="align-items:start">${sideCards}${tlCard}</div>`;
+      : `<div class="grid g2" style="align-items:start"><div>${askCard}${tlCard}</div><div>${sideCards}</div></div>`;
     clampBlock($("#tlb"), 520, "timeline");
     if ($("#conote")) $("#conote").onclick = () => openNote({ company: key });
     bindNoteActions(body);

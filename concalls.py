@@ -557,12 +557,12 @@ def bse():
     return _sess
 
 
-def bse_query(frm, to, subcategory, cat=None):
+def bse_query(frm, to, subcategory, cat=None, scrip=""):
     rows, page = [], 1
     while page <= 300:
         params = {"pageno": page, "strCat": cat or ("Company Update" if subcategory != "-1" else "-1"),
                   "strPrevDate": frm.strftime("%Y%m%d"), "strToDate": to.strftime("%Y%m%d"),
-                  "strScrip": "", "strSearch": "P", "strType": "C", "subcategory": subcategory}
+                  "strScrip": scrip, "strSearch": "P", "strType": "C", "subcategory": subcategory}
         for attempt in range(4):
             try:
                 r = bse().get(BSE_API, params=params, timeout=40)
@@ -607,10 +607,25 @@ def download_list(days):
         end = min(day + dt.timedelta(days=6), to)
         print(f"  {day:%d %b} - {end:%d %b} ... ", end="", flush=True)
         rows = [r for r in bse_query(day, end, "Earnings Call Transcript") if is_transcript(r)]
+        # many companies (e.g. Zen Technologies) file their transcript as "Analyst / Investor Meet"
+        try:
+            rows += [r for r in bse_query(day, end, "Analyst / Investor Meet") if is_transcript(r)]
+        except Exception as e:
+            say(f"(investor-meet filings skipped: {str(e)[:60]}) ", )
         if not rows:
             rows = [r for r in bse_query(day, end, "-1") if is_transcript(r)]
         say(f"{len(rows)} transcripts")
-        for row in rows:
+        add_transcripts(lib, rows)
+        day = end + dt.timedelta(days=1)
+    save_lib(lib)
+    companies = {c["code"] for c in lib["calls"].values()}
+    say(f"\nDone. Library: {len(lib['calls'])} transcripts from {len(companies)} companies.")
+
+
+def add_transcripts(lib, rows):
+    new = 0
+    for row in rows:
+        if True:
             try:
                 d = dt.datetime.fromisoformat(str(row.get("NEWS_DT") or row.get("DT_TM"))[:19])
             except ValueError:
@@ -623,10 +638,22 @@ def download_list(days):
                     "company": (row.get("SLONGNAME") or "").strip() or str(row.get("SCRIP_CD")),
                     "date": d.strftime("%Y-%m-%d"), "quarter": quarter_from_date(d), "pdf": att}
                 new += 1
-        day = end + dt.timedelta(days=1)
+    return new
+
+
+def transcripts_for(code, days=200):
+    """All transcripts one company filed recently (for a request from the website)."""
+    lib = load_lib()
+    to = dt.date.today()
+    rows = []
+    for sub in ("Earnings Call Transcript", "Analyst / Investor Meet"):
+        try:
+            rows += [r for r in bse_query(to - dt.timedelta(days=days), to, sub, scrip=str(code)) if is_transcript(r)]
+        except Exception:
+            pass
+    n = add_transcripts(lib, rows)
     save_lib(lib)
-    companies = {c["code"] for c in lib["calls"].values()}
-    say(f"\nDone: {new} new transcripts. Library: {len(lib['calls'])} transcripts from {len(companies)} companies.")
+    return n
 
 
 PRES_FILE = DATA / "presentations.json"

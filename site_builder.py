@@ -160,6 +160,9 @@ def build(quiet=False):
             search.append([nm, e["k"], e["d"], e["t"], e.get("l", "")])
             if e["k"] == "pivot" and e.get("th"):
                 themes.setdefault(e["th"], []).append({"c": nm, "d": e["d"], "t": e["t"], "l": e.get("l", "")})
+    import directory as DIR
+    dr = DIR.load()
+    (data / "directory.js").write_text(_js("DESK_DIR", None, [[k, v["n"], v.get("s", ""), v.get("id", "")] for k, v in dr.items() if k != "_meta"]), encoding="utf-8")
     (data / "search.js").write_text(_js("DESK_SEARCH", None, {"tl": search, "themes": themes}), encoding="utf-8")
     import trackers as TK
     track = {"trackers": TK.load(TK.TRACK_FILE, {}), "markets": TK.load(TK.MARKET_FILE, {"series": []}),
@@ -188,6 +191,7 @@ def build(quiet=False):
     js = js.replace('const BUILD = ""', 'const BUILD = "' + stamp + '"')
     (data / "build.js").write_text(f'window.DESK_BUILD_NOW = "{stamp}";', encoding="utf-8")
     js = js.replace('loadScript("data/newsarchive.js")', 'loadScript("data/newsarchive.js?v=' + stamp + '")')
+    js = js.replace('loadScript("data/directory.js")', 'loadScript("data/directory.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/search.js")', 'loadScript("data/search.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/tlindex.js")', 'loadScript("data/tlindex.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/bsindex.js")', 'loadScript("data/bsindex.js?v=' + stamp + '")')

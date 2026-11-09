@@ -60,7 +60,7 @@ jobs:
           GO=true
           if [ "$EVENT" = "issues" ]; then
             TITLE="${{ github.event.issue.title }}"
-            case "$TITLE" in [Ss]tory:*) MODE=story-only ;; *) GO=false ;; esac
+            case "$TITLE" in [Ss]tory:*|[Cc]oncall:*) MODE=story-only ;; *) GO=false ;; esac
           elif [ "${{ inputs.force }}" != "true" ]; then
             LAST=$(gh api repos/${{ github.repository }}/commits/data --jq .commit.committer.date 2>/dev/null || echo "")
             if [ -n "$LAST" ]; then
