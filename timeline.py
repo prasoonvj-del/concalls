@@ -106,8 +106,9 @@ def update():
         T = {}
     for r in T.get("pivots", []):
         n += add(key_for(r["company"], by_name), r["uid"], r["date"], "pivot",
-                 f"{(r.get('type') or 'pivot').title()}: {r['what']}" + (f" - {r['why']}" if r.get("why") else ""), r.get("link", ""),
-                 {"s": r.get("sent", "")})
+                 f"{(r.get('type') or 'pivot').title()}: {r['what']}" + (f" - {r['why']}" if r.get("why") else "")
+                 + (f" [{r['src']}]" if r.get("src") else ""), r.get("link", ""),
+                 {"s": r.get("sent", ""), "th": r.get("theme", "")})
     for r in T.get("results", []):
         bits = []
         if r.get("revenue") is not None:
@@ -132,6 +133,11 @@ def update():
                 n += add(code, f"bs|{code}|{b['at']}", b["at"], "story", f"Share-price story: {b['one']}")
     except Exception:
         pass
+    themes = {r["uid"]: r.get("theme") for r in T.get("pivots", []) if r.get("theme")}
+    for lst in cos.values():
+        for e in lst:
+            if e["k"] == "pivot" and not e.get("th") and e["u"] in themes:
+                e["th"] = themes[e["u"]]
     # facts the trackers merged away as repeats (still inside their 4-month window) go from the timeline too
     live = {r["uid"] for k in ("pivots", "results", "orders", "calls") for r in T.get(k, [])}
     oldest = min([r["date"] for k in ("pivots", "results", "orders", "calls") for r in T.get(k, [])] or ["9999"])

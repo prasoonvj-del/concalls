@@ -280,6 +280,11 @@ def main():
             backstory.step("full" if conf["concalls"] else "news")
         except Exception:
             say(f"\n!! 'Story so far' failed:\n{traceback.format_exc()}")
+        try:
+            import pivot_sources
+            pivot_sources.step(C.Pool(), "full" if conf["concalls"] else "news")
+        except Exception:
+            say(f"\n!! Pivots from summaries failed:\n{traceback.format_exc()}")
     try:
         import timeline
         timeline.update()

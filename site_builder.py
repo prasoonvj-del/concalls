@@ -111,7 +111,7 @@ def build(quiet=False):
         one = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", m.group(1) if m else plain)).strip()
         one = re.sub(r"^Tone:\s*\w+\s*[-–—:]\s*", "", one)
         c["one"] = one[:257] + "…" if len(one) > 260 else one
-        text[i] = plain.lower()
+        text[i] = plain.replace("&amp;", "&")
         (data / "cc" / f"{i}.js").write_text(_js("DESK_CCH", i, c.pop("html")), encoding="utf-8")
     for j, o in enumerate(cc["overviews"]):
         o["k"] = j
@@ -148,6 +148,15 @@ def build(quiet=False):
         (data / "tl" / f"{fk}.js").write_text(_js("DESK_TL", fk, lst), encoding="utf-8")
         tlidx[fk] = {"name": tl.get("names", {}).get(k, ""), "code": k if not k.startswith("n:") else "", "n": len(lst)}
     (data / "tlindex.js").write_text(_js("DESK_TLIDX", None, tlidx), encoding="utf-8")
+    # search index (every timeline entry, compact) and the themes companies are moving into
+    search, themes = [], {}
+    for k, lst in tl.get("companies", {}).items():
+        nm = tl.get("names", {}).get(k, "")
+        for e in lst:
+            search.append([nm, e["k"], e["d"], e["t"], e.get("l", "")])
+            if e["k"] == "pivot" and e.get("th"):
+                themes.setdefault(e["th"], []).append({"c": nm, "d": e["d"], "t": e["t"], "l": e.get("l", "")})
+    (data / "search.js").write_text(_js("DESK_SEARCH", None, {"tl": search, "themes": themes}), encoding="utf-8")
     import trackers as TK
     track = {"trackers": TK.load(TK.TRACK_FILE, {}), "markets": TK.load(TK.MARKET_FILE, {"series": []}),
              "weekly": TK.load(TK.WEEKLY_FILE, {"reviews": []})}
@@ -173,6 +182,7 @@ def build(quiet=False):
     js = js.replace('loadScript("data/concalls.js")', 'loadScript("data/concalls.js?v=' + stamp + '")')
     js = js.replace('const CCV = ""', 'const CCV = "?v=' + stamp + '"')
     js = js.replace('loadScript("data/newsarchive.js")', 'loadScript("data/newsarchive.js?v=' + stamp + '")')
+    js = js.replace('loadScript("data/search.js")', 'loadScript("data/search.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/tlindex.js")', 'loadScript("data/tlindex.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/bsindex.js")', 'loadScript("data/bsindex.js?v=' + stamp + '")')
     js = js.replace('loadScript("data/conews.js")', 'loadScript("data/conews.js?v=' + stamp + '")')

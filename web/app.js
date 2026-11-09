@@ -448,6 +448,7 @@
     "m&a": "M&A", funding: "Funding / debt", rating: "Rating", management: "Management" };
   const pivotLine = (r, showCo = true) => `<div class="pv"><span class="kc" style="background:var(${r.sent === "-" ? "--neg" : "--s1"})">${esc(PIVOT_LBL[r.type] || r.type || "Pivot")}</span>
     ${showCo ? `<a href="#companies/${encodeURIComponent(r.company)}"><b>${esc(r.company)}</b></a> - ` : ""}${esc(r.what)}
+    ${r.theme ? ` <a class="thchip" href="#trackers/themes" onclick="localStorage.setItem('pivtheme', JSON.stringify(${esc(JSON.stringify(themeOf(r.theme)))}))">${esc(themeOf(r.theme))}</a>` : ""}${r.src ? ` <span class="m">(${esc(r.src)})</span>` : ""}
     ${r.why ? `<div class="m">→ ${esc(r.why)} · ${esc(r.date.slice(5))} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div>` : `<div class="m">${esc(r.date.slice(5))} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div>`}</div>`;
   const median = (a) => { const b = a.slice().sort((p, q) => p - q), m = b.length >> 1; return b.length ? (b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2) : null; };
   const isWatch = (name) => watchlist().some((w) => sameCo(name, w) || String(name).toLowerCase().includes(w.toLowerCase()));
@@ -1003,7 +1004,7 @@
       }
       if (my !== seq) return;
       const calls = cc.calls.filter((c) => (!st.s || c.sector === st.s) && (!st.q || c.quarter === st.q) && (!st.t || c.tone === st.t) &&
-        (!st.f || c.company.toLowerCase().includes(st.f) || (TX[c.k] || "").includes(st.f))).sort((a, b) => (a.date < b.date ? 1 : -1));
+        (!st.f || c.company.toLowerCase().includes(st.f) || (TX[c.k] || "").toLowerCase().includes(st.f))).sort((a, b) => (a.date < b.date ? 1 : -1));
       $("#kl").innerHTML = calls.slice(0, shown).map((c) => `<div class="crow">
           <div class="ch"><a class="n" href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a><span class="m">${esc(c.quarter)}${st.s ? "" : " · " + esc(c.sector)} · ${esc(c.date.slice(5))}</span>
           <span class="r2">${deckFor(c) ? `<a class="badge" href="${esc(deckFor(c).pdf)}" target="_blank" rel="noopener" title="Investor deck filed with this call">deck</a>` : ""}${c.compared ? `<span class="badge" title="Includes what changed vs last quarter">vs last qtr</span>` : ""}
@@ -1331,6 +1332,90 @@
     };
   }
 
+  /* ------------------------------------------------------------ search & themes */
+  async function getSearch() {
+    if (!window.DESK_SEARCH) { try { await loadScript("data/search.js"); } catch (e) { window.DESK_SEARCH = { tl: [], themes: {} }; } }
+    return window.DESK_SEARCH;
+  }
+  // a few words the market writes several ways
+  const SYN = [["lfp", "lithium iron phosphate"], ["data centre", "data center", "datacenter"], ["ev", "electric vehicle"],
+    ["capex", "capital expenditure"], ["semiconductor", "semicon", "chip"], ["green hydrogen", "electrolyser", "electrolyzer"],
+    ["bess", "battery energy storage"], ["cdmo", "contract development"], ["glp-1", "glp1", "semaglutide", "obesity"],
+    ["pli", "production linked incentive"], ["transformer", "transformers"], ["solar", "photovoltaic", "pv module"]];
+  const expandQ = (q) => { const l = q.toLowerCase().trim(); const g = SYN.find((x) => x.includes(l)); return g ? g : [l]; };
+  const THEME_KEYS = [["Battery materials & cells", /battery|lfp|cathode|anode|electrolyte|cell/i], ["EV & two-wheelers", /\bev\b|electric vehicle|two-wheeler/i],
+    ["Solar manufacturing", /solar/i], ["Data centres & AI infrastructure", /data cent|ai infra/i], ["Semiconductors & electronics manufacturing", /semicon|electronics/i],
+    ["Power T&D, transformers & cables", /t&d|transformer|cable|transmission/i], ["Defence", /defen[cs]e/i], ["Railways", /rail/i], ["Nuclear", /nuclear/i],
+    ["Green hydrogen & ammonia", /hydrogen|ammonia/i], ["Specialty chemicals & fluorochemicals", /chemical|fluoro/i], ["Pharma CDMO, peptides & biologics", /cdmo|peptide|biolog/i],
+    ["GLP-1 & obesity drugs", /glp|obesity/i], ["M&A & consolidation", /m&a|acqui|merger|consolidat/i], ["Debt reduction & fund-raising", /debt|fund/i],
+    ["Legal & regulatory", /legal|regulat/i], ["Capacity expansion (other)", /capacity/i]];
+  const themeOf = (t) => { if (!t) return ""; const m = /^other:\s*(.+)$/i.exec(t); if (m) return m[1].trim(); const k = THEME_KEYS.find(([, r]) => r.test(t)); return k ? k[0] : t; };
+  const highlight = (txt, terms) => { let h = esc(txt); terms.forEach((w) => { if (w.length > 1) h = h.replace(new RegExp("(" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "ig"), "<mark>$1</mark>"); }); return h; };
+  const snippet = (text, term, n = 160) => { const i = text.toLowerCase().indexOf(term); if (i < 0) return text.slice(0, n * 2); const a = Math.max(0, i - n); return (a ? "…" : "") + text.slice(a, i + term.length + n) + "…"; };
+
+  async function pageSearch(q0) {
+    q0 = q0 || store.get("lastq", "");
+    view.innerHTML = `<h1>Search</h1><div class="sub">Everything on file: concall summaries, investor decks, pivots, results, orders, broker calls, company timelines and recent news</div>
+      <div class="filters"><input type="search" id="sq" placeholder="e.g. LFP, data centre, transformer capacity, GLP-1, Bloom Energy" value="${esc(q0)}" style="flex:1"></div>
+      <div id="sres"></div>`;
+    const run = async () => {
+      const q = $("#sq").value.trim(); store.set("lastq", q);
+      if (q.length < 2) { $("#sres").innerHTML = `<div class="m">Type a word or phrase - a technology, product, customer, place or company.</div>`; return; }
+      $("#sres").innerHTML = `<div class="m">Searching…</div>`;
+      const terms = expandQ(q), hit = (t) => { const l = (t || "").toLowerCase(); return terms.find((w) => l.includes(w)); };
+      const [S, cc, TX] = await Promise.all([getSearch(), getConcalls(), ccText()]);
+      if (!window.DESK_CONEWS) { try { await loadScript("data/conews.js"); } catch (e) { window.DESK_CONEWS = {}; } }
+      const P = window.DESK_PRES || (await getPres());
+      const byCo = {};
+      const add = (co, h) => { const k = Object.keys(byCo).find((x) => sameCo(x, co)) || co; (byCo[k] = byCo[k] || []).push(h); };
+      // concall summaries (latest per company first)
+      cc.calls.forEach((c) => { const t = TX[c.k] || ""; const w = hit(t) || hit(c.company); if (w) add(c.company, { k: "Concall " + c.quarter, d: c.date, s: snippet(t, w), l: "#companies/" + encodeURIComponent(c.company), w }); });
+      // deck summaries
+      P.forEach((d) => { const t = ((d.one || "") + " " + (d.html || "").replace(/<[^>]+>/g, " ")).replace(/&amp;/g, "&").replace(/\s+/g, " "); const w = hit(t); if (w) add(d.company, { k: "Deck", d: d.when.slice(0, 10), s: snippet(t, w), l: d.pdf, w }); });
+      // timeline: pivots, results, orders, broker calls, stories - kept for good
+      S.tl.forEach(([co, k, d, t, l]) => { if (k === "concall" || k === "deck") return; const w = hit(t); if (w) add(co, { k: { pivot: "Pivot", result: "Results", order: "Order", broker: "Broker", story: "Price story" }[k] || k, d, s: t, l, w }); });
+      // recent news headlines
+      Object.entries(window.DESK_CONEWS).forEach(([co, list]) => list.forEach((m) => { const w = hit(m.t); if (w) add(co, { k: "News", d: m.d, s: m.t, l: "", w }); }));
+      const cos = Object.entries(byCo).map(([co, hs]) => {
+        const seen = new Set(); hs = hs.filter((h) => { const key = h.k + h.s.slice(0, 60); if (seen.has(key)) return false; seen.add(key); return true; });
+        return { co, hs: hs.sort((a, b) => (a.d < b.d ? 1 : -1)), kinds: new Set(hs.map((h) => h.k.split(" ")[0])).size, last: hs.reduce((m, h) => (h.d > m ? h.d : m), "") };
+      }).sort((a, b) => b.kinds - a.kinds || (a.last < b.last ? 1 : -1));
+      const th = Object.keys(S.themes || {}).filter((t) => terms.some((w) => t.toLowerCase().includes(w) || themeOf(t).toLowerCase().includes(w)));
+      $("#sres").innerHTML = `<div class="sub">${plural(cos.length, "company")} mention <b>${esc(terms.join(" / "))}</b>${th.length ? ` · theme: ${th.map((t) => `<a href="#trackers/themes" data-theme="${esc(themeOf(t))}">${esc(themeOf(t))}</a>`).join(", ")}` : ""}</div>
+        ${cos.length > 1 ? `<div class="card"><h2>Who's in it <span class="m">tap a name to jump</span></h2><div class="chips">${cos.slice(0, 60).map((c, i) => `<a class="chip link" href="#" data-jump="${i}">${esc(c.co)} <span class="m">${c.hs.length}</span></a>`).join("")}</div></div>` : ""}
+        ${cos.slice(0, 80).map((c, i) => `<div class="card" id="sr${i}"><h2><a href="#companies/${encodeURIComponent(c.co)}">${esc(c.co)}</a> <span class="m">${plural(c.hs.length, "mention")}</span></h2>
+          ${c.hs.slice(0, 8).map((h) => `<div class="sh"><span class="kc" style="background:var(${h.k === "Pivot" ? "--s5" : h.k.startsWith("Concall") ? "--s1" : h.k === "Deck" ? "--s3" : "--neu"})">${esc(h.k)}</span>
+            <span class="m">${esc(h.d)}</span> ${highlight(h.s, terms)} ${h.l ? `<a class="m" href="${esc(h.l)}" ${h.l.startsWith("#") ? "" : 'target="_blank" rel="noopener"'}>open</a>` : ""}</div>`).join("")}
+          ${c.hs.length > 8 ? `<div class="m">+ ${c.hs.length - 8} more on the <a href="#companies/${encodeURIComponent(c.co)}">company page</a></div>` : ""}</div>`).join("") || `<div class="card m">Nothing on file mentions that yet.</div>`}`;
+      $("#sres").querySelectorAll("[data-jump]").forEach((a) => a.onclick = (e) => { e.preventDefault(); $("#sr" + a.dataset.jump).scrollIntoView({ behavior: "smooth" }); });
+      $("#sres").querySelectorAll("[data-theme]").forEach((a) => a.onclick = () => store.set("pivtheme", a.dataset.theme));
+    };
+    let tmr; $("#sq").oninput = () => { clearTimeout(tmr); tmr = setTimeout(run, 350); };
+    $("#sq").focus(); run();
+  }
+
+  async function renderThemes(body) {
+    const S = await getSearch();
+    const groups = {};
+    Object.entries(S.themes || {}).forEach(([t, list]) => { const k = themeOf(t); (groups[k] = groups[k] || []).push(...list); });
+    const rows = Object.entries(groups).map(([k, list]) => ({ k, list: list.sort((a, b) => (a.d < b.d ? 1 : -1)), cos: [...new Set(list.map((x) => x.c))] }))
+      .sort((a, b) => b.cos.length - a.cos.length);
+    if (!rows.length) { body.innerHTML = empty("No themes yet - they build up as pivots are recorded."); return; }
+    let sel = store.get("pivtheme", rows[0].k); if (!groups[sel]) sel = rows[0].k;
+    const draw = () => {
+      const r = rows.find((x) => x.k === sel);
+      const byCo = {}; r.list.forEach((x) => { (byCo[x.c] = byCo[x.c] || []).push(x); });
+      body.innerHTML = `<div class="card"><h2>Themes <span class="m">where companies are putting money - tap a theme · kept for good</span></h2>
+          <div class="sgrid">${rows.map((x) => `<button class="stile ${x.k === sel ? "on" : ""}" data-t="${esc(x.k)}"><span class="sn">${esc(x.k)}</span><span class="m">${x.cos.length}</span></button>`).join("")}</div></div>
+        <div class="card"><h2>${esc(sel)} <span class="m">${plural(r.cos.length, "company")} · newest first · <a href="#search" id="thsearch">search all mentions →</a></span></h2>
+          ${Object.entries(byCo).map(([co, xs]) => `<div class="thc"><a href="#companies/${encodeURIComponent(co)}"><b>${esc(co)}</b></a>
+            ${xs.map((x) => `<div class="m">${esc(x.d)} · ${esc(x.t.replace(/^\w[\w&]*:\s*/, ""))}${x.l ? ` <a href="${esc(x.l)}" target="_blank" rel="noopener">source</a>` : ""}</div>`).join("")}</div>`).join("")}</div>`;
+      body.querySelectorAll("[data-t]").forEach((b) => b.onclick = () => { sel = b.dataset.t; store.set("pivtheme", sel); draw(); });
+      $("#thsearch").onclick = () => store.set("lastq", sel.split(/[ ,(&]/)[0]);
+    };
+    draw();
+  }
+
   /* ------------------------------------------------------------ markets */
   async function pageMarkets() {
     const D = await getTrack();
@@ -1409,16 +1494,16 @@
   async function pageTrackers(which) {
     const D = await getTrack();
     const T = D.trackers || {};
-    which = ["pivots", "results", "orders", "calls"].includes(which) ? which : "pivots";
-    const names = { pivots: "Pivots", results: "Results", orders: "Order wins", calls: "Broker calls" };
+    which = ["pivots", "themes", "results", "orders", "calls"].includes(which) ? which : "pivots";
+    const names = { pivots: "Pivots", themes: "Themes", results: "Results", orders: "Order wins", calls: "Broker calls" };
     const NOISE = /\b(drhp|ipo|public issue|sebi nod|listing on|lists on|files? (for|draft))\b/i;
-    const rows0 = (T[which] || []).filter((r) => which !== "pivots" || !NOISE.test(r.what));
+    const rows0 = (T[which === "themes" ? "pivots" : which] || []).filter((r) => !/pivots|themes/.test(which) || !NOISE.test(r.what));
     const secs = [...new Set(rows0.map((r) => r.sector || "Other"))].sort();
     const st = store.get("trk-" + which, { q: "", sec: "", w: false, days: 30 });
     st.kind = "";
     view.innerHTML = `<h1>Trackers</h1>
       <div class="sub">Pulled from the news by AI and kept for four months${T.updated ? " · updated " + esc(T.updated.replace("T", " ")) : ""} · check figures in the linked story before acting</div>
-      <div class="cotabs">${Object.keys(names).map((k) => `<button data-go="#trackers/${k}" class="${k === which ? "on" : ""}">${names[k]} <span class="m">${(T[k] || []).length}</span></button>`).join("")}</div>
+      <div class="cotabs">${Object.keys(names).map((k) => `<button data-go="#trackers/${k}" class="${k === which ? "on" : ""}">${names[k]} ${k === "themes" ? "" : `<span class="m">${(T[k] || []).length}</span>`}</button>`).join("")}</div>
       <div class="filters"><input type="search" id="kq" placeholder="Search company" value="${esc(st.q)}">
         <select id="ks"><option value="">All sectors</option>${secs.map((x) => `<option ${x === st.sec ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>
         <select id="kd">${[7, 30, 90, 120].map((d) => `<option value="${d}" ${d === st.days ? "selected" : ""}>Last ${d} days</option>`).join("")}</select>
@@ -1439,6 +1524,7 @@
       const src = (r) => `<a class="m" href="${esc(r.link)}" target="_blank" rel="noopener" title="${esc(r.title)}">source</a>`;
       if (!rows.length) { body.innerHTML = empty("Nothing here yet for these filters."); return; }
       const full = rows; let lim = st.lim || 25;
+      if (which === "themes") { $(".filters").style.display = "none"; renderThemes(body); return; }
       if (which === "pivots") {
         const byType = {}, bySec = {};
         allRows.forEach((r) => { const t = PIVOT_LBL[r.type] || "Other"; byType[t] = (byType[t] || 0) + 1; });
@@ -1625,6 +1711,7 @@
       else if (tab === "tab") await pageTab(arg);
       else if (tab === "archive") await pageArchive();
       else if (tab === "notes") pageNotes();
+      else if (tab === "search") await pageSearch(arg ? decodeURIComponent(arg) : "");
       else if (tab === "settings") pageSettings();
       else await pageToday(null);
     } catch (e) {
