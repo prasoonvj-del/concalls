@@ -154,6 +154,19 @@ def step_concalls(conf):
         return
     repair_once(lib)
     C.classify(lib, pool)
+    try:
+        import industries
+        industries.classify(lib, pool)
+        lib = C.load_lib()
+        # sectors whose line-up changed (companies moved by the industry sorting) get a fresh overview
+        redo = 0
+        for sector in C.SECTORS:
+            if redo >= 5:
+                break
+            if C.overview(sector, lib, pool):
+                redo += 1
+    except Exception as e:
+        say(f"  industry sorting skipped: {str(e)[:120]}")
     recheck_figures(lib)
     queue, is_watch = plan_concalls(lib, conf)
     budget = conf["limit"]
@@ -194,11 +207,19 @@ def step_concalls(conf):
                 say("Stopping concalls for this run (AI failing repeatedly).")
                 break
         time.sleep(pool.pause)
+    touched_ind = set()
     for sector in sorted(touched):
         try:
             C.overview(sector, lib, pool)
         except C.AIError as e:
             say(f"    overview failed: {e}")
+    try:
+        import industries
+        touched_ind = {industries.industry_of(lib, c) for c in lib["calls"].values() if C.sector_of(lib, c) in touched}
+        if time.time() < deadline:
+            industries.overviews(lib, pool, touched_ind, limit=8)
+    except Exception as e:
+        say(f"  industry overviews skipped: {str(e)[:120]}")
     if time.time() < deadline:
         backfill_metrics(lib, pool, conf["backfill"], deadline)
 
@@ -342,6 +363,12 @@ def main():
             backstory.step("full" if conf["concalls"] else "news")
         except Exception:
             say(f"\n!! 'Story so far' failed:\n{traceback.format_exc()}")
+        if not conf["concalls"]:
+            try:
+                import industries
+                industries.classify(C.load_lib(), C.Pool(), limit=200, minutes=4)
+            except Exception as e:
+                say(f"  industry sorting skipped: {str(e)[:120]}")
         try:
             import pivot_sources
             pivot_sources.step(C.Pool(), "full" if conf["concalls"] else "news")

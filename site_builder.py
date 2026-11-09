@@ -52,6 +52,7 @@ def concall_data():
         calls.append({"metrics": c.get("metrics") or {}, "unchecked": c.get("metrics_unchecked") or [],
                       "prev_tone": (prev or {}).get("tone", "") if prev and prev.get("summary") else "",
                       "company": c["company"], "code": c["code"], "sector": C.sector_of(lib, c), "id": c["id"],
+                      "ind": (lib.get("industries") or {}).get(c["code"], ""),
                       "quarter": c["quarter"], "date": c["date"], "tone": c.get("tone", ""),
                       "compared": bool(c.get("compared")), "checks": bad,
                       "pdf": c.get("pdf_url", C.BSE_PDF[0] + c["pdf"]), "html": html})
@@ -59,7 +60,7 @@ def concall_data():
     for o in lib["overviews"].values():
         f = C.here(o["file"])
         if f.exists():
-            overviews.append({"sector": o["sector"], "quarter": o["quarter"], "companies": o["companies"],
+            overviews.append({"sector": o["sector"], "ind": o.get("industry", ""), "quarter": o["quarter"], "companies": o["companies"],
                               "html": C.md(f.read_text(encoding="utf-8"))})
     return {"calls": calls, "overviews": overviews}
 
@@ -117,9 +118,9 @@ def build(quiet=False):
         text[k] = plain.replace("&amp;", "&")
         (data / "cc" / f"{k}.js").write_text(_js("DESK_CCH", k, {"c": c["company"], "h": c.pop("html")}), encoding="utf-8")
     for o in cc["overviews"]:
-        k = "ov_" + re.sub(r"[^a-z0-9]+", "_", (o["sector"] + "_" + o["quarter"]).lower()).strip("_")
+        k = "ov_" + re.sub(r"[^a-z0-9]+", "_", (o["sector"] + "_" + o.get("ind", "") + "_" + o["quarter"]).lower()).strip("_")
         o["k"] = k
-        (data / "cc" / f"{k}.js").write_text(_js("DESK_OVH", k, {"c": o["sector"], "h": o.pop("html")}), encoding="utf-8")
+        (data / "cc" / f"{k}.js").write_text(_js("DESK_OVH", k, {"c": o["sector"] + o.get("ind", ""), "h": o.pop("html")}), encoding="utf-8")
     (data / "cctext.js").write_text(_js("DESK_CCTEXT", None, text), encoding="utf-8")
     (data / "concalls.js").write_text(_js("DESK_CONCALLS", None, cc), encoding="utf-8")
     pres = json.loads(C.PRES_FILE.read_text(encoding="utf-8")) if C.PRES_FILE.exists() else []

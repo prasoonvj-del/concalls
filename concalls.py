@@ -56,8 +56,8 @@ BSE_PDF = ["https://www.bseindia.com/xml-data/corpfiling/AttachLive/",
 
 SECTORS = [
     "Textiles & Apparel", "Pharma & Healthcare Products", "Hospitals & Diagnostics", "Banks",
-    "NBFC & Financial Services", "Insurance", "IT & Software", "Telecom", "Automobiles",
-    "Auto Components", "Chemicals", "Fertilisers & Agrochemicals", "Metals & Mining", "Oil & Gas",
+    "NBFC & Financial Services", "Capital Markets & Wealth", "Insurance", "IT & Software", "Telecom", "Automobiles",
+    "Auto Components", "Chemicals", "Paints & Coatings", "Fertilisers & Agrochemicals", "Metals & Mining", "Oil & Gas",
     "Power & Utilities", "Capital Goods & Engineering", "Defence & Aerospace", "Electrical & Electronics",
     "Construction & Infrastructure", "Cement & Building Materials", "Real Estate", "FMCG & Food",
     "Consumer Durables", "Retail & E-commerce", "Media & Entertainment", "Hotels & Travel",
@@ -1061,21 +1061,25 @@ def summarise(calls, lib, pool, compare=True, limit=None, stats=None):
     return True
 
 
-def overview(sector, lib, pool):
-    calls = [c for c in lib["calls"].values() if sector_of(lib, c) == sector and c.get("summary")]
-    if len(calls) < 2:
-        return
+def overview(sector, lib, pool, industry=None):
+    """Sector overview, or (with `industry`) an overview of one industry inside the sector. True if written."""
+    inds = lib.get("industries") or {}
+    calls = [c for c in lib["calls"].values() if sector_of(lib, c) == sector and c.get("summary")
+             and (not industry or inds.get(c["code"]) == industry)]
+    if len(calls) < (3 if industry else 2):
+        return False
     q = max((c["quarter"] for c in calls), key=quarter_key)
     calls = latest_per_company([c for c in calls if c["quarter"] == q])
-    if len(calls) < 2:
-        return
-    key = f"{sector}|{q}"
+    if len(calls) < (3 if industry else 2):
+        return False
+    key = f"{sector}|{industry}|{q}" if industry else f"{sector}|{q}"
+    label = f"{sector} - {industry}" if industry else sector
     names = sorted(c["company"] for c in calls)
     stamp = [c.get("compared", False) for c in sorted(calls, key=lambda c: c["company"])]
     old = lib["overviews"].get(key, {})
     if old.get("companies") == names and old.get("compared") == stamp:
-        return  # already up to date
-    say(f"\nWriting the {sector} overview for {q} from {len(calls)} companies ...")
+        return False  # already up to date
+    say(f"\nWriting the {label} overview for {q} from {len(calls)} companies ...")
     texts = [(c["company"], (here(c["summary"])).read_text(encoding="utf-8").split("\n---\n")[0]) for c in calls]
 
     def job(ai):
@@ -1083,21 +1087,22 @@ def overview(sector, lib, pool):
         if ai.max_input_tokens:  # small-limit provider: give each company an equal share
             per = max(800, (ai.max_input_tokens - 1500) * 4 // len(texts))
         body = "\n\n".join(f"=== {n} ===\n" + (t[:per] if per else t) for n, t in texts)
-        return ai.ask(OVERVIEW_PROMPT.format(sector=sector, quarter=q, n=len(calls), body=body), label="overview")
+        return ai.ask(OVERVIEW_PROMPT.format(sector=label, quarter=q, n=len(calls), body=body), label="overview")
 
     try:
         out, _ = pool.run(job)
     except AIError as e:
         say(f"    overview failed: {e}")
-        return
+        return False
     folder = OUT_DIR / safe_name(sector)
     folder.mkdir(parents=True, exist_ok=True)
-    path = folder / f"_SECTOR OVERVIEW - {q}.md"
+    path = folder / (f"_INDUSTRY OVERVIEW - {safe_name(industry)} - {q}.md" if industry else f"_SECTOR OVERVIEW - {q}.md")
     path.write_text(out + f"\n\n*Based on: {', '.join(names)}*\n", encoding="utf-8")
-    lib["overviews"][key] = {"sector": sector, "quarter": q, "companies": names, "compared": stamp,
-                             "file": path.relative_to(BASE).as_posix()}
+    lib["overviews"][key] = {"sector": sector, "industry": industry or "", "quarter": q, "companies": names,
+                             "compared": stamp, "file": path.relative_to(BASE).as_posix()}
     save_lib(lib)
     say(f"    saved: {path.relative_to(BASE)}")
+    return True
 
 
 # ============================================================================ page

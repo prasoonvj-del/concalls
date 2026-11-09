@@ -41,7 +41,7 @@
     window.DESK_OVH = window.DESK_OVH || {};
     if (window.DESK_OVH[o.k] == null) { try { await loadScript("data/cc/" + o.k + ".js" + CCV); } catch (e) { staleCheck(true); return ""; } }
     const x = window.DESK_OVH[o.k];
-    if (!x || typeof x !== "object" || x.c !== o.sector) { staleCheck(true); return ""; }
+    if (!x || typeof x !== "object" || x.c !== o.sector + (o.ind || "")) { staleCheck(true); return ""; }
     return x.h || "";
   }
   // the site is rebuilt several times a day; a page left open (tablet!) reloads itself when it is out of date
@@ -924,7 +924,7 @@
       .filter((x) => x[1] != null).map((x) => `<div class="tile"><div class="v" style="font-size:19px">${fmtM(x[1])}</div><div class="k">${x[0]} · ${x[2]}</div></div>`).join("")}</div>`;
     const deckSum = decks.find((d) => d.one || d.html);
     view.innerHTML = `<div class="cohead"><h1>${esc(key)}</h1>
-        <div class="sub"><a href="#companies">All companies</a>${sector ? ` · <a href="#sectors/${encodeURIComponent(sector)}">${esc(sector)}</a>` : ""}${call ? ` · <a href="#peers/${encodeURIComponent(call.sector)}">peers</a> · <a href="${esc(call.pdf)}" target="_blank" rel="noopener">transcript</a>` : ""}${decks[0] ? ` · <a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">latest deck</a>` : ""}${(call || decks[0] || dirE) ? ` · <a href="${screenerLink(call ? call.code : decks[0] ? decks[0].code : dirE[0])}" target="_blank" rel="noopener">Screener</a>` : ""}</div>
+        <div class="sub"><a href="#companies">All companies</a>${sector ? ` · <a href="#sectors/${encodeURIComponent(sector)}">${esc(sector)}</a>` : ""}${call && call.ind ? ` › <a href="#concalls/${encodeURIComponent(sector)}">${esc(call.ind)}</a>` : ""}${call ? ` · <a href="#peers/${encodeURIComponent(call.sector)}">peers</a> · <a href="${esc(call.pdf)}" target="_blank" rel="noopener">transcript</a>` : ""}${decks[0] ? ` · <a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">latest deck</a>` : ""}${(call || decks[0] || dirE) ? ` · <a href="${screenerLink(call ? call.code : decks[0] ? decks[0].code : dirE[0])}" target="_blank" rel="noopener">Screener</a>` : ""}</div>
         ${chips ? `<div class="chips">${chips}</div>` : ""}${figs}</div>
       <div id="cobody"></div>`;
     const newsLine = (g) => `<li class="nl"><div class="t" data-story-date="${g.x.date}" data-sid="${g.x.s.id}">${esc(g.x.s.title)}</div>
@@ -1016,7 +1016,7 @@
     const quarters = [...new Set(cc.calls.map((c) => c.quarter))].sort((a, b) => (a.slice(-2) + a[1] < b.slice(-2) + b[1] ? 1 : -1));
     const TONES = ["Positive", "Mixed", "Cautious", "Negative"], TC = { Positive: "--pos", Mixed: "--neu", Cautious: "--caution", Negative: "--neg" };
     const nDeck = (window.DESK_PRES || []).length;
-    const st = { s: sector || "", q: "", f: "", t: "" };
+    const st = { s: sector || "", i: "", q: "", f: "", t: "" };
     const bySec = {};
     cc.calls.forEach((c) => { const o = bySec[c.sector] = bySec[c.sector] || { n: 0 }; o.n++; const k = TONES.includes(c.tone) ? c.tone : "Mixed"; o[k] = (o[k] || 0) + 1; });
     const secs = Object.keys(bySec).sort((a, b) => bySec[b].n - bySec[a].n);
@@ -1026,7 +1026,9 @@
         ${legend(TONES.map((k) => [k, cssv(TC[k])]))}
         <div class="sgrid">${secs.map((k) => { const o = bySec[k]; return `<button class="stile" data-s="${esc(k)}"><span class="sn">${esc(k)}</span><span class="m">${o.n}</span>
           <span class="mb wide">${TONES.map((t) => o[t] ? `<i style="width:${(100 * o[t]) / o.n}%;background:var(${TC[t]})" title="${o[t]} ${t}"></i>` : "").join("")}</span></button>`; }).join("")}</div></div>
+      <div id="kind"></div>
       <div class="filters"><select id="ks"><option value="">All sectors</option>${secs.slice().sort().map((x) => `<option>${esc(x)}</option>`).join("")}</select>
+        <select id="ki" hidden><option value="">All industries</option></select>
         <select id="kq"><option value="">All quarters</option>${quarters.map((q) => `<option>${esc(q)}</option>`).join("")}</select>
         <select id="kt"><option value="">Any tone</option>${TONES.map((t) => `<option>${t}</option>`).join("")}</select>
         <input type="search" id="kf" placeholder="Search company or any word (cotton, capex, tariff…)"><button id="cclr" class="clr" hidden>✕ Clear filters</button></div>
@@ -1034,17 +1036,29 @@
     let shown = 40, seq = 0;
     const draw = async () => {
       const my = ++seq;
+      if ($("#ks").value !== st.s) st.i = "";
       Object.assign(st, { s: $("#ks").value, q: $("#kq").value, t: $("#kt").value, f: $("#kf").value.toLowerCase() });
-      $("#cclr").hidden = !(st.s || st.q || st.t || st.f);
+      $("#cclr").hidden = !(st.s || st.i || st.q || st.t || st.f);
+      // industries inside the chosen sector: tone per industry, tap to narrow down
+      const inSec = st.s ? cc.calls.filter((c) => c.sector === st.s) : [];
+      const byInd = {};
+      inSec.forEach((c) => { const k = c.ind || "Other"; const o = byInd[k] = byInd[k] || { n: 0 }; o.n++; const t = TONES.includes(c.tone) ? c.tone : "Mixed"; o[t] = (o[t] || 0) + 1; });
+      const indKeys = Object.keys(byInd).sort((a, b) => byInd[b].n - byInd[a].n);
+      $("#ki").hidden = indKeys.length < 2;
+      $("#ki").innerHTML = `<option value="">All industries</option>` + indKeys.map((k) => `<option ${k === st.i ? "selected" : ""}>${esc(k)}</option>`).join("");
+      $("#kind").innerHTML = indKeys.length > 1 ? `<div class="card"><h2>${esc(st.s)} by industry <span class="m">tap one - its companies are compared only with each other</span></h2>
+        <div class="sgrid">${indKeys.map((k) => { const o = byInd[k]; return `<button class="stile itile ${k === st.i ? "on" : ""}" data-i="${esc(k)}"><span class="sn">${esc(k)}</span><span class="m">${o.n}</span>
+          <span class="mb wide">${TONES.map((t) => o[t] ? `<i style="width:${(100 * o[t]) / o.n}%;background:var(${TC[t]})"></i>` : "").join("")}</span></button>`; }).join("")}</div></div>` : "";
+      $("#kind").querySelectorAll(".itile").forEach((b) => b.onclick = () => { st.i = st.i === b.dataset.i ? "" : b.dataset.i; shown = 40; draw(); });
       const TX = st.f ? await ccText() : {};
       if (my !== seq) return;
-      view.querySelectorAll(".stile").forEach((b) => b.classList.toggle("on", b.dataset.s === st.s));
-      const ov = st.s ? cc.overviews.filter((o) => o.sector === st.s && (!st.q || o.quarter === st.q)).sort((a, b) => (a.quarter < b.quarter ? 1 : -1))[0] : null;
+      view.querySelectorAll(".stile:not(.itile)").forEach((b) => b.classList.toggle("on", b.dataset.s === st.s));
+      const ov = st.s ? cc.overviews.filter((o) => o.sector === st.s && (o.ind || "") === (st.i || "") && (!st.q || o.quarter === st.q)).sort((a, b) => (a.quarter < b.quarter ? 1 : -1))[0] : null;
       const qk = (q) => { const m = /Q(\d) FY(\d+)/.exec(q || ""); return m ? Number(m[2]) * 10 + Number(m[1]) : 0; };
       const pool = cc.calls.filter((c) => (!st.s || c.sector === st.s) && c.tone);
       const qs = [...new Set(pool.map((c) => c.quarter))].filter((q) => pool.filter((c) => c.quarter === q).length >= 3).sort((a, b) => qk(a) - qk(b));
       const trend = qs.length >= 2 ? `<div class="card"><h2>Management tone over time <span class="m">${esc(st.s || "all sectors")} · share of calls by quarter</span></h2>${legend([["Positive", cssv("--pos")], ["Cautious or negative", cssv("--neg")]])}<div id="ktr"></div></div>` : "";
-      $("#kov").innerHTML = trend + (ov ? `<div class="card md"><h2>${esc(st.s)} - what managements are saying <span class="m">${esc(ov.quarter)} · ${ov.companies.length} companies</span></h2>${marketLine(st.s)}<div id="kovb">${await ovHtml(ov)}</div></div>` : "");
+      $("#kov").innerHTML = trend + (ov ? `<div class="card md"><h2>${esc(st.i || st.s)} - what managements are saying <span class="m">${esc(ov.quarter)} · ${ov.companies.length} companies</span></h2>${marketLine(st.s)}<div id="kovb">${await ovHtml(ov)}</div></div>` : "");
       if (qs.length >= 2) {
         const share = (q, f) => { const xs = pool.filter((c) => c.quarter === q); return (100 * xs.filter(f).length) / xs.length; };
         indexChart($("#ktr"), qs, [
@@ -1053,10 +1067,10 @@
         ], "%", null, 200);
       }
       if (my !== seq) return;
-      const calls = cc.calls.filter((c) => (!st.s || c.sector === st.s) && (!st.q || c.quarter === st.q) && (!st.t || c.tone === st.t) &&
+      const calls = cc.calls.filter((c) => (!st.s || c.sector === st.s) && (!st.i || (c.ind || "Other") === st.i) && (!st.q || c.quarter === st.q) && (!st.t || c.tone === st.t) &&
         (!st.f || c.company.toLowerCase().includes(st.f) || (TX[c.k] || "").toLowerCase().includes(st.f))).sort((a, b) => (a.date < b.date ? 1 : -1));
       $("#kl").innerHTML = calls.slice(0, shown).map((c) => `<div class="crow">
-          <div class="ch"><a class="n" href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a><span class="m">${esc(c.quarter)}${st.s ? "" : " · " + esc(c.sector)} · ${esc(c.date.slice(5))}</span>
+          <div class="ch"><a class="n" href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a><span class="m">${esc(c.quarter)}${st.s ? "" : " · " + esc(c.sector)}${c.ind && !st.i ? " · " + esc(c.ind) : ""} · ${esc(c.date.slice(5))}</span>
           <span class="r2">${deckFor(c) ? `<a class="badge" href="${esc(deckFor(c).pdf)}" target="_blank" rel="noopener" title="Investor deck filed with this call">deck</a>` : ""}${c.compared ? `<span class="badge" title="Includes what changed vs last quarter">vs last qtr</span>` : ""}
           ${c.checks.length ? `<span class="badge w" title="Figures not found word-for-word in the transcript">⚠ ${c.checks.length}</span>` : ""}
           ${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}</span></div>
@@ -1066,14 +1080,15 @@
       const mb = $("#kmore"); if (mb) mb.onclick = () => { shown += 80; draw(); };
     };
     $("#ks").value = st.s;
-    view.querySelectorAll(".stile").forEach((b) => b.addEventListener("click", () => { $("#ks").value = $("#ks").value === b.dataset.s ? "" : b.dataset.s; shown = 40; draw(); }));
+    view.querySelectorAll(".stile:not(.itile)").forEach((b) => b.addEventListener("click", () => { $("#ks").value = $("#ks").value === b.dataset.s ? "" : b.dataset.s; shown = 40; draw(); }));
     ["ks", "kq", "kt"].forEach((id) => { $("#" + id).onchange = () => { shown = 40; draw(); }; });
+    $("#ki").onchange = () => { st.i = $("#ki").value; shown = 40; draw(); };
     $("#kf").oninput = () => { shown = 40; draw(); };
-    $("#cclr").onclick = () => { ["ks", "kq", "kt", "kf"].forEach((id) => { $("#" + id).value = ""; }); shown = 40; draw(); };
+    $("#cclr").onclick = () => { ["ks", "kq", "kt", "kf"].forEach((id) => { $("#" + id).value = ""; }); st.i = ""; shown = 40; draw(); };
     draw();
   }
 
-  const FIN = ["Banks", "NBFC & Financial Services", "Insurance"];
+  const FIN = ["Banks", "NBFC & Financial Services", "Capital Markets & Wealth", "Insurance"];
   const MET = {
     revenue_cr: ["Revenue", "Rs cr"], revenue_growth_yoy_pct: ["Revenue growth", "% YoY"],
     ebitda_margin_pct: ["EBITDA margin", "%"], ebitda_margin_change_bps_yoy: ["Margin change", "bps YoY"],
@@ -1100,7 +1115,10 @@
     withM.forEach((c) => { counts[c.sector] = (counts[c.sector] || 0) + 1; });
     const sectors = Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b));
     sector = sectors.includes(sector) ? sector : sectors[0];
-    const rows = withM.filter((c) => c.sector === sector);
+    const secRows = withM.filter((c) => c.sector === sector);
+    const indList = [...new Set(secRows.map((c) => c.ind).filter(Boolean))].sort();
+    let pind = store.get("peerind:" + sector, ""); if (!indList.includes(pind)) pind = "";
+    const rows = secRows.filter((c) => !pind || c.ind === pind);
     // only columns that at least one company in this sector actually reported
     const cols = colsFor(sector).filter((k) => rows.some((c) => typeof c.metrics[k] === "number"));
     const fin = FIN.includes(sector);
@@ -1121,8 +1139,9 @@
 
     view.innerHTML = `<h1>Peer comparison</h1>
       <div class="sub">Key figures from each company's latest concall · ⚠ = not stated word-for-word in the transcript (usually calculated) · tap a company for its summary</div>
-      <div class="filters"><select id="ps">${sectors.map((s) => `<option ${s === sector ? "selected" : ""}>${esc(s)} (${counts[s]})</option>`).join("")}</select></div>
-      <div class="card"><h2>${esc(sector)} <span class="m">${plural(rows.length, "company")}</span></h2>
+      <div class="filters"><select id="ps">${sectors.map((s) => `<option ${s === sector ? "selected" : ""}>${esc(s)} (${counts[s]})</option>`).join("")}</select>
+        ${indList.length > 1 ? `<select id="pi"><option value="">All industries in ${esc(sector)}</option>${indList.map((i) => `<option ${i === pind ? "selected" : ""}>${esc(i)}</option>`).join("")}</select>` : ""}</div>
+      <div class="card"><h2>${esc(pind || sector)} <span class="m">${plural(rows.length, "company")}${pind ? " · like-for-like within " + esc(sector) : indList.length > 1 ? " · pick an industry to compare like with like" : ""}</span></h2>
         <div style="overflow-x:auto"><table class="peer" id="pt"></table></div></div>
       <div class="grid g2">
         <div class="card"><h2>${esc(MET[xKey][0])} vs ${esc(MET[yKey][0])} <span class="m">dashed lines = sector median</span></h2><div id="c-sc"></div></div>
@@ -1135,6 +1154,7 @@
           ${legend([["Worse", cssv("--neg")], ["Better", cssv("--pos")]])}<div id="c-sh"></div><div id="t-sh"></div></div>
       </div>`;
     $("#ps").onchange = (e) => go("#peers/" + encodeURIComponent(e.target.value.replace(/ \(\d+\)$/, "")));
+    if ($("#pi")) $("#pi").onchange = (e) => { store.set("peerind:" + sector, e.target.value); route(); };
 
     let sortKey = yKey, dir = -1;
     const drawTable = () => {
