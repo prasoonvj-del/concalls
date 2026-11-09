@@ -622,6 +622,12 @@ def download_list(days):
     say(f"\nDone. Library: {len(lib['calls'])} transcripts from {len(companies)} companies.")
 
 
+def pdf_url(call):
+    """Full address of a call's transcript on BSE."""
+    p = call.get("pdf_url") or call.get("pdf") or ""
+    return p if not p or p.startswith("http") else BSE_PDF[0] + p
+
+
 def add_transcripts(lib, rows):
     new = 0
     for row in rows:

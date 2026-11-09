@@ -145,6 +145,10 @@ def update():
         cos[k2] = [e for e in cos[k2] if e["k"] not in ("pivot", "result", "order", "broker") or e["u"] in live or e["d"] < oldest]
         if not cos[k2]:
             del cos[k2]
+    for lst in cos.values():  # bare BSE file names -> full address
+        for e in lst:
+            if e.get("l") and not e["l"].startswith("http"):
+                e["l"] = C.BSE_PDF[0] + e["l"]
     # tidy: newest first, capped
     for k, lst in cos.items():
         lst.sort(key=lambda e: e["d"], reverse=True)

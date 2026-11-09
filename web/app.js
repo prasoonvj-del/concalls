@@ -92,7 +92,7 @@
       const head = m !== month ? `<div class="tlm">${m}</div>` : ""; month = m;
       const [lbl, col] = TLK[e.k] || [e.k, "--neu"];
       return `${head}<div class="tle"><span class="m tld">${esc(e.d.slice(8))}</span><span class="kc" style="background:var(${e.s === "-" ? "--neg" : col})">${lbl}</span>
-        <span>${esc(e.t)}${e.l ? ` <a class="m" href="${esc(e.l)}" target="_blank" rel="noopener">source</a>` : ""}</span></div>`;
+        <span>${esc(e.t)}${fixLink(e.l) ? ` <a class="m" href="${esc(fixLink(e.l))}" target="_blank" rel="noopener">source</a>` : ""}</span></div>`;
     }).join("");
   }
   async function getDir() {
@@ -475,7 +475,9 @@
 
   const PIVOT_LBL = { capacity: "Capacity", order: "Big order", legal: "Legal / case", approval: "Approval", strategy: "Strategy shift",
     "m&a": "M&A", funding: "Funding / debt", rating: "Rating", management: "Management" };
-  const pivotLine = (r, showCo = true) => `<div class="pv"><span class="kc" style="background:var(${r.sent === "-" ? "--neg" : "--s1"})">${esc(PIVOT_LBL[r.type] || r.type || "Pivot")}</span>
+  const fixLink = (l) => (!l ? "" : /^(https?:|#)/.test(l) ? l : /\.pdf$/i.test(l) ? "https://www.bseindia.com/xml-data/corpfiling/AttachLive/" + l : "");
+  const pivotLine = (r0, showCo = true) => { const r = Object.assign({}, r0, { link: fixLink(r0.link) }); return pivotLine0(r, showCo); };
+  const pivotLine0 = (r, showCo = true) => `<div class="pv"><span class="kc" style="background:var(${r.sent === "-" ? "--neg" : "--s1"})">${esc(PIVOT_LBL[r.type] || r.type || "Pivot")}</span>
     ${showCo ? `<a href="#companies/${encodeURIComponent(r.company)}"><b>${esc(r.company)}</b></a> - ` : ""}${esc(r.what)}
     ${r.theme ? ` <a class="thchip" href="#trackers/themes" onclick="localStorage.setItem('pivtheme', JSON.stringify(${esc(JSON.stringify(themeOf(r.theme)))}))">${esc(themeOf(r.theme))}</a>` : ""}${r.src ? ` <span class="m">(${esc(r.src)})</span>` : ""}
     ${r.why ? `<div class="m">→ ${esc(r.why)} · ${esc(r.date.slice(5))} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div>` : `<div class="m">${esc(r.date.slice(5))} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div>`}</div>`;
@@ -1421,7 +1423,7 @@
       // deck summaries
       P.forEach((d) => { const t = ((d.one || "") + " " + (d.html || "").replace(/<[^>]+>/g, " ")).replace(/&amp;/g, "&").replace(/\s+/g, " "); const w = hit(t); if (w) add(d.company, { k: "Deck", d: d.when.slice(0, 10), s: snippet(t, w), l: d.pdf, w }); });
       // timeline: pivots, results, orders, broker calls, stories - kept for good
-      S.tl.forEach(([co, k, d, t, l]) => { if (k === "concall" || k === "deck") return; const w = hit(t); if (w) add(co, { k: { pivot: "Pivot", result: "Results", order: "Order", broker: "Broker", story: "Price story" }[k] || k, d, s: t, l, w }); });
+      S.tl.forEach(([co, k, d, t, l]) => { if (k === "concall" || k === "deck") return; const w = hit(t); if (w) add(co, { k: { pivot: "Pivot", result: "Results", order: "Order", broker: "Broker", story: "Price story" }[k] || k, d, s: t, l: fixLink(l), w }); });
       // recent news headlines
       Object.entries(window.DESK_CONEWS).forEach(([co, list]) => list.forEach((m) => { const w = hit(m.t); if (w) add(co, { k: "News", d: m.d, s: m.t, l: "", w }); }));
       const cos = Object.entries(byCo).map(([co, hs]) => {
@@ -1457,7 +1459,7 @@
           <div class="sgrid">${rows.map((x) => `<button class="stile ${x.k === sel ? "on" : ""}" data-t="${esc(x.k)}"><span class="sn">${esc(x.k)}</span><span class="m">${x.cos.length}</span></button>`).join("")}</div></div>
         <div class="card"><h2>${esc(sel)} <span class="m">${plural(r.cos.length, "company")} · newest first · <a href="#search" id="thsearch">search all mentions →</a></span></h2>
           ${Object.entries(byCo).map(([co, xs]) => `<div class="thc"><a href="#companies/${encodeURIComponent(co)}"><b>${esc(co)}</b></a>
-            ${xs.map((x) => `<div class="m">${esc(x.d)} · ${esc(x.t.replace(/^\w[\w&]*:\s*/, ""))}${x.l ? ` <a href="${esc(x.l)}" target="_blank" rel="noopener">source</a>` : ""}</div>`).join("")}</div>`).join("")}</div>`;
+            ${xs.map((x) => `<div class="m">${esc(x.d)} · ${esc(x.t.replace(/^\w[\w&]*:\s*/, ""))}${fixLink(x.l) ? ` <a href="${esc(fixLink(x.l))}" target="_blank" rel="noopener">source</a>` : ""}</div>`).join("")}</div>`).join("")}</div>`;
       body.querySelectorAll("[data-t]").forEach((b) => b.onclick = () => { sel = b.dataset.t; store.set("pivtheme", sel); draw(); });
       $("#thsearch").onclick = () => store.set("lastq", sel.split(/[ ,(&]/)[0]);
     };

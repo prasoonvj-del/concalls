@@ -325,6 +325,9 @@ def tidy(idx, cache):
     from names import Resolver
     R = Resolver(cache)
     every = [r for k in ("results", "orders", "calls", "pivots") for r in idx[k].values()]
+    for r in every:  # bare BSE file names from early concall pivots -> full address
+        if r.get("link") and not r["link"].startswith("http"):
+            r["link"] = C.BSE_PDF[0] + r["link"]
     R.classify_unknown([r["company"] for r in every])
     for r in every:
         name, code = R.resolve(r["company"])

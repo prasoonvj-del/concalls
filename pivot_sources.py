@@ -70,7 +70,7 @@ def step(pool, mode="full"):
             except OSError:
                 continue
             items.append({"key": f"cc|{c['id']}", "company": c["company"], "code": c["code"], "date": c["date"],
-                          "src": f"Concall {c['quarter']}", "link": c.get("pdf") or "", "text": _core(text)})
+                          "src": f"Concall {c['quarter']}", "link": C.pdf_url(c), "text": _core(text)})
     try:
         import decks
         sums = decks.load()
