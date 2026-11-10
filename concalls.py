@@ -463,6 +463,7 @@ class AI:
 
 
 class Pool:
+    dead = set()  # providers that asked for payment this run
     """Gemini, Mistral and Groq (whichever have keys). Normal work goes Gemini -> Mistral -> Groq;
     bulk side jobs (pivots, decks, tab write-ups, sorting) go Mistral first to keep Gemini free for
     summaries and the big picture. A provider that fails is skipped for 15 minutes."""
@@ -480,7 +481,7 @@ class Pool:
         self.sambanova, self.mistral, self.backup = extra["sambanova"], extra["mistral"], extra["backup"]
         helpers = [self.sambanova, self.mistral]
         order = helpers + [self.primary, self.backup] if bulk else [self.primary] + helpers + [self.backup]
-        self.chain = [a for a in order if a]
+        self.chain = [a for a in order if a and a.provider not in Pool.dead] or [self.primary]
         for a in self.chain:
             a.patient = a is self.chain[-1]
         self.down = {}
@@ -504,6 +505,9 @@ class Pool:
                 return job(ai), ai
             except AIError as e:
                 last = e
+                if re.search(r"\b402\b|payment method", str(e), re.I):  # wants a card: leave it out for the whole run
+                    Pool.dead.add(ai.provider)
+                    self.chain = [a for a in self.chain if a is not ai] or self.chain
                 if i + 1 < len(tried):
                     nxt = tried[i + 1]
                     say(f"    {ai.provider} unavailable ({str(e)[:90]})\n"
