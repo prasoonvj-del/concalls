@@ -469,9 +469,7 @@ class Pool:
     summaries and the big picture. A provider that fails is skipped for 15 minutes."""
 
     def __init__(self, bulk=False):
-        self.primary = AI("ai")
-        if bulk:
-            self.primary.lite_first = True
+        self.primary = AI("ai")  # full Flash models first for everything; Lite only when those are busy or used up
         extra = {}
         for sec in ("sambanova", "mistral", "backup"):
             try:
