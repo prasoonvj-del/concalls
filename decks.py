@@ -158,8 +158,8 @@ def step(pool, mode="full"):
         for d in todo:
             if made >= n_max or time.time() > deadline:
                 break
-            if pool.backup and time.time() < pool.down_until:
-                say("  Gemini is resting - leaving the backup AI for concalls and news; decks continue next update")
+            if len(pool.chain) > 1 and pool.providers()[0] is pool.backup:
+                say("  only the last-resort AI is left - keeping it for concalls and news; decks continue next update")
                 break
             text, problem = deck_text(d, tmp)
             rec = done.get(d["id"], {"tries": 0})
@@ -197,8 +197,10 @@ def step(pool, mode="full"):
                 rec["why"] = str(e)[:120]
                 done[d["id"]] = rec
                 continue
-            if ai is not pool.primary:  # answered by the backup - fine, but stop after this one
-                pool.down_until = max(pool.down_until, time.time() + 900)
+            if ai is pool.backup and len(pool.chain) > 1:  # answered by the last resort - fine, but stop after this one
+                pool.down[id(ai)] = 0
+                for a in pool.chain[:-1]:
+                    pool.down[id(a)] = time.time() + 900
             one = ""
             m = re.search(r"\*\*In one line:\*\*\s*(.+)", out)
             if m:

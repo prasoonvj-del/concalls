@@ -11,6 +11,7 @@ Each step is independent: if one fails (e.g. BSE is down), the others still run 
 Settings: the [cloud] section of config.ini. API keys: GEMINI_API_KEY / GROQ_API_KEY (GitHub secrets).
 """
 import configparser
+import os
 import re
 import time
 import traceback
@@ -33,7 +34,8 @@ def settings():
         "days": int(c.get("concall_days", "7") or 7),
         "first_days": int(c.get("first_run_days", "150") or 150),
         "sectors": None if sectors.lower() == "all" else [x.strip() for x in sectors.split(",") if x.strip()],
-        "limit": int(c.get("max_concalls_per_run", "60") or 60),
+        # a Mistral key adds a whole second daily allowance, so more concalls fit in a run
+        "limit": int(c.get("max_concalls_per_run", "60") or 60) + (30 if os.environ.get("MISTRAL_API_KEY", "").strip() else 0),
         # all = every company; watchlist = only those (others compare once last quarter is summarised anyway)
         "compare": {"yes": "all", "true": "all", "no": "none", "false": "none"}.get(
             c.get("compare_with_last_quarter", "watchlist").strip().lower(),
@@ -161,7 +163,7 @@ def step_concalls(conf):
     C.classify(lib, pool)
     try:
         import industries
-        industries.classify(lib, pool)
+        industries.classify(lib, C.Pool(bulk=True))
         lib = C.load_lib()
         # sectors whose line-up changed (companies moved by the industry sorting) get a fresh overview
         redo = 0
@@ -360,7 +362,7 @@ def main():
             say(f"\n!! Concall request failed:\n{traceback.format_exc()}")
         try:
             import decks
-            decks.step(C.Pool(), "full" if conf["concalls"] else "news")
+            decks.step(C.Pool(bulk=True), "full" if conf["concalls"] else "news")
         except Exception:
             say(f"\n!! Deck summaries failed:\n{traceback.format_exc()}")
         try:
@@ -371,12 +373,12 @@ def main():
         if not conf["concalls"]:
             try:
                 import industries
-                industries.classify(C.load_lib(), C.Pool(), limit=200, minutes=4)
+                industries.classify(C.load_lib(), C.Pool(bulk=True), limit=200, minutes=4)
             except Exception as e:
                 say(f"  industry sorting skipped: {str(e)[:120]}")
         try:
             import pivot_sources
-            pivot_sources.step(C.Pool(), "full" if conf["concalls"] else "news")
+            pivot_sources.step(C.Pool(bulk=True), "full" if conf["concalls"] else "news")
         except Exception:
             say(f"\n!! Pivots from summaries failed:\n{traceback.format_exc()}")
     try:

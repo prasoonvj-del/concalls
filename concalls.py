@@ -235,18 +235,21 @@ class AI:
         self.patient = True  # set False when a backup provider can take over
         # Most free tiers other than Gemini accept only a few thousand tokens per request;
         # longer transcripts are then summarised in parts (0 = no limit).
-        self.max_input_tokens = int(c.get("max_input_tokens", "0" if section == "ai" else "5000") or 0)
+        self.max_input_tokens = int(c.get("max_input_tokens", "0" if section in ("ai", "mistral") else "5000") or 0)
         if os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY", "").startswith("xai-") or \
                 c.get("api_key", "").strip().startswith("xai-"):
             self.max_input_tokens = 0 if section != "ai" else self.max_input_tokens  # Grok takes whole transcripts
         # In the cloud (GitHub Actions) keys come from encrypted secrets, not config.ini
-        names = ("GEMINI_API_KEY",) if section == "ai" else ("GROQ_API_KEY", "GROK_API_KEY", "XAI_API_KEY")
+        names = {"ai": ("GEMINI_API_KEY",), "mistral": ("MISTRAL_API_KEY",)}.get(
+            section, ("GROQ_API_KEY", "GROK_API_KEY", "XAI_API_KEY"))
         env_key = next((os.environ[n].strip() for n in names if os.environ.get(n, "").strip()), "")
         self.key = env_key or c.get("api_key", "").strip()
-        default_url = ("https://generativelanguage.googleapis.com/v1beta/openai" if section == "ai"
-                       else "https://api.groq.com/openai/v1")
+        default_url = {"ai": "https://generativelanguage.googleapis.com/v1beta/openai",
+                       "mistral": "https://api.mistral.ai/v1"}.get(section, "https://api.groq.com/openai/v1")
         self.url = c.get("base_url", default_url).strip().rstrip("/")
-        self.model = c.get("model", "auto").strip()
+        self.model = c.get("model", "mistral-large-latest" if section == "mistral" else "auto").strip()
+        if section == "mistral":  # free "Experiment" plan: large model first, smaller ones if its limit is used
+            self.backups = [m for m in ("mistral-medium-latest", "mistral-small-latest") if m != self.model]
         # the key tells us the provider, whatever config.ini says (Groq: gsk_..., xAI Grok: xai-...)
         if self.key.startswith("xai-"):
             self.url, self.provider = "https://api.x.ai/v1", "xAI Grok"
@@ -254,6 +257,8 @@ class AI:
                 self.model = "auto"
         elif self.key.startswith("gsk_"):
             self.url, self.provider = "https://api.groq.com/openai/v1", "Groq"
+        elif "mistral.ai" in self.url:
+            self.provider = "Mistral"
         else:
             self.provider = "Gemini" if "generativelanguage" in self.url else self.url.split("/")[2]
         self.max_wait = int(c.get("max_wait_seconds", "180") or 180)
@@ -442,39 +447,49 @@ class AI:
 
 
 class Pool:
-    """Gemini first; if it's down, the backup provider takes over for 15 minutes."""
+    """Gemini, Mistral and Groq (whichever have keys). Normal work goes Gemini -> Mistral -> Groq;
+    bulk side jobs (pivots, decks, tab write-ups, sorting) go Mistral first to keep Gemini free for
+    summaries and the big picture. A provider that fails is skipped for 15 minutes."""
 
-    def __init__(self):
+    def __init__(self, bulk=False):
         self.primary = AI("ai")
-        try:
-            self.backup = AI("backup")
-        except AIError:
-            self.backup = None
-        self.primary.patient = self.backup is None
-        self.down_until = 0
+        extra = {}
+        for sec in ("mistral", "backup"):
+            try:
+                extra[sec] = AI(sec)
+            except AIError:
+                extra[sec] = None
+        self.mistral, self.backup = extra["mistral"], extra["backup"]
+        order = [self.mistral, self.primary, self.backup] if bulk else [self.primary, self.mistral, self.backup]
+        self.chain = [a for a in order if a]
+        for a in self.chain:
+            a.patient = a is self.chain[-1]
+        self.down = {}
         self.pause = self.primary.pause
 
     def providers(self):
         """Who to try, in order, right now."""
-        if self.backup and time.time() < self.down_until:
-            return [self.backup]
-        return [self.primary] + ([self.backup] if self.backup else [])
+        now = time.time()
+        up = [a for a in self.chain if self.down.get(id(a), 0) <= now]
+        return up or self.chain[-1:]
 
     def ask(self, prompt, label="AI", max_wait=None):
-        """Returns (text, ai_used). Falls back to the backup if Gemini fails."""
+        """Returns (text, ai_used), moving down the chain when a provider fails."""
         return self.run(lambda ai: ai.ask(prompt, label=label, max_wait=max_wait))
 
     def run(self, job):
         last = None
-        for ai in self.providers():
+        tried = self.providers()
+        for i, ai in enumerate(tried):
             try:
                 return job(ai), ai
             except AIError as e:
                 last = e
-                if ai is self.primary and self.backup:
-                    say(f"    Gemini unavailable ({str(e)[:90]})\n"
-                        f"    -> using backup {self.backup.model} for the next 15 minutes")
-                    self.down_until = time.time() + 900
+                if i + 1 < len(tried):
+                    nxt = tried[i + 1]
+                    say(f"    {ai.provider} unavailable ({str(e)[:90]})\n"
+                        f"    -> using {nxt.provider} {nxt.model} for the next 15 minutes")
+                    self.down[id(ai)] = time.time() + 900
                     continue
                 raise
         raise last
@@ -482,12 +497,12 @@ class Pool:
 
 def test_ai():
     ok = False
-    for section, name in (("ai", "Main AI (Gemini)"), ("backup", "Backup AI")):
+    for section, name in (("ai", "Main AI (Gemini)"), ("mistral", "Mistral"), ("backup", "Backup AI (Groq)")):
         say(f"\nTesting {name} ...")
         try:
             ai = AI(section)
         except AIError as e:
-            say("  not set up (optional - see README)" if section == "backup" else f"  PROBLEM: {e}")
+            say("  not set up (optional - see README)" if section != "ai" else f"  PROBLEM: {e}")
             continue
         try:
             t = time.time()

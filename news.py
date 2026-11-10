@@ -558,6 +558,7 @@ def build(conf=None, log_failed=True):
         return None
     try:
         pool = C.Pool()
+        bulk = C.Pool(bulk=True)  # tagging and tab write-ups: Mistral first, keeping Gemini for the brief itself
         say("Checking the AI connection ...")
         pool.ask("Reply with exactly: OK", label="check", max_wait=45)
     except C.AIError as e:
@@ -583,7 +584,7 @@ def build(conf=None, log_failed=True):
     say(f"\nSorting stories by sector, company, importance and sentiment ({len(fresh)} new, "
         f"{len(stories) - len(fresh)} remembered from earlier runs) ...")
     if fresh:
-        tag(fresh, pool)
+        tag(fresh, bulk)
         for s in fresh:
             cache["tags"][s["key"]] = {k: s[k] for k in ("category", "companies", "importance", "sentiment")}
     save_cache(cache, now_utc)
@@ -695,7 +696,7 @@ def build(conf=None, log_failed=True):
     }
     for t_i, (tab, folders) in enumerate(conf["tabs"].items(), 1):
         try:
-            brief["tabs"].append(build_tab(tab, folders, opml, conf, pool, cache, t_i * 100000))
+            brief["tabs"].append(build_tab(tab, folders, opml, conf, bulk, cache, t_i * 100000))
         except Exception as e:
             say(f"  {tab} tab failed: {e}")
     save_cache(cache, now_utc)
