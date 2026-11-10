@@ -297,7 +297,8 @@ class AI:
                      "kimi-k2", "qwen3-235b", "llama-4-maverick", "qwen/qwen3-32b", "qwen3-32b", "llama-4-scout",
                      "openai/gpt-oss-20b", "gpt-oss-20b"]
             skip = ("whisper", "tts", "guard", "embed", "image", "vision", "audio", "playai", "compound", "imagine",
-                    "8b", "1b", "3b", "instant", "distill", "e5-", "ocr", "speech", "rerank")
+                    "8b", "1b", "3b", "7b", "instant", "distill", "e5-", "ocr", "speech", "rerank", "orpheus", "allam",
+                    "safeguard", "prompt-guard")
             chat = [i for i in ids if not any(x in i.lower() for x in skip)]
 
             def pref(i):  # free limits are per model: order every usable model, best first
@@ -327,7 +328,8 @@ class AI:
         if not flash:
             raise AIError(f"No suitable model found. Models available: {', '.join(ids[:15])}")
         last = DATA / "working_model.txt"  # start with whichever model worked last time
-        if last.exists() and last.read_text(encoding="utf-8").strip() in flash:
+        # (never start on a Lite model just because it was the fallback last time - quality first)
+        if last.exists() and last.read_text(encoding="utf-8").strip() in flash and "lite" not in last.read_text(encoding="utf-8"):
             m = last.read_text(encoding="utf-8").strip()
             flash.remove(m)
             flash.insert(0, m)
