@@ -235,17 +235,19 @@ class AI:
         self.patient = True  # set False when a backup provider can take over
         # Most free tiers other than Gemini accept only a few thousand tokens per request;
         # longer transcripts are then summarised in parts (0 = no limit).
-        self.max_input_tokens = int(c.get("max_input_tokens", "0" if section in ("ai", "mistral") else "5000") or 0)
+        self.max_input_tokens = int(c.get("max_input_tokens", "0" if section in ("ai", "mistral", "sambanova") else "5000") or 0)
         if os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY", "").startswith("xai-") or \
                 c.get("api_key", "").strip().startswith("xai-"):
             self.max_input_tokens = 0 if section != "ai" else self.max_input_tokens  # Grok takes whole transcripts
         # In the cloud (GitHub Actions) keys come from encrypted secrets, not config.ini
-        names = {"ai": ("GEMINI_API_KEY",), "mistral": ("MISTRAL_API_KEY",)}.get(
+        names = {"ai": ("GEMINI_API_KEY",), "mistral": ("MISTRAL_API_KEY",),
+                 "sambanova": ("SAMBANOVA_API_KEY",)}.get(
             section, ("GROQ_API_KEY", "GROK_API_KEY", "XAI_API_KEY"))
         env_key = next((os.environ[n].strip() for n in names if os.environ.get(n, "").strip()), "")
         self.key = env_key or c.get("api_key", "").strip()
         default_url = {"ai": "https://generativelanguage.googleapis.com/v1beta/openai",
-                       "mistral": "https://api.mistral.ai/v1"}.get(section, "https://api.groq.com/openai/v1")
+                       "mistral": "https://api.mistral.ai/v1",
+                       "sambanova": "https://api.sambanova.ai/v1"}.get(section, "https://api.groq.com/openai/v1")
         self.url = c.get("base_url", default_url).strip().rstrip("/")
         self.model = c.get("model", "mistral-large-latest" if section == "mistral" else "auto").strip()
         if section == "mistral":  # free "Experiment" plan: large model first, smaller ones if its limit is used
@@ -259,6 +261,8 @@ class AI:
             self.url, self.provider = "https://api.groq.com/openai/v1", "Groq"
         elif "mistral.ai" in self.url:
             self.provider = "Mistral"
+        elif "sambanova" in self.url:
+            self.provider = "SambaNova"
         else:
             self.provider = "Gemini" if "generativelanguage" in self.url else self.url.split("/")[2]
         self.max_wait = int(c.get("max_wait_seconds", "180") or 180)
@@ -289,11 +293,18 @@ class AI:
         ids = [m.get("id", "").replace("models/", "") for m in r.json().get("data", [])]
         if not any("gemini" in i for i in ids):
             # Groq / xAI / others: take the best general chat model on offer
-            prefs = ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "moonshotai/kimi-k2-instruct",
-                     "qwen/qwen3-32b", "openai/gpt-oss-20b"]
-            skip = ("whisper", "tts", "guard", "embed", "image", "vision", "audio", "playai", "compound", "imagine")
+            prefs = ["openai/gpt-oss-120b", "gpt-oss-120b", "deepseek-v3", "llama-3.3-70b", "moonshotai/kimi-k2",
+                     "kimi-k2", "qwen3-235b", "llama-4-maverick", "qwen/qwen3-32b", "qwen3-32b", "llama-4-scout",
+                     "openai/gpt-oss-20b", "gpt-oss-20b"]
+            skip = ("whisper", "tts", "guard", "embed", "image", "vision", "audio", "playai", "compound", "imagine",
+                    "8b", "1b", "3b", "instant", "distill", "e5-", "ocr", "speech", "rerank")
             chat = [i for i in ids if not any(x in i.lower() for x in skip)]
-            pick = next((p for p in prefs if p in chat), None)
+
+            def pref(i):  # free limits are per model: order every usable model, best first
+                lo = i.lower()
+                return next((n for n, p in enumerate(prefs) if p in lo), len(prefs))
+            chat.sort(key=pref)
+            pick = next((i for i in chat if pref(i) < len(prefs)), None)
             if not pick and any("grok" in i for i in chat):
                 grok = [i for i in chat if "grok" in i]
                 pick = next((i for i in grok if "fast" in i), None) or next((i for i in grok if "mini" in i), None) or grok[0]
@@ -301,8 +312,8 @@ class AI:
                 pick = chat[0]
             if not pick:
                 raise AIError(f"No usable model found for {self.url}")
-            self.model, self.backups = pick, [i for i in prefs if i in chat and i != pick]
-            say(f"  Using {pick}")
+            self.model, self.backups = pick, [i for i in chat if i != pick]
+            say(f"  Using {pick}" + (f" (then {', '.join(self.backups[:4])})" if self.backups else ""))
             return
         self.reasoning = True  # ask Gemini to think briefly - much faster
         bad = ("image", "tts", "audio", "live", "embed", "robotics", "computer", "preview", "exp", "native")
@@ -320,6 +331,8 @@ class AI:
             m = last.read_text(encoding="utf-8").strip()
             flash.remove(m)
             flash.insert(0, m)
+        if getattr(self, "lite_first", False):  # routine jobs: Flash-Lite models (bigger free limits) first
+            flash.sort(key=lambda i: "lite" not in i)
         self.model = flash[0]
         self.backups = flash[1:]
         say(f"  Models to try, in order: {', '.join(flash[:5])}")
@@ -393,7 +406,8 @@ class AI:
                     raise AIError("The AI returned an empty answer (possibly a safety block).")
                 try:
                     DATA.mkdir(parents=True, exist_ok=True)
-                    (DATA / "working_model.txt").write_text(self.model, encoding="utf-8")
+                    if not getattr(self, "lite_first", False):
+                        (DATA / "working_model.txt").write_text(self.model, encoding="utf-8")
                 except Exception:
                     pass
                 return text.strip()
@@ -453,14 +467,17 @@ class Pool:
 
     def __init__(self, bulk=False):
         self.primary = AI("ai")
+        if bulk:
+            self.primary.lite_first = True
         extra = {}
-        for sec in ("mistral", "backup"):
+        for sec in ("sambanova", "mistral", "backup"):
             try:
                 extra[sec] = AI(sec)
             except AIError:
                 extra[sec] = None
-        self.mistral, self.backup = extra["mistral"], extra["backup"]
-        order = [self.mistral, self.primary, self.backup] if bulk else [self.primary, self.mistral, self.backup]
+        self.sambanova, self.mistral, self.backup = extra["sambanova"], extra["mistral"], extra["backup"]
+        helpers = [self.sambanova, self.mistral]
+        order = helpers + [self.primary, self.backup] if bulk else [self.primary] + helpers + [self.backup]
         self.chain = [a for a in order if a]
         for a in self.chain:
             a.patient = a is self.chain[-1]
@@ -497,7 +514,8 @@ class Pool:
 
 def test_ai():
     ok = False
-    for section, name in (("ai", "Main AI (Gemini)"), ("mistral", "Mistral"), ("backup", "Backup AI (Groq)")):
+    for section, name in (("ai", "Main AI (Gemini)"), ("sambanova", "SambaNova"), ("mistral", "Mistral"),
+                          ("backup", "Backup AI (Groq)")):
         say(f"\nTesting {name} ...")
         try:
             ai = AI(section)

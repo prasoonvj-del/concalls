@@ -35,7 +35,7 @@ def settings():
         "first_days": int(c.get("first_run_days", "150") or 150),
         "sectors": None if sectors.lower() == "all" else [x.strip() for x in sectors.split(",") if x.strip()],
         # a Mistral key adds a whole second daily allowance, so more concalls fit in a run
-        "limit": int(c.get("max_concalls_per_run", "60") or 60) + (30 if os.environ.get("MISTRAL_API_KEY", "").strip() else 0),
+        "limit": int(c.get("max_concalls_per_run", "60") or 60) + (30 if any(os.environ.get(k, "").strip() for k in ("MISTRAL_API_KEY", "SAMBANOVA_API_KEY")) else 0),
         # all = every company; watchlist = only those (others compare once last quarter is summarised anyway)
         "compare": {"yes": "all", "true": "all", "no": "none", "false": "none"}.get(
             c.get("compare_with_last_quarter", "watchlist").strip().lower(),
