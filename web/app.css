@@ -229,3 +229,16 @@ mark{background:#ffe58a;color:#222;border-radius:2px;padding:0 1px}
 .thc{padding:7px 0;border-top:1px solid var(--line-2,rgba(127,127,127,.12))}
 a.thchip{font-size:11px;border:1px solid var(--s5);color:var(--text);border-radius:999px;padding:0 7px;text-decoration:none;margin-left:4px;white-space:nowrap}
 .updbar{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--s1);color:#fff;text-align:center;padding:8px;font-weight:600}
+
+/* Today: top stories explained - one card, compact two-column reading grid */
+.xgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:0 26px}
+.xs{padding:11px 0 12px;border-top:1px solid var(--line,rgba(127,127,127,.15))}
+.xs .t{font-size:15.5px;font-weight:600;line-height:1.35;cursor:pointer;margin-bottom:5px}
+.xs .t:hover{color:var(--accent)}
+.xm{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;margin-bottom:4px}
+.xm .src{font-size:12px}
+.xs p{font-size:13.5px;line-height:1.5;margin:4px 0;color:var(--text)}
+.xs p b{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-2);font-weight:600;margin-right:4px}
+@media (max-width:520px){.xgrid{grid-template-columns:1fr}}
+.xs p.cx{color:var(--text-2);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.xs p.cx.open{display:block}

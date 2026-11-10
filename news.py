@@ -391,9 +391,11 @@ facts, figures or events about today's story.
 
 For EACH story write exactly this block:
 ### [<id>]
-Context: <1-2 sentences of background needed to understand it>
-Why it matters: <1-2 sentences on the impact for the company, sector or market>
-What to watch: <1 sentence: the next signal or date to track>
+Context: <one sentence, max 30 words, of background needed to understand it - skip textbook definitions>
+Why it matters: <one or two sentences, max 40 words: the concrete impact - which companies or sector, which way, how much>
+What to watch: <one sentence, max 20 words: the next signal or date to track>
+
+Be precise and specific; name companies and numbers where the story gives them. No filler.
 
 STORIES:
 """
@@ -763,11 +765,15 @@ def build_tab(tab, folders, opml, conf, pool, cache, offset):
     keys = [s["key"] for s in top]
     prev = cache["sections"].get("tab:" + tab)
     text = ""
-    if prev and len(set(keys) - set(prev["keys"])) < max(8, 0.25 * len(keys)):
-        # keep the earlier write-up, but its [ids] must point at today's numbering
+
+    def earlier():
+        # the earlier write-up, with its [ids] pointed at today's numbering (stories gone since lose their link)
         remap = {old: next((s["id"] for s in top if s["key"] == k), None) for old, k in prev.get("idmap", {}).items()}
-        text = re.sub(r"\[(\d+(?:\s*,\s*\d+)*)\]", lambda m: "[" + ", ".join(
-            str(remap[n]) for n in re.findall(r"\d+", m.group(1)) if remap.get(n)) + "]", prev["text"])
+        return re.sub(r"\[(\d+(?:\s*,\s*\d+)*)\]", lambda m: "[" + ", ".join(
+            str(remap[n]) for n in re.findall(r"\d+", m.group(1)) if remap.get(n)) + "]", prev["text"]).replace("[]", "")
+
+    if prev and len(set(keys) - set(prev["keys"])) < max(8, 0.25 * len(keys)):
+        text = earlier()
         say(f"  little new - keeping the earlier {tab} digest")
     elif top:
         try:
@@ -778,6 +784,9 @@ def build_tab(tab, folders, opml, conf, pool, cache, offset):
                                                "idmap": {str(s["id"]): s["key"] for s in top}}
         except C.AIError as e:
             say(f"  {tab} digest failed: {e}")
+            if prev and prev.get("text"):   # AI out of quota: show the last write-up rather than a bare list
+                text = earlier()
+                say(f"  showing the earlier {tab} digest until the AI is free again")
     one = ""
     m = re.search(r"\*\*In one line:\*\*\s*(.+)", text)
     if m:

@@ -640,52 +640,44 @@
       <h1>Morning brief</h1>
       <div class="sub">${esc(b.label)} · last ${b.hours}h · ${fmt(st.articles)} articles from ${plural(st.sources, "source")} → ${plural(st.relevant, "market story")} · built ${esc(b.built.slice(11, 16))}</div>
       ${dateNav(date)}
+      ${top.length ? `<div class="card"><h2>Top stories, explained <span class="m">${top.length} that matter most today</span></h2><div class="xgrid" id="topx">${top.map((t) => {
+        const s = byId[t.id];
+        return `<div class="xs"><div class="t" data-story="${s.id}">${esc(s.title)}</div>
+          <div class="xm">${sentChip(s.sent)} ${impDots(s.imp)} <span class="chip link" data-go="#sectors/${encodeURIComponent(s.cat)}">${esc(s.cat)}</span>
+            <span class="src">${esc(s.sources.slice(0, 3).map((x) => x.name).join(", "))}${s.outlets > 3 ? " +" + (s.outlets - 3) : ""}</span></div>
+          ${t.why ? `<p><b>Why it matters</b> ${esc(t.why)}</p>` : ""}
+          ${t.watch ? `<p><b>Watch</b> ${esc(t.watch)}</p>` : ""}
+          ${t.context ? `<p class="cx" title="Tap to read all"><b>Background</b> ${esc(t.context)}</p>` : ""}
+          <div class="ctxs" data-cos="${esc(JSON.stringify(s.companies.slice(0, 3)))}"></div></div>`;
+      }).join("")}</div></div>` : ""}
+      <div class="card"><h2>Sector by sector <span class="m">tap a row for the full sector page</span></h2><div class="secs2">${b.sections.map((s) => `<div class="srow" data-go="#sectors/${encodeURIComponent(s.cat)}">
+          <div><b>${esc(s.cat)}</b><div class="m">${s.ids.length} · ${s.pos}▲ ${s.neg}▼</div><span class="mb">${s.ids.length ? `<i style="width:${(100 * s.pos) / s.ids.length}%;background:var(--pos)"></i><i style="width:${(100 * s.neg) / s.ids.length}%;background:var(--neg)"></i>` : ""}</span></div>
+          <div>${s.one ? `<div class="clamp md">${s.one}</div>` : `<span class="m">-</span>`}</div></div>`).join("")}</div></div>
+      <div id="wah"></div>
+      ${b.big ? `<div class="card md"><h2>The big picture</h2><div id="bigp">${b.big}</div></div>` : ""}
+      ${wl.length ? `<div class="card"><h2>Your watchlist <span class="m">${esc(wl.join(", "))}</span></h2>${
+        wlStories.length ? `<div id="wlf"></div>` : `<div class="m">No news on your watchlist in this brief.</div>`}</div>` : ""}
       <div class="tiles">
         <div class="tile"><div class="v">${fmt(st.relevant)}</div><div class="k">market stories</div></div>
         <div class="tile"><div class="v">${b.sections.length}</div><div class="k">sectors & topics in the news</div></div>
         <div class="tile"><div class="v" style="color:${mood >= 50 ? cssv("--pos") : cssv("--neg")}">${mood}%</div><div class="k">of sentiment-bearing stories positive (${pos}▲ ${neg}▼)</div></div>
         <div class="tile"><div class="v" style="font-size:18px">${esc(topSec ? topSec.cat : "-")}</div><div class="k">busiest sector (${topSec ? plural(topSec.ids.length, "story") : ""})</div></div>
       </div>
-      ${b.big ? `<div class="card md"><h2>The big picture</h2><div id="bigp">${b.big}</div></div>` : ""}
-      ${wl.length ? `<div class="card"><h2>Your watchlist <span class="m">${esc(wl.join(", "))}</span></h2>${
-        wlStories.length ? `<div id="wlf"></div>` : `<div class="m">No news on your watchlist in this brief.</div>`}</div>` : ""}
-      <div id="pivw"></div><div id="wah"></div>
-      ${top.length ? `<h2 style="margin:18px 0 10px">Top stories, explained</h2><div class="grid g2" id="topx">${top.map((t, ti) => {
-        const s = byId[t.id];
-        return `<div class="card explain"><h3 class="t" data-story="${s.id}" style="cursor:pointer">${esc(s.title)}</h3>
-          <div style="margin-bottom:6px">${sentChip(s.sent)} · ${impDots(s.imp)} · <span class="chip link" data-go="#sectors/${encodeURIComponent(s.cat)}">${esc(s.cat)}</span></div>
-          ${t.why ? `<div class="row"><b>Why it matters:</b> ${esc(t.why)}</div>` : ""}
-          ${t.context ? `<div class="row"><b>Context:</b> ${esc(t.context)}</div>` : ""}
-          ${t.watch ? `<div class="row"><b>What to watch:</b> ${esc(t.watch)}</div>` : ""}
-          <div class="ctxs" data-cos="${esc(JSON.stringify(s.companies.slice(0, 3)))}"></div>
-          <div class="src" style="margin-top:6px">${plural(s.outlets, "outlet")}: ${esc(s.sources.slice(0, 4).map((x) => x.name).join(", "))}</div></div>`;
-      }).join("")}</div>` : ""}
-      <div class="grid g2" style="margin-top:14px">
+      <div class="grid g2">
         <div class="card"><h2>Sector mood <span class="m">stories by sentiment</span></h2>
           ${legend([["Negative", cssv("--neg")], ["Positive", cssv("--pos")]])}<div id="c-mood"></div><div id="t-mood"></div></div>
         <div class="card"><h2>News flow <span class="m">stories per day, busiest sectors</span></h2><div id="l-flow"></div><div id="c-flow"></div><div id="t-flow"></div></div>
       </div>
-      <div class="card"><h2>Sector by sector <span class="m">tap a row for the full sector page</span></h2><div class="secs2">${b.sections.map((s) => `<div class="srow" data-go="#sectors/${encodeURIComponent(s.cat)}">
-          <div><b>${esc(s.cat)}</b><div class="m">${s.ids.length} · ${s.pos}▲ ${s.neg}▼</div><span class="mb">${s.ids.length ? `<i style="width:${(100 * s.pos) / s.ids.length}%;background:var(--pos)"></i><i style="width:${(100 * s.neg) / s.ids.length}%;background:var(--neg)"></i>` : ""}</span></div>
-          <div>${s.one ? `<div class="clamp md">${s.one}</div>` : `<span class="m">-</span>`}</div></div>`).join("")}</div></div>
       <div class="card"><h2>Most-mentioned companies <span class="m">tap a bar for everything on the company</span></h2><div id="c-comp"></div><div id="t-comp"></div></div>
       ${b.failed && b.failed.length ? `<details class="card"><summary class="m" style="cursor:pointer">${plural(b.failed.length, "feed")} didn't load this time</summary>
         <ul class="list">${b.failed.map((f) => `<li>${esc(f.name)} <span class="src">(${esc(f.folder)}) - ${esc(f.error)}</span></li>`).join("")}</ul></details>` : ""}`;
     $("#datesel").onchange = (e) => go("#today/" + e.target.value);
     if ($("#wlf")) storyFeed($("#wlf"), wlStories, { page: 6, ph: "Search watchlist news" });
     clampBlock($("#bigp"), 620, "bigpicture");
-    clampBlock($("#topx"), 900, "explained");
+    clampBlock($("#topx"), 1100, "explained");
+    view.querySelectorAll(".xs .cx").forEach((p) => { p.onclick = () => p.classList.toggle("open"); });
     clampBlock(view.querySelector(".secs2"), 520, "sectors");
     loadCtx().then(() => {
-      const PV = ((window.DESK_TRACK || {}).trackers || {}).pivots || [];
-      const wk = new Date(b.date + "T00:00"); wk.setDate(wk.getDate() - 7);
-      const recentP = PV.filter((r) => !/\b(drhp|ipo|public issue|sebi nod|listing on|lists on|files? (for|draft))\b/i.test(r.what) && r.date >= wk.toISOString().slice(0, 10) && r.date <= b.date)
-        .sort((x, y) => (isWatch(y.company) - isWatch(x.company)) || (y.imp || 0) - (x.imp || 0) || (x.date < y.date ? 1 : -1)).slice(0, 10);
-      if ($("#pivw") && recentP.length) {
-        $("#pivw").innerHTML = `<div class="card"><h2>Pivots of the week <span class="m">company-changing news that can re-rate or de-rate a stock · <a href="#trackers/pivots">all ${PV.length}</a></span></h2>
-          <div class="pvg" id="pvgw">${recentP.map((r) => pivotLine(r)).join("")}</div></div>`;
-        clampBlock($("#pvgw"), 330, "pivots");
-      }
       if ($("#wah")) { renderWeekAhead($("#wah")); clampBlock($("#wal"), 430, "weekahead"); }
       view.querySelectorAll(".ctxs").forEach((d) => { d.innerHTML = JSON.parse(d.dataset.cos).map(ctxLine).join(""); });
       // "Stocks in focus": company names open the company page, with the tone of their last concall
@@ -1772,7 +1764,7 @@
         <div style="margin-top:10px"><button class="primary" id="wls">Save</button> <span class="m" id="wlm"></span></div></div>
       <div class="card"><h2>Appearance</h2><select id="th"><option value="auto">Match my device</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
       <div class="card"><h2>Today page: show in full</h2><p class="help">Ticked sections always open in full; unticked ones show the first part with "Show all". Tapping "Show all" or "Show less" on the page changes this too.</p>
-        ${[["bigpicture", "The big picture"], ["pivots", "Pivots of the week"], ["weekahead", "Week ahead"], ["explained", "Top stories, explained"], ["sectors", "Sector by sector"]]
+        ${[["bigpicture", "The big picture"], ["weekahead", "Week ahead"], ["explained", "Top stories, explained"], ["sectors", "Sector by sector"]]
           .map(([k, l]) => `<label style="display:block;margin:6px 0"><input type="checkbox" data-open="${k}" ${store.get("open-" + k, false) ? "checked" : ""}> ${l}</label>`).join("")}</div>
       <div class="card"><h2>Swiping between tabs</h2><p class="help">On a tablet or phone, swipe sideways anywhere on the page to move to the next or previous tab.</p>
         <select id="swd"><option value="right-next">Swipe right → next tab, swipe left → previous</option><option value="left-next">Swipe left → next tab, swipe right → previous</option></select></div>
