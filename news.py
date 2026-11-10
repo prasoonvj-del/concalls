@@ -649,6 +649,20 @@ def build(conf=None, log_failed=True):
                          flags=re.M | re.I).strip()
         except C.AIError as e:
             say(f"    failed: {e}")
+    big_html, big_from = md_html(big) if big else "", ""
+    if not big_html:  # AI out of quota: keep the latest big picture on show, saying which day it is from
+        for f in sorted(BRIEF_DIR.glob("*.json"), reverse=True):
+            try:
+                ob = json.loads(f.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            if ob.get("big"):
+                big_html = ob["big"]
+                if ob.get("date") != now.strftime("%Y-%m-%d"):  # its [ids] point at that day's stories - drop them
+                    big_html = re.sub(r'<a class="r" data-id="\d+">\d+</a>', "", big_html)
+                big_from = ob.get("bigFrom") or ("" if ob.get("date") == now.strftime("%Y-%m-%d") else ob.get("label", ob.get("date", "")))
+                say(f"  showing the big picture from {big_from or 'earlier today'} until the AI is free again")
+                break
 
     out_sections = []
     for c in cats:
@@ -670,7 +684,7 @@ def build(conf=None, log_failed=True):
         "stats": {"feeds": len(feeds), "articles": len(articles), "stories": len(stories),
                   "relevant": len(relevant), "failed": len(failed),
                   "sources": len({x["name"] for s in relevant for x in s["sources"]})},
-        "big": md_html(big), "top": top, "sections": out_sections,
+        "big": big_html, "bigFrom": big_from, "top": top, "sections": out_sections,
         "stories": [{"id": s["id"], "title": s["title"], "desc": s["desc"],
                      "when": s["when"].astimezone(IST).isoformat(timespec="minutes"),
                      "cat": s["category"], "companies": s["companies"], "imp": s["importance"],

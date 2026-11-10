@@ -640,6 +640,7 @@
       <h1>Morning brief</h1>
       <div class="sub">${esc(b.label)} · last ${b.hours}h · ${fmt(st.articles)} articles from ${plural(st.sources, "source")} → ${plural(st.relevant, "market story")} · built ${esc(b.built.slice(11, 16))}</div>
       ${dateNav(date)}
+      ${b.big ? `<div class="card md bigcard"><h2>The big picture${b.bigFrom ? ` <span class="m">from the ${esc(b.bigFrom)} brief - today's is written once the AI is free</span>` : ""}</h2><div id="bigp">${b.big}</div></div>` : ""}
       ${top.length ? `<div class="card"><h2>Top stories, explained <span class="m">${top.length} that matter most today</span></h2><div class="xgrid" id="topx">${top.map((t) => {
         const s = byId[t.id];
         return `<div class="xs"><div class="t" data-story="${s.id}">${esc(s.title)}</div>
@@ -652,9 +653,8 @@
       }).join("")}</div></div>` : ""}
       <div class="card"><h2>Sector by sector <span class="m">tap a row for the full sector page</span></h2><div class="secs2">${b.sections.map((s) => `<div class="srow" data-go="#sectors/${encodeURIComponent(s.cat)}">
           <div><b>${esc(s.cat)}</b><div class="m">${s.ids.length} · ${s.pos}▲ ${s.neg}▼</div><span class="mb">${s.ids.length ? `<i style="width:${(100 * s.pos) / s.ids.length}%;background:var(--pos)"></i><i style="width:${(100 * s.neg) / s.ids.length}%;background:var(--neg)"></i>` : ""}</span></div>
-          <div>${s.one ? `<div class="clamp md">${s.one}</div>` : `<span class="m">-</span>`}</div></div>`).join("")}</div></div>
+          <div>${s.one ? `<div class="md sone">${s.one}</div>` : `<span class="m">-</span>`}</div></div>`).join("")}</div></div>
       <div id="wah"></div>
-      ${b.big ? `<div class="card md"><h2>The big picture</h2><div id="bigp">${b.big}</div></div>` : ""}
       ${wl.length ? `<div class="card"><h2>Your watchlist <span class="m">${esc(wl.join(", "))}</span></h2>${
         wlStories.length ? `<div id="wlf"></div>` : `<div class="m">No news on your watchlist in this brief.</div>`}</div>` : ""}
       <div class="tiles">
@@ -673,12 +673,10 @@
         <ul class="list">${b.failed.map((f) => `<li>${esc(f.name)} <span class="src">(${esc(f.folder)}) - ${esc(f.error)}</span></li>`).join("")}</ul></details>` : ""}`;
     $("#datesel").onchange = (e) => go("#today/" + e.target.value);
     if ($("#wlf")) storyFeed($("#wlf"), wlStories, { page: 6, ph: "Search watchlist news" });
-    clampBlock($("#bigp"), 620, "bigpicture");
     clampBlock($("#topx"), 1100, "explained");
     view.querySelectorAll(".xs .cx").forEach((p) => { p.onclick = () => p.classList.toggle("open"); });
-    clampBlock(view.querySelector(".secs2"), 520, "sectors");
     loadCtx().then(() => {
-      if ($("#wah")) { renderWeekAhead($("#wah")); clampBlock($("#wal"), 430, "weekahead"); }
+      if ($("#wah")) renderWeekAhead($("#wah"));
       view.querySelectorAll(".ctxs").forEach((d) => { d.innerHTML = JSON.parse(d.dataset.cos).map(ctxLine).join(""); });
       // "Stocks in focus": company names open the company page, with the tone of their last concall
       const bp = $("#bigp");
@@ -1287,7 +1285,7 @@
     const cal = (T.calendar || []).filter((e) => e.when >= today && e.when <= aheadS);
     const daysA = [...new Set(items.map((e) => e.when).concat(cal.map((e) => e.when)))].sort();
     const kf = store.get("wakind", "");
-    host.innerHTML = `<div class="card"><h2>Week ahead <span class="m">next two weeks · what can move Indian stocks</span></h2>
+    host.innerHTML = `<div class="card"><h2>Week ahead <span class="m">next two weeks · what can move Indian stocks · scroll sideways for later days</span></h2>
         <div class="filters seg" id="wak">${[["", "All"], ["india", "India policy & data"], ["global", "Global"], ["co", "Companies"]].map(([k, l]) => `<button data-k="${k}" class="${k === kf ? "on" : ""}">${l}</button>`).join("")}</div>
         <div id="wal"></div></div>`;
     const drawAgenda = () => {
@@ -1299,7 +1297,7 @@
         const bigCos = c1.filter((c) => big(c.company)), rest = c1.length - bigCos.length;
         if (!e1.length && !bigCos.length) return "";
         const nice = new Date(d + "T00:00").toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" });
-        return `<div class="wa"><div class="wd">${nice}</div><div>
+        return `<div class="wcol"><div class="wd">${nice}</div><div>
           ${e1.map((e) => `<div class="ag"><span class="kc" style="background:var(${(KIND[e.kind] || KIND.company)[1]})">${(KIND[e.kind] || KIND.company)[0]}</span>
             <b>${esc(e.what)}</b>${e.time ? ` <span class="m">${esc(e.time)}</span>` : ""}${e.usual ? ` <span class="m" title="Usual release day - can shift by a day or two">(usual date)</span>` : ""}
             ${e.link ? ` <a class="m" href="${esc(e.link)}" target="_blank" rel="noopener">source</a>` : ""}
@@ -1307,7 +1305,7 @@
           ${bigCos.length ? `<div class="ag"><span class="kc" style="background:var(--s5)">Results</span> <b>${bigCos.map((c) => `<a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a>`).join(", ")}</b>${rest > 0 ? ` <span class="m">+ ${rest} smaller companies</span>` : ""}</div>` : ""}
         </div></div>`;
       }).join("");
-      $("#wal").innerHTML = rows || `<div class="m">Nothing on the agenda for this filter yet.</div>`;
+      $("#wal").innerHTML = rows ? `<div class="wstrip">${rows}</div>` : `<div class="m">Nothing on the agenda for this filter yet.</div>`;
     };
     drawAgenda();
     $("#wak").onclick = (e) => { const b2 = e.target.closest("button"); if (!b2) return; store.set("wakind", b2.dataset.k);
@@ -1764,7 +1762,7 @@
         <div style="margin-top:10px"><button class="primary" id="wls">Save</button> <span class="m" id="wlm"></span></div></div>
       <div class="card"><h2>Appearance</h2><select id="th"><option value="auto">Match my device</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
       <div class="card"><h2>Today page: show in full</h2><p class="help">Ticked sections always open in full; unticked ones show the first part with "Show all". Tapping "Show all" or "Show less" on the page changes this too.</p>
-        ${[["bigpicture", "The big picture"], ["weekahead", "Week ahead"], ["explained", "Top stories, explained"], ["sectors", "Sector by sector"]]
+        ${[["explained", "Top stories, explained"]]
           .map(([k, l]) => `<label style="display:block;margin:6px 0"><input type="checkbox" data-open="${k}" ${store.get("open-" + k, false) ? "checked" : ""}> ${l}</label>`).join("")}</div>
       <div class="card"><h2>Swiping between tabs</h2><p class="help">On a tablet or phone, swipe sideways anywhere on the page to move to the next or previous tab.</p>
         <select id="swd"><option value="right-next">Swipe right → next tab, swipe left → previous</option><option value="left-next">Swipe left → next tab, swipe right → previous</option></select></div>
