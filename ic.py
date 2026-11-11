@@ -124,7 +124,7 @@ def _real_url(url):
     try:
         from googlenewsdecoder import gnewsdecoder
         r = gnewsdecoder(url, interval=1)
-        if r.get("status") and r.get("decoded_url"):
+        if (r.get("status") or r.get("success")) and r.get("decoded_url"):
             return r["decoded_url"]
         _why(str(r.get("message") or r)[:160])
     except Exception as e:
@@ -144,6 +144,11 @@ def _why(msg):
 def step(stories, pool, limit=15):
     """Picks new initiation stories out of this run, reads them, files the notes. Returns today's new notes."""
     d = load()
+    if d.get("relink") != 1:  # Google News links couldn't be opened before: read those again
+        bad = {x["uid"] for x in d["items"] if x.get("src") == "headline"}
+        d["items"] = [x for x in d["items"] if x["uid"] not in bad]
+        d["seen"], d["backfilled"], d["relink"] = {}, 0, 1
+        save(d)
     todo = [s for s in candidates(stories) if s["key"] not in d["seen"]][:limit]
     if not todo:
         return []
