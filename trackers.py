@@ -125,12 +125,12 @@ def extract(stories, pool, cache):
         cache["extract_v"] = 2
     known = cache.setdefault("extract", {})
     fx = market_fx()
-    if not cache.get("policy_v2"):  # stories read before policy decisions were tracked: read the policy ones again
+    if not cache.get("policy_v3"):  # stories read before policy decisions were tracked: read the policy ones again
         pol = re.compile(r"cabinet|ccea|gst council|subsid|\bmsp\b|\bfrp\b|ministry|duty|\bpli\b|scheme|export curb|ban", re.I)
         for s0 in stories:
-            if pol.search(s0["title"] + " " + s0.get("desc", "")):
+            if pol.search(s0["title"] + " " + s0.get("desc", "")) and not cache["extract"].get(s0["key"]):
                 cache["extract"].pop(s0["key"], None)
-        cache["policy_v2"] = True
+        cache["policy_v3"] = True
     todo = [s for s in stories if s["key"] not in known and CANDIDATE.search(s["title"] + " " + s.get("desc", ""))]
     for s in stories:
         if s["key"] not in known and s not in todo:
@@ -143,7 +143,7 @@ def extract(stories, pool, cache):
         rows = "\n".join(f"[{s['id']}] {s['title']}" + (f" - {s['desc'][:220]}" if s.get("desc") else "")
                          for s in batch)
         try:
-            text, _ = pool.ask(EXTRACT_PROMPT.format(today=today, fx=fx["usd"], eur=fx["eur"]) + rows,
+            text, ai = pool.ask(EXTRACT_PROMPT.format(today=today, fx=fx["usd"], eur=fx["eur"]) + rows,
                                label=f"extracting facts {i + 1}-{i + len(batch)} of {len(todo)}")
         except C.QuotaOver as e:
             say(f"  {e}")
@@ -152,8 +152,11 @@ def extract(stories, pool, cache):
             say(f"  extraction failed: {e}")
             continue
         got = parse_lines(text, {s["id"] for s in batch})
+        lite = "lite" in (getattr(ai, "model", "") or "")
         for s in batch:
-            known[s["key"]] = [g[:1] + g[2:] for g in got if g[1] == s["id"]]
+            lines = [g[:1] + g[2:] for g in got if g[1] == s["id"]]
+            if lines or not lite:  # a Lite model's "nothing here" isn't trusted: those stories get read again later
+                known[s["key"]] = lines
         time.sleep(pool.pause)
 
 
