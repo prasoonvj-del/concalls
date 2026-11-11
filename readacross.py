@@ -69,8 +69,8 @@ def load():
         d = json.loads(FILE.read_text(encoding="utf-8"))
     except Exception:
         d = {}
-    if d.get("v") != 2:  # first pass kept quote marks round the phrases, so nothing matched - start again
-        d = {"v": 2, "done": {}, "items": [], "px": d.get("px", {}), "sym": d.get("sym", {})}
+    if d.get("v") != 3:  # first pass kept quote marks round the phrases, so nothing matched - start again
+        d = {"v": 3, "done": {}, "items": [], "px": d.get("px", {}), "sym": d.get("sym", {})}
     return d
 
 
@@ -170,7 +170,7 @@ def step(lib, pool, limit=12):
             want = {x.strip().lower() for x in p[5].split(";")}
             sig = {"dir": p[2].lower(), "trend": p[3][:200], "who": p[4][:140],
                    "inds": [k for k in I.PARENT if k.lower() in want][:4],
-                   "keywords": [k for k in (x.strip(" \"'“”‘’").lower() for x in p[6].split(",")) if k and k not in GENERIC_KW][:8]}
+                   "keywords": [k for k in (x.strip(" \"'“”‘’[]").lower() for x in re.sub(r"[\[\]]", "", p[6]).split(",")) if k and k not in GENERIC_KW][:8]}
             if not sig["inds"]:
                 continue
             ms = match(lib, sig, c["code"], texts, inds)
