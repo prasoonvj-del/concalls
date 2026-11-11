@@ -1113,6 +1113,11 @@
     const secs = Object.keys(bySec).sort((a, b) => a.localeCompare(b));
     const score = (o) => ((o.Positive || 0) * 3 + (o.Mixed || 0) * 2 + (o.Cautious || 0)) / o.n;
     view.innerHTML = `<h1>Concalls</h1><div class="sub">${plural(cc.calls.length, "summary")} · ${plural(cc.overviews.length, "sector overview")}${nDeck ? ` · <a href="#presentations">${plural(nDeck, "investor deck")} filed recently →</a>` : ""}</div>
+      <div class="card"><h2>Management tone by sector <span class="m">tap a sector · number = companies · bar = tone of each one's latest call</span></h2>
+        <div id="ktl" class="ktl"></div>
+        ${legend(TONES.map((k) => [k, cssv(TC[k])]))}
+        <div class="sgrid">${secs.map((k) => { const o = bySec[k]; return `<button class="stile" data-s="${esc(k)}"><span class="sn">${esc(k)}</span><span class="m">${o.n}</span>
+          <span class="mb wide">${TONES.map((t) => o[t] ? `<i style="width:${(100 * o[t]) / o.n}%;background:var(${TC[t]})" title="${o[t]} ${t}"></i>` : "").join("")}</span></button>`; }).join("")}</div></div>
       <div class="filters"><select id="ks"><option value="">All sectors</option>${secs.slice().sort().map((x) => `<option>${esc(x)}</option>`).join("")}</select>
         <select id="ki" hidden><option value="">All industries</option></select>
         <select id="kq"><option value="">All quarters</option>${quarters.map((q) => `<option>${esc(q)}</option>`).join("")}</select>
@@ -1121,12 +1126,7 @@
         <select id="ke"><option value="">vs market: any</option><option value="addressed">✔ Addressed what the market wanted</option><option value="partly">~ Partly addressed</option><option value="gap">✖ Gap - didn't address it</option></select>
         <input type="search" id="kf" placeholder="Search company or any word (cotton, capex, tariff…)"><button id="cclr" class="clr" hidden>✕ Clear filters</button></div>
       <div id="kov"></div><div class="card" style="padding:4px 8px"><div id="kl"></div></div>
-      <div id="kind"></div>
-      <div class="card"><h2>Management tone by sector <span class="m">tap a sector · number = companies · bar = tone of each one's latest call</span></h2>
-        ${legend(TONES.map((k) => [k, cssv(TC[k])]))}
-        <div class="sgrid">${secs.map((k) => { const o = bySec[k]; return `<button class="stile" data-s="${esc(k)}"><span class="sn">${esc(k)}</span><span class="m">${o.n}</span>
-          <span class="mb wide">${TONES.map((t) => o[t] ? `<i style="width:${(100 * o[t]) / o.n}%;background:var(${TC[t]})" title="${o[t]} ${t}"></i>` : "").join("")}</span></button>`; }).join("")}</div></div>
-      <div id="ktrd"></div>`;
+      <div id="kind"></div>`;
     let shown = 40, seq = 0;
     const draw = async () => {
       const my = ++seq;
@@ -1151,16 +1151,15 @@
       const qk = (q) => { const m = /Q(\d) FY(\d+)/.exec(q || ""); return m ? Number(m[2]) * 10 + Number(m[1]) : 0; };
       const pool = cc.calls.filter((c) => (!st.s || c.sector === st.s) && c.tone);
       const qs = [...new Set(pool.map((c) => c.quarter))].filter((q) => pool.filter((c) => c.quarter === q).length >= 3).sort((a, b) => qk(a) - qk(b));
-      const trend = qs.length >= 2 ? `<div class="card"><h2>Management tone over time <span class="m">${esc(st.s || "all sectors")} · share of calls by quarter</span></h2>${legend([["Positive", cssv("--pos")], ["Cautious or negative", cssv("--neg")]])}<div id="ktr"></div></div>` : "";
-      $("#ktrd").innerHTML = trend;
       $("#kov").innerHTML = (ov ? `<div class="card md"><h2>${esc(st.i || st.s)} - what managements are saying <span class="m">${esc(ov.quarter)} · ${ov.companies.length} companies</span></h2>${marketLine(st.s)}<div id="kovb">${await ovHtml(ov)}</div></div>` : "");
-      if (qs.length >= 2) {
-        const share = (q, f) => { const xs = pool.filter((c) => c.quarter === q); return (100 * xs.filter(f).length) / xs.length; };
-        indexChart($("#ktr"), qs, [
-          { name: "Positive", color: cssv("--pos"), values: qs.map((q) => share(q, (c) => c.tone === "Positive")) },
-          { name: "Cautious or negative", color: cssv("--neg"), values: qs.map((q) => share(q, (c) => c.tone === "Cautious" || c.tone === "Negative")) },
-        ], "%", null, 200);
-      }
+      // tone over time, in one line: each quarter's mix, share positive and the change
+      const share = (q, f) => { const xs = pool.filter((c) => c.quarter === q); return (100 * xs.filter(f).length) / xs.length; };
+      const qs4 = qs.slice(-4);
+      $("#ktl").innerHTML = qs4.length >= 2 ? `<span class="m">Tone over time · ${esc(st.s || "all sectors")}:</span> ${qs4.map((q, i) => {
+        const p = share(q, (c) => c.tone === "Positive"), n = share(q, (c) => c.tone === "Cautious" || c.tone === "Negative");
+        const d = i ? p - share(qs4[i - 1], (c) => c.tone === "Positive") : null;
+        return `<span class="tq" title="${Math.round(p)}% positive, ${Math.round(n)}% cautious or negative"><b>${esc(q)}</b> <span class="mb mini"><i style="width:${p}%;background:var(--pos)"></i><i style="width:${100 - p - n}%;background:var(--neu)"></i><i style="width:${n}%;background:var(--neg)"></i></span> ${Math.round(p)}% positive${d != null && Math.abs(d) >= 1 ? ` <span class="${d > 0 ? "up" : "dn"}">${d > 0 ? "▲" : "▼"}${Math.round(Math.abs(d))}</span>` : ""}</span>`;
+      }).join(" → ")}` : "";
       if (my !== seq) return;
       const calls = cc.calls.filter((c) => (!st.s || c.sector === st.s) && (!st.i || (c.ind || "Other") === st.i) && (!st.q || c.quarter === st.q) && (!st.t || c.tone === st.t) && (!$("#ke").value || (c.ex || {}).v === $("#ke").value) &&
         (!st.f || c.company.toLowerCase().includes(st.f) || (TX[c.k] || "").toLowerCase().includes(st.f))).sort((a, b) => (a.date < b.date ? 1 : -1));
