@@ -1113,11 +1113,6 @@
     const secs = Object.keys(bySec).sort((a, b) => a.localeCompare(b));
     const score = (o) => ((o.Positive || 0) * 3 + (o.Mixed || 0) * 2 + (o.Cautious || 0)) / o.n;
     view.innerHTML = `<h1>Concalls</h1><div class="sub">${plural(cc.calls.length, "summary")} · ${plural(cc.overviews.length, "sector overview")}${nDeck ? ` · <a href="#presentations">${plural(nDeck, "investor deck")} filed recently →</a>` : ""}</div>
-      <div class="card"><h2>Management tone by sector <span class="m">tap a sector · number = companies · bar = tone of each one's latest call</span></h2>
-        ${legend(TONES.map((k) => [k, cssv(TC[k])]))}
-        <div class="sgrid">${secs.map((k) => { const o = bySec[k]; return `<button class="stile" data-s="${esc(k)}"><span class="sn">${esc(k)}</span><span class="m">${o.n}</span>
-          <span class="mb wide">${TONES.map((t) => o[t] ? `<i style="width:${(100 * o[t]) / o.n}%;background:var(${TC[t]})" title="${o[t]} ${t}"></i>` : "").join("")}</span></button>`; }).join("")}</div></div>
-      <div id="kind"></div>
       <div class="filters"><select id="ks"><option value="">All sectors</option>${secs.slice().sort().map((x) => `<option>${esc(x)}</option>`).join("")}</select>
         <select id="ki" hidden><option value="">All industries</option></select>
         <select id="kq"><option value="">All quarters</option>${quarters.map((q) => `<option>${esc(q)}</option>`).join("")}</select>
@@ -1125,7 +1120,13 @@
         <select id="kso"><option value="">Newest first</option><option value="hi">Best management rating</option><option value="lo">Weakest management rating</option></select>
         <select id="ke"><option value="">vs market: any</option><option value="addressed">✔ Addressed what the market wanted</option><option value="partly">~ Partly addressed</option><option value="gap">✖ Gap - didn't address it</option></select>
         <input type="search" id="kf" placeholder="Search company or any word (cotton, capex, tariff…)"><button id="cclr" class="clr" hidden>✕ Clear filters</button></div>
-      <div id="kov"></div><div class="card" style="padding:4px 8px"><div id="kl"></div></div>`;
+      <div id="kov"></div><div class="card" style="padding:4px 8px"><div id="kl"></div></div>
+      <div id="kind"></div>
+      <div class="card"><h2>Management tone by sector <span class="m">tap a sector · number = companies · bar = tone of each one's latest call</span></h2>
+        ${legend(TONES.map((k) => [k, cssv(TC[k])]))}
+        <div class="sgrid">${secs.map((k) => { const o = bySec[k]; return `<button class="stile" data-s="${esc(k)}"><span class="sn">${esc(k)}</span><span class="m">${o.n}</span>
+          <span class="mb wide">${TONES.map((t) => o[t] ? `<i style="width:${(100 * o[t]) / o.n}%;background:var(${TC[t]})" title="${o[t]} ${t}"></i>` : "").join("")}</span></button>`; }).join("")}</div></div>
+      <div id="ktrd"></div>`;
     let shown = 40, seq = 0;
     const draw = async () => {
       const my = ++seq;
@@ -1142,7 +1143,7 @@
       $("#kind").innerHTML = indKeys.length > 1 ? `<div class="card"><h2>${esc(st.s)} by industry <span class="m">tap one - its companies are compared only with each other</span></h2>
         <div class="sgrid">${indKeys.map((k) => { const o = byInd[k]; return `<button class="stile itile ${k === st.i ? "on" : ""}" data-i="${esc(k)}"><span class="sn">${esc(k)}</span><span class="m">${o.n}</span>
           <span class="mb wide">${TONES.map((t) => o[t] ? `<i style="width:${(100 * o[t]) / o.n}%;background:var(${TC[t]})"></i>` : "").join("")}</span></button>`; }).join("")}</div></div>` : "";
-      $("#kind").querySelectorAll(".itile").forEach((b) => b.onclick = () => { st.i = st.i === b.dataset.i ? "" : b.dataset.i; shown = 40; draw(); });
+      $("#kind").querySelectorAll(".itile").forEach((b) => b.onclick = () => { st.i = st.i === b.dataset.i ? "" : b.dataset.i; shown = 40; draw(); scrollTo({ top: 0, behavior: "smooth" }); });
       const TX = st.f ? await ccText() : {};
       if (my !== seq) return;
       view.querySelectorAll(".stile:not(.itile)").forEach((b) => b.classList.toggle("on", b.dataset.s === st.s));
@@ -1151,7 +1152,8 @@
       const pool = cc.calls.filter((c) => (!st.s || c.sector === st.s) && c.tone);
       const qs = [...new Set(pool.map((c) => c.quarter))].filter((q) => pool.filter((c) => c.quarter === q).length >= 3).sort((a, b) => qk(a) - qk(b));
       const trend = qs.length >= 2 ? `<div class="card"><h2>Management tone over time <span class="m">${esc(st.s || "all sectors")} · share of calls by quarter</span></h2>${legend([["Positive", cssv("--pos")], ["Cautious or negative", cssv("--neg")]])}<div id="ktr"></div></div>` : "";
-      $("#kov").innerHTML = trend + (ov ? `<div class="card md"><h2>${esc(st.i || st.s)} - what managements are saying <span class="m">${esc(ov.quarter)} · ${ov.companies.length} companies</span></h2>${marketLine(st.s)}<div id="kovb">${await ovHtml(ov)}</div></div>` : "");
+      $("#ktrd").innerHTML = trend;
+      $("#kov").innerHTML = (ov ? `<div class="card md"><h2>${esc(st.i || st.s)} - what managements are saying <span class="m">${esc(ov.quarter)} · ${ov.companies.length} companies</span></h2>${marketLine(st.s)}<div id="kovb">${await ovHtml(ov)}</div></div>` : "");
       if (qs.length >= 2) {
         const share = (q, f) => { const xs = pool.filter((c) => c.quarter === q); return (100 * xs.filter(f).length) / xs.length; };
         indexChart($("#ktr"), qs, [
@@ -1176,7 +1178,7 @@
       const mb = $("#kmore"); if (mb) mb.onclick = () => { shown += 80; draw(); };
     };
     $("#ks").value = st.s;
-    view.querySelectorAll(".stile:not(.itile)").forEach((b) => b.addEventListener("click", () => { $("#ks").value = $("#ks").value === b.dataset.s ? "" : b.dataset.s; shown = 40; draw(); }));
+    view.querySelectorAll(".stile:not(.itile)").forEach((b) => b.addEventListener("click", () => { $("#ks").value = $("#ks").value === b.dataset.s ? "" : b.dataset.s; shown = 40; draw(); scrollTo({ top: 0, behavior: "smooth" }); }));
     ["ks", "kq", "kt", "ke", "kso"].forEach((id) => { $("#" + id).onchange = () => { shown = 40; draw(); }; });
     $("#ki").onchange = () => { st.i = $("#ki").value; shown = 40; draw(); };
     $("#kf").oninput = () => { shown = 40; draw(); };
