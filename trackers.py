@@ -131,7 +131,6 @@ def extract(stories, pool, cache):
             if pol.search(s0["title"] + " " + s0.get("desc", "")):
                 cache["extract"].pop(s0["key"], None)
         cache["policy_v1"] = True
-        known = set(cache["extract"])
     todo = [s for s in stories if s["key"] not in known and CANDIDATE.search(s["title"] + " " + s.get("desc", ""))]
     for s in stories:
         if s["key"] not in known and s not in todo:
