@@ -646,6 +646,7 @@ def build(conf=None, log_failed=True):
     try:  # brokerages initiating coverage: read the articles, keep a note per initiation
         import ic
         new_ic = ic.step(relevant, pool)
+        ic.backfill(pool)
     except Exception as e:
         say(f"  initiating coverage skipped: {str(e)[:120]}")
 

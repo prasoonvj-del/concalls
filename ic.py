@@ -71,7 +71,7 @@ def article_text(sources):
     import news
     links = [x["link"] for x in sources if x.get("link")]
     links.sort(key=lambda u: "news.google." in u)  # publisher links before Google News redirects
-    for url in links[:3]:
+    for url in [_real_url(u) for u in links[:3]]:
         if "news.google." not in url:
             raw, err = news.fetch(url)
             if raw:
@@ -105,7 +105,24 @@ def _num(v):
 
 
 def candidates(stories):
-    return [s for s in stories if PAT.search(s["title"] + " " + (s.get("desc") or ""))]
+    """Initiation stories about Indian companies (US 'X initiates coverage on Palantir' wires are left out)."""
+    return [s for s in stories if PAT.search(s["title"] + " " + (s.get("desc") or ""))
+            and s.get("category") not in ("Global Markets & Macro", "Not market-relevant")
+            and not re.search(r"\$\s?\d|\bNYSE\b|\bNasdaq\b", s["title"])]
+
+
+def _real_url(url):
+    """Google News hands out redirect links; turn them into the publisher's address."""
+    if "news.google." not in url:
+        return url
+    try:
+        from googlenewsdecoder import gnewsdecoder
+        r = gnewsdecoder(url, interval=1)
+        if r.get("status") and r.get("decoded_url"):
+            return r["decoded_url"]
+    except Exception:
+        pass
+    return url
 
 
 def step(stories, pool, limit=12):
@@ -166,7 +183,7 @@ def step(stories, pool, limit=12):
                "target": target, "upside": upside, "thesis": keep(o.get("thesis"), 4), "numbers": keep(o.get("numbers"), 3),
                "risks": keep(o.get("risks"), 2), "picks": keep(o.get("picks"), 6),
                "title": s["title"][:200], "link": next((x["link"] for x in s["sources"] if "news.google." not in x["link"]),
-                                                     s["sources"][0]["link"] if s["sources"] else ""),
+                                                     _real_url(s["sources"][0]["link"]) if s["sources"] else ""),
                "src": "article" if texts[i] != s["title"] + ". " + (s.get("desc") or "") else "headline"}
         if rec["uid"] in have:
             continue
@@ -193,3 +210,32 @@ def big_lines(new):
             f", target Rs {r['target']:,.0f}" if r.get("target") else "") + (f" ({r['upside']:g}% upside)" if r.get("upside") else "")
         rows.append(head + (" - " + "; ".join(r["thesis"][:2]) if r["thesis"] else ""))
     return ["### New broker coverage (initiations today)\n" + "\n".join("- " + x for x in rows) + "\n"]
+
+
+def backfill(pool, days=14):
+    """Once: pick up the initiations already in the last two weeks of briefs."""
+    d = load()
+    if d.get("backfilled"):
+        return
+    import news
+    stories = []
+    for f in sorted(news.BRIEF_DIR.glob("*.json"))[-days:]:
+        try:
+            b = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        for x in b.get("stories", []):
+            try:
+                when = dt.datetime.fromisoformat(x["when"])
+            except Exception:
+                continue
+            stories.append({"key": re.sub(r"\W+", "", x["title"].lower())[:120], "title": x["title"], "desc": x.get("desc", ""),
+                            "when": when, "sources": x.get("sources", []), "category": x.get("cat", "")})
+    seen = set()
+    stories = [s for s in stories if not (s["key"] in seen or seen.add(s["key"]))]
+    for _ in range(3):
+        if not step(stories, pool):
+            break
+    d = load()
+    d["backfilled"] = True
+    save(d)
