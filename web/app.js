@@ -982,10 +982,15 @@
     else if (res) figs = `<div class="tiles" style="margin:6px 0">${[["Revenue", res.revenue, "Rs cr"], ["Revenue growth", res.rev_yoy, "% YoY"], ["Net profit", res.profit, "Rs cr"], ["Profit growth", res.pat_yoy, "% YoY"]]
       .filter((x) => x[1] != null).map((x) => `<div class="tile"><div class="v" style="font-size:19px">${fmtM(x[1])}</div><div class="k">${x[0]} · ${x[2]}</div></div>`).join("")}</div>`;
     const deckSum = decks.find((d) => d.one || d.html);
-    view.innerHTML = `<div class="cohead"><h1>${esc(key)}</h1>
+    view.innerHTML = `<div class="cohead"><h1>${esc(key)} <button class="star" id="costar" title="Add to / remove from your watchlist">${isWatch(key) ? "★ On watchlist" : "☆ Watch"}</button></h1>
         <div class="sub"><a href="#companies">All companies</a>${sector ? ` · <a href="#sectors/${encodeURIComponent(sector)}">${esc(sector)}</a>` : ""}${call && call.ind ? ` › <a href="#concalls/${encodeURIComponent(sector)}">${esc(call.ind)}</a>` : ""}${call ? ` · <a href="#peers/${encodeURIComponent(call.sector)}">peers</a> · <a href="${esc(call.pdf)}" target="_blank" rel="noopener">transcript</a>` : ""}${decks[0] ? ` · <a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">latest deck</a>` : ""}${(call || decks[0] || dirE) ? ` · <a href="${screenerLink(call ? call.code : decks[0] ? decks[0].code : dirE[0])}" target="_blank" rel="noopener">Screener</a>` : ""}</div>
         ${chips ? `<div class="chips">${chips}</div>` : ""}${figs}</div>
       <div id="cobody"></div>`;
+    $("#costar").onclick = () => {
+      const on = isWatch(key);
+      store.set("watchlist", on ? watchlist().filter((w) => !(sameCo(key, w) || key.toLowerCase().includes(w.toLowerCase()))) : watchlist().concat([key]));
+      $("#costar").textContent = on ? "☆ Watch" : "★ On watchlist";
+    };
     const newsLine = (g) => `<li class="nl"><div class="t" data-story-date="${g.x.date}" data-sid="${g.x.s.id}">${esc(g.x.s.title)}</div>
         <div class="src">${sentChip(g.x.s.sent)} · ${impDots(g.x.s.imp)} · ${when(g.x.s.when)}${g.more.length ? ` · <details class="sim"><summary>+${g.more.length} similar</summary>${g.more.map((m) => `<div class="t" data-story-date="${m.date}" data-sid="${m.s.id}">${esc(m.s.title)}</div>`).join("")}</details>` : ""}</div></li>`;
     const deckBlock = (d, open) => `<details class="sum" ${open ? "open" : ""}><summary><span class="n">${esc((d.title || "Investor presentation").slice(0, 110))}</span><span class="m">${when(d.when)}</span>
@@ -1798,9 +1803,63 @@
         ${(a.top || []).length ? `<h3>Top headlines</h3><ul>${a.top.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}</div></details>`).join("")}</div>` : ""}`;
   }
 
+  /* ------------------------------------------------------------ watchlist: everything new on your companies */
+  async function pageWatchlist() {
+    view.innerHTML = `<div class="loading">Loading…</div>`;
+    await Promise.all([getConcalls(), getPres(), getTrack(), getDir(),
+      window.DESK_CONEWS ? 0 : loadScript("data/conews.js").catch(() => { window.DESK_CONEWS = {}; })]);
+    const wl = watchlist();
+    const lastSeen = store.get("wl-seen", ""), now = new Date().toISOString().slice(0, 10);
+    const dirNames = (window.DESK_DIR || []).map((d) => d.n || d.name || d[1] || "").filter(Boolean);
+    const T = (window.DESK_TRACK || {}).trackers || {}, IC = (window.DESK_TRACK || {}).ic || [];
+    const cc = window.DESK_CONCALLS || { calls: [] }, P = window.DESK_PRES || [];
+    const cut = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10);
+    const match = (n, w) => n && (sameCo(n, w) || String(n).toLowerCase().includes(w.toLowerCase()));
+    const cards = wl.map((w) => {
+      const ev = [];
+      Object.entries(window.DESK_CONEWS).filter(([n]) => match(n, w)).forEach(([, list]) => list.forEach((m) =>
+        ev.push({ d: m.d, k: "News", h: `<span class="t" data-sid="${m.id}" data-story-date="${m.d}">${esc(m.t)}</span> ${sentChip(m.s)}` })));
+      cc.calls.filter((c) => match(c.company, w)).forEach((c) => ev.push({ d: c.date, k: "Concall",
+        h: `<a href="#companies/${encodeURIComponent(c.company)}">${esc(c.quarter)} concall summary</a>${c.tone ? ` <span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}` }));
+      (T.results || []).filter((r) => match(r.company, w)).forEach((r) => ev.push({ d: r.date, k: "Results",
+        h: `${esc(r.quarter || "")}: revenue <span class="${pctCls(r.rev_yoy)}">${pct(r.rev_yoy)}</span>, profit <span class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</span>${r.read ? " · " + esc(r.read) : ""} <a class="m" href="${esc(r.link)}" target="_blank" rel="noopener">source</a>` }));
+      (T.orders || []).filter((r) => match(r.company, w)).forEach((r) => ev.push({ d: r.date, k: "Order",
+        h: `${r.value == null ? "" : "Rs " + fmtM(r.value) + " cr "}${esc(r.client ? "from " + r.client : "")} ${esc(r.what || "")} <a class="m" href="${esc(r.link)}" target="_blank" rel="noopener">source</a>` }));
+      (T.calls || []).filter((r) => match(r.company, w)).forEach((r) => ev.push({ d: r.date, k: "Broker",
+        h: `${esc(r.broker)}: ${esc(r.rating || "")}${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}${r.action ? " (" + esc(r.action) + ")" : ""}${r.why ? ` <span class="m">- ${esc(r.why)}</span>` : ""}` }));
+      IC.filter((r) => match(r.company, w)).forEach((r) => ev.push({ d: r.date, k: r.init ? "Initiation" : "Research", h: icNote(r, false) }));
+      (T.pivots || []).filter((r) => match(r.company, w)).forEach((r) => ev.push({ d: r.date, k: "Pivot", h: pivotLine(r, false) }));
+      P.filter((d) => match(d.company, w)).forEach((d) => ev.push({ d: d.date, k: "Deck",
+        h: `<a href="${esc(fixLink(d.pdf))}" target="_blank" rel="noopener">${esc(d.title || "Investor presentation")}</a>${d.one ? ` <span class="m">- ${esc(d.one)}</span>` : ""}` }));
+      const seen = new Set(), sig = (e) => e.k + "|" + e.h.replace(/<[^>]+>/g, "").replace(/\W+/g, "").toLowerCase().slice(0, 90);
+      // newest first, and the same story carried in two days' briefs only once
+      const list = ev.filter((e) => e.d && e.d >= cut).sort((a, b) => (a.d < b.d ? 1 : -1)).filter((e) => !seen.has(sig(e)) && seen.add(sig(e)));
+      const fresh = list.filter((e) => lastSeen && e.d > lastSeen).length;
+      let name = (cc.calls.find((c) => match(c.company, w)) || {}).company || dirNames.find((n) => match(n, w)) || w;
+      if (name === name.toUpperCase()) name = name.toLowerCase().replace(/\b\w/g, (ch) => ch.toUpperCase());
+      return { w, name, list, fresh, last: list.length ? list[0].d : "" };
+    }).sort((a, b) => (a.last < b.last ? 1 : -1));
+    view.innerHTML = `<h1>★ Watchlist</h1><div class="sub">Everything on your companies from the last 90 days - news, concalls, results, orders, broker calls and research, pivots, decks · saved in this browser${lastSeen ? ` · "new" = since your last visit (${esc(lastSeen)})` : ""}</div>
+      <div class="card"><div class="filters"><input id="wadd" list="wdl" placeholder="Add a company - type a few letters" style="flex:1;min-width:220px"><datalist id="wdl"></datalist>
+        <button class="primary" id="waddb">Add</button></div>
+        <div class="chips" style="margin-top:8px">${wl.map((w) => `<span class="chip">${esc(w)} <a href="javascript:void 0" data-rm="${esc(w)}" title="Remove" style="text-decoration:none">✕</a></span>`).join("") || `<span class="m">Nothing yet - add companies above, or tap ☆ Watch on any company page.</span>`}</div></div>
+      ${cards.map((c) => `<div class="card"><h2><a href="#companies/${encodeURIComponent(c.name)}">${esc(c.name)}</a> <span class="m">${plural(c.list.length, "update")}${c.fresh ? ` · <b class="up">${c.fresh} new</b>` : ""}</span></h2>
+        ${c.list.length ? `<ul class="list wl">${c.list.slice(0, 12).map((e) => `<li><span class="chip">${esc(e.k)}</span>${lastSeen && e.d > lastSeen ? ` <span class="chip ini">new</span>` : ""} <span class="m">${esc(e.d.slice(5))}</span> ${e.h}</li>`).join("")}</ul>
+          ${c.list.length > 12 ? `<div class="m"><a href="#companies/${encodeURIComponent(c.name)}">All ${c.list.length} on the company page →</a></div>` : ""}` : `<div class="m">Nothing in the last 90 days.</div>`}</div>`).join("")}`;
+    const dl = $("#wdl"), inp = $("#wadd");
+    inp.oninput = () => { const q = inp.value.toLowerCase(); dl.innerHTML = q.length < 2 ? "" : dirNames.filter((n) => n.toLowerCase().includes(q)).slice(0, 20).map((n) => `<option value="${esc(n)}">`).join(""); };
+    const add = () => { const v = inp.value.trim(); if (!v) return; if (!watchlist().some((w) => w.toLowerCase() === v.toLowerCase())) store.set("watchlist", watchlist().concat([v])); route(); };
+    $("#waddb").onclick = add; inp.onkeydown = (e) => { if (e.key === "Enter") add(); };
+    view.querySelectorAll("[data-rm]").forEach((a) => { a.onclick = () => { store.set("watchlist", watchlist().filter((w) => w !== a.dataset.rm)); route(); }; });
+    view.querySelectorAll("[data-sid]").forEach((d) => d.addEventListener("click", async () => {
+      currentBrief = await getBrief(d.dataset.storyDate); current = currentBrief.date; openStory(d.dataset.sid);
+    }));
+    store.set("wl-seen", now);
+  }
+
   function pageSettings() {
     view.innerHTML = `<h1>Settings</h1><div class="sub">Saved in this browser only - your watchlist is never published.</div>
-      <div class="card"><h2>Watchlist</h2><p class="help">Companies to pull to the top of every brief. Separate with commas; part of a name is enough.</p>
+      <div class="card"><h2>Watchlist</h2><p class="help">Easiest: tap <b>☆ Watch</b> on any company page, or use the <a href="#watchlist">★ Watchlist</a> tab. Companies here are pulled to the top of every brief. Separate with commas; part of a name is enough.</p>
         <input type="text" id="wl" style="width:100%" placeholder="e.g. Trident, Apollo Hospitals, KPR Mill" value="${esc(watchlist().join(", "))}">
         <div style="margin-top:10px"><button class="primary" id="wls">Save</button> <span class="m" id="wlm"></span></div></div>
       <div class="card"><h2>Appearance</h2><select id="th"><option value="auto">Match my device</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
@@ -1853,6 +1912,7 @@
       else if (tab === "notes") pageNotes();
       else if (tab === "search") await pageSearch(arg ? decodeURIComponent(arg) : "");
       else if (tab === "settings") pageSettings();
+      else if (tab === "watchlist") await pageWatchlist();
       else await pageToday(null);
     } catch (e) {
       view.innerHTML = empty("Something went wrong loading this page: " + esc(e.message));
