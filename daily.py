@@ -233,6 +233,13 @@ def step_concalls(conf):
             expect.step(lib, pool, limit=80)
     except Exception as e:
         say(f"  expectations skipped: {str(e)[:120]}")
+    try:  # read-across: what big companies' calls signal for smaller listed players
+        import readacross
+        if time.time() < deadline:
+            readacross.step(lib, pool, limit=24)
+        readacross.outcomes()
+    except Exception as e:
+        say(f"  read-across skipped: {str(e)[:120]}")
     if time.time() < deadline:
         backfill_metrics(lib, pool, conf["backfill"], deadline)
 
@@ -387,6 +394,11 @@ def main():
                 expect.step(C.load_lib(), C.Pool(), limit=24)
             except Exception as e:
                 say(f"  expectations skipped: {str(e)[:120]}")
+            try:
+                import readacross
+                readacross.step(C.load_lib(), C.Pool(), limit=8)
+            except Exception as e:
+                say(f"  read-across skipped: {str(e)[:120]}")
         try:
             import pivot_sources
             pivot_sources.step(C.Pool(bulk=True), "full" if conf["concalls"] else "news")

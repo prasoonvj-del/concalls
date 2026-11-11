@@ -584,6 +584,14 @@
     + ({ addressed: 2, partly: 1, gap: 0 }[(c.ex || {}).v] ?? 1) + ({ delivered: 2, partly: 1, missed: 0 }[(c.dl || {}).v] ?? 1)
     + ({ raised: 1, cut: -1, initiated: 0.5 }[((c.metrics || {}).guidance)] || 0);
 
+  // read-across: a big company's call signals something for smaller players (matched from their own concalls)
+  const RA = () => ((window.DESK_TRACK || {}).ra || []);
+  const raDir = (r) => `<span class="exc ${r.dir === "tailwind" ? "up" : "dn"}">${r.dir === "tailwind" ? "▲ Tailwind" : "▼ Headwind"}</span>`;
+  const raRet = (m, r) => m.ret == null ? "" : ` <span class="${m.ret - (r.nifty || 0) >= 0 ? "up" : "dn"}" title="since ${esc(r.date)}; Nifty ${r.nifty == null ? "n/a" : (r.nifty > 0 ? "+" : "") + r.nifty + "%"}">${m.ret > 0 ? "+" : ""}${m.ret}%</span>`;
+  const raNote = (r) => `<div class="icn"><div class="t">${raDir(r)} <a href="#companies/${encodeURIComponent(r.src)}">${esc(r.src)}</a> <span class="m">(${esc(r.quarter)} call)</span>: ${esc(r.trend)}</div>
+    <div class="m">Touches: ${esc(r.who)}${r.nifty != null ? ` · Nifty since ${esc(r.date.slice(5))}: ${r.nifty > 0 ? "+" : ""}${r.nifty}%` : ""}</div>
+    <ul>${r.matches.slice(0, 6).map((m) => `<li><a href="#companies/${encodeURIComponent(m.company)}">${esc(m.company)}</a>${raRet(m, r)} <span class="m">- its own ${esc(m.q)} call: "${esc(m.why)}"</span></li>`).join("")}</ul></div>`;
+
   // a brokerage initiation note (read from the article; figures checked against it)
   function icNote(r, withCo) {
     const neg = /sell|reduce|underperform|underweight/i.test(r.rating || ""), pos = /buy|add|accumulate|outperform|overweight/i.test(r.rating || "");
@@ -885,6 +893,8 @@
           <div class="card md"><h2>${esc(sec.cat)} <span class="m">${plural(sec.ids.length, "story")} · ${sec.pos}▲ ${sec.neg}▼ ${sec.neu}•</span></h2>
             ${marketLine(sec.cat)}
             ${sec.one ? `<p><b>${sec.one}</b></p>` : ""}<div id="sw">${sec.html || `<p class="m">Too few stories today for a write-up - see the list below.</p>`}</div></div>
+          ${(() => { const ra = RA().filter((r) => r.sector === sec.cat || r.matches.some((m) => (cc.calls.find((c) => c.code === m.code) || {}).sector === sec.cat)).slice(0, 5);
+            return ra.length ? `<div class="card"><h2>Read-across <span class="m">what big companies' calls signal for ${esc(sec.cat)} · matched from smaller companies' own calls</span></h2>${ra.map(raNote).join("")}</div>` : ""; })()}
           ${secIc.length ? `<div class="card"><h2>Broker research <span class="m">${esc(sec.cat)} · initiations and research notes, last 90 days</span></h2>${secIc.slice(0, 6).map((r) => icNote(r, true)).join("")}</div>` : ""}
           ${ov || calls.length || res.length ? `<div class="card"><h2>What managements said <span class="m">concalls${res.length ? " & results" : ""} in this sector</span></h2>
             ${ov ? `<div class="md"><div class="m">Sector overview · ${esc(ov.quarter)} · ${ov.companies.length} companies</div>${await ovHtml(ov)}</div>` : ""}
@@ -1087,11 +1097,18 @@
     const notesCard = `<div class="card"><h2>My notes <span class="m">${myNotes.length ? plural(myNotes.length, "note") : "only you see these"}</span></h2>
         ${myNotes.map((n2) => noteHtml(n2, false)).join("")}<button id="conote">✎ Add a note on ${esc(key)}</button></div>`;
     const ics = ((window.DESK_TRACK || {}).ic || []).filter((r) => r.company && sameCo(r.company, key));
+    const raIn = RA().filter((r) => r.matches.some((m) => sameCo(m.company, key)));
+    const raOut = RA().filter((r) => sameCo(r.src, key));
+    const raCard = raIn.length || raOut.length ? `<div class="card"><h2>Read-across <span class="m">${raIn.length ? "signals from bigger companies' calls that touch this one" : "what this company's call signals for smaller players"}</span></h2>
+      ${raIn.slice(0, 4).map((r) => { const m = r.matches.find((x) => sameCo(x.company, key));
+        return `<div class="icn"><div class="t">${raDir(r)} <a href="#companies/${encodeURIComponent(r.src)}">${esc(r.src)}</a> <span class="m">(${esc(r.quarter)})</span>: ${esc(r.trend)}</div>
+          <div class="m">This company's own ${esc(m.q)} call: "${esc(m.why)}"${raRet(m, r) ? " · since the signal:" + raRet(m, r) : ""}</div></div>`; }).join("")}
+      ${raOut.slice(0, 3).map(raNote).join("")}</div>` : "";
     const icCard = ics.length ? `<div class="card"><h2>Broker research <span class="m">what their reports argue · read from the news articles</span></h2>${ics.slice(0, 4).map((r) => icNote(r, false)).join("")}</div>` : "";
     const exCard = call && call.ex && call.ex.v ? `<div class="card"><h2>Management vs market <span class="m">${esc(call.quarter)} call · from the analyst Q&A${call.dl && call.dl.v ? " and last quarter's guidance" : ""}</span></h2>
       <div style="margin:4px 0">${exChip(call)} <span class="m">Market wanted:</span> <b>${esc(call.ex.focus || "")}</b></div><div>${esc(call.ex.line || "")}</div>
       ${call.dl && call.dl.v ? `<div style="margin-top:8px">${dlChip(call)} <span class="m">Said vs did:</span> ${esc(call.dl.line || "")}</div>` : ""}</div>` : "";
-    const sideCards = `${notesCard}${exCard}${storyCard}${icCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
+    const sideCards = `${notesCard}${exCard}${storyCard}${raCard}${icCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
       <div class="card"><h2>In the news <span class="m">${plural(items.length, "story")} · ${pz}▲ ${nz}▼</span></h2>
         ${items.length >= 4 ? `<div id="cod"></div>` : ""}
         ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>`;
@@ -1198,7 +1215,7 @@
           ${c.checks.length ? `<span class="badge w" title="Figures not found word-for-word in the transcript">⚠ ${c.checks.length}</span>` : ""}
           ${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}${scoreBadge(c)}</span></div>
           <div class="cp">${esc(c.one || "")} <a href="#companies/${encodeURIComponent(c.company)}">full summary →</a></div>
-          ${scoreWhy(c)}</div>`).join("")
+          ${scoreWhy(c)}${RA().filter((r) => r.src_code === c.code && r.date === c.date).map((r) => `<div class="cx2">${raDir(r)} <span class="m">Read-across:</span> ${esc(r.trend)} <span class="m">→</span> ${r.matches.slice(0, 5).map((m) => `<a href="#companies/${encodeURIComponent(m.company)}">${esc(m.company)}</a>`).join(", ")}</div>`).join("")}</div>`).join("")
         + (calls.length > shown ? `<button id="kmore" style="margin:8px">Show ${Math.min(80, calls.length - shown)} more${calls.length - shown > 80 ? ` (${calls.length - shown} left)` : ""}</button>` : "")
         || empty("Nothing matches.");
       const mb = $("#kmore"); if (mb) mb.onclick = () => { shown += 80; draw(); };
@@ -1914,6 +1931,8 @@
         h: `${esc(r.broker)}: ${esc(r.rating || "")}${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}${r.action ? " (" + esc(r.action) + ")" : ""}${r.why ? ` <span class="m">- ${esc(r.why)}</span>` : ""}` }));
       IC.filter((r) => match(r.company, w)).forEach((r) => ev.push({ d: r.date, k: r.init ? "Initiation" : "Research", h: icNote(r, false) }));
       (T.pivots || []).filter((r) => match(r.company, w)).forEach((r) => ev.push({ d: r.date, k: "Pivot", h: pivotLine(r, false) }));
+      RA().filter((r) => r.matches.some((m) => match(m.company, w))).forEach((r) => ev.push({ d: r.date, k: "Read-across",
+        h: `${raDir(r)} ${esc(r.src)}: ${esc(r.trend)}` }));
       P.filter((d) => match(d.company, w)).forEach((d) => ev.push({ d: d.date, k: "Deck",
         h: `<a href="${esc(fixLink(d.pdf))}" target="_blank" rel="noopener">${esc(d.title || "Investor presentation")}</a>${d.one ? ` <span class="m">- ${esc(d.one)}</span>` : ""}` }));
       const seen = new Set(), sig = (e) => e.k + "|" + e.h.replace(/<[^>]+>/g, "").replace(/\W+/g, "").toLowerCase().slice(0, 90);

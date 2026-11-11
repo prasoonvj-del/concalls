@@ -188,6 +188,9 @@ def build(quiet=False):
         import ic
         cut = (dt.date.today() - dt.timedelta(days=365)).isoformat()
         track["ic"] = [r for r in ic.load().get("items", []) if r["date"] >= cut]
+        import readacross
+        cut2 = (dt.date.today() - dt.timedelta(days=200)).isoformat()
+        track["ra"] = [r for r in readacross.load().get("items", []) if r["date"] >= cut2 and r.get("matches")]
         (data / "trackers.js").write_text(_js("DESK_TRACK", None, track), encoding="utf-8")
     except Exception as e:
         say(f"  (initiating coverage notes not added: {e})")
