@@ -1342,21 +1342,6 @@
   }
 
   /** Week ahead: what can move Indian stocks in the next two weeks (shown on Today). */
-  // government & regulator decisions: decided in the last days, and pending ones the news says are coming
-  function polHtml() {
-    const P = ((window.DESK_TRACK || {}).trackers || {}).policy || [];
-    if (!P.length) return "";
-    const secs = (t) => esc(t || "").replace(/([^,;]+?)\s*\+/g, '<span class="up">$1 ▲</span>').replace(/([^,;]+?)\s*[-−–]\s*(?=,|;|$)/g, '<span class="dn">$1 ▼</span>');
-    const cos = (r) => (r.cos || []).map((c) => `<a href="#companies/${encodeURIComponent(c)}">${esc(c)}</a>`).join(", ");
-    const row = (r) => `<li><span class="chip">${esc(r.body || "Govt")}</span> <b>${esc(r.what)}</b>${r.when_txt ? ` <span class="m">· ${esc(r.when_txt)}</span>` : ""}
-      ${r.sectors ? `<div class="m">Sectors: ${secs(r.sectors)}</div>` : ""}${(r.cos || []).length ? `<div class="m">Companies: ${cos(r)}</div>` : ""}
-      <div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`;
-    const dec = P.filter((r) => r.status === "decided"), pend = P.filter((r) => r.status === "pending");
-    return `<div class="grid g2 pol">
-      <div><h3>Policy pipeline <span class="m">reported as coming up - Cabinet usually meets on Wednesdays</span></h3>${pend.length ? `<ul class="list">${pend.slice(0, 8).map(row).join("")}</ul>` : `<div class="m">Nothing flagged in the news right now.</div>`}</div>
-      <div><h3>Just decided <span class="m">last 10 days - check how the sectors reacted</span></h3>${dec.length ? `<ul class="list">${dec.slice(0, 8).map(row).join("")}</ul>` : `<div class="m">No major decisions in the news.</div>`}</div></div>`;
-  }
-
   function renderWeekAhead(host) {
     const T = (window.DESK_TRACK || {}).trackers || {};
     const today = new Date().toISOString().slice(0, 10);
@@ -1395,12 +1380,34 @@
       if (u) { u.usual = false; u.link = e.link; return; }
       items.push(Object.assign({}, e, { kind: e.kind || guessKind(e.what) }));
     });
+    // government decisions go into the same day columns: decided ones on the day (earlier ones in "Recently decided"),
+    // pending Cabinet items on the next Wednesday (its usual day), other pending ones under "Coming up - no date yet"
+    const wkd = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const iso = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    const nextDayL = (n) => { const d = new Date(today + "T00:00"); for (let i = 0; i < 8; i++) { if (d.getDay() === n) return iso(d); d.setDate(d.getDate() + 1); } return ""; };
+    (T.policy || []).forEach((r) => {
+      const body = /ministry name|^-?$/i.test(r.body || "") ? "Govt" : r.body;
+      const e = { pol: 1, kind: "india-policy", status: r.status, body, what: r.what, sectors: r.sectors, cos: r.cos || [], link: r.link, when_txt: r.when_txt };
+      if (r.status === "decided") { e.when = r.date >= today ? today : "_recent"; items.push(e); return; }
+      if (r.status !== "pending") return;
+      const day = wkd.findIndex((w) => (r.when_txt || "").toLowerCase().includes(w));
+      e.when = day >= 0 ? nextDayL(day) : /cabinet|ccea/i.test(body) ? nextDayL(3) : "_soon";
+      if (e.when && e.when !== "_soon" && e.when > aheadS) e.when = "_soon";
+      items.push(e);
+    });
     const cal = (T.calendar || []).filter((e) => e.when >= today && e.when <= aheadS);
-    const daysA = [...new Set(items.map((e) => e.when).concat(cal.map((e) => e.when)))].sort();
+    const daysA = [...new Set(items.map((e) => e.when).concat(cal.map((e) => e.when)))].sort((a, b) => (a[0] === "_") - (b[0] === "_") || a.localeCompare(b))
+      .sort((a, b) => (a === "_recent" ? -1 : b === "_recent" ? 1 : 0));
+    // "no date yet" right after today
+    const iS = daysA.indexOf("_soon"); if (iS >= 0) { daysA.splice(iS, 1); daysA.splice(daysA[0] === "_recent" ? 2 : 1, 0, "_soon"); }
+    const secs = (t) => esc(t || "").replace(/([^,;]+?)\s*\+/g, '<span class="up">$1 ▲</span>').replace(/([^,;]+?)\s*[-−–]\s*(?=,|;|$)/g, '<span class="dn">$1 ▼</span>');
+    const polLine = (e) => `<div class="ag"><span class="kc" style="background:var(--s1)">${e.status === "decided" ? "Decided" : "Pending"}</span>
+      <span class="chip">${esc(e.body || "Govt")}</span> <b>${esc(e.what)}</b>${e.status === "pending" && e.when_txt ? ` <span class="m">· ${esc(e.when_txt)}</span>` : ""}
+      ${e.link ? ` <a class="m" href="${esc(e.link)}" target="_blank" rel="noopener">source</a>` : ""}
+      ${e.sectors ? `<div class="m">→ ${secs(e.sectors)}</div>` : ""}${e.cos.length ? `<div class="m">${e.cos.map((c) => `<a href="#companies/${encodeURIComponent(c)}">${esc(c)}</a>`).join(", ")}</div>` : ""}</div>`;
     const kf = store.get("wakind", "");
     host.innerHTML = `<div class="card"><h2>Week ahead <span class="m">next two weeks · what can move Indian stocks · scroll sideways for later days</span></h2>
         <div class="filters seg" id="wak">${[["", "All"], ["india", "India policy & data"], ["global", "Global"], ["co", "Companies"]].map(([k, l]) => `<button data-k="${k}" class="${k === kf ? "on" : ""}">${l}</button>`).join("")}</div>
-        ${polHtml()}
         <div id="wal"></div></div>`;
     const drawAgenda = () => {
       const k = store.get("wakind", "");
@@ -1410,9 +1417,10 @@
         const c1 = !k || k === "co" ? cal.filter((e) => e.when === d) : [];
         const bigCos = c1.filter((c) => big(c.company)), rest = c1.length - bigCos.length;
         if (!e1.length && !bigCos.length) return "";
-        const nice = new Date(d + "T00:00").toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" });
-        return `<div class="wcol"><div class="wd">${nice}</div><div>
-          ${e1.map((e) => `<div class="ag"><span class="kc" style="background:var(${(KIND[e.kind] || KIND.company)[1]})">${(KIND[e.kind] || KIND.company)[0]}</span>
+        const nice = d === "_recent" ? "Recently decided <span class='m'>last 10 days</span>" : d === "_soon" ? "Coming up <span class='m'>date not fixed</span>"
+          : esc(new Date(d + "T00:00").toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" }));
+        return `<div class="wcol${d[0] === "_" ? " wpol" : ""}"><div class="wd">${nice}</div><div>
+          ${e1.map((e) => e.pol ? polLine(e) : `<div class="ag"><span class="kc" style="background:var(${(KIND[e.kind] || KIND.company)[1]})">${(KIND[e.kind] || KIND.company)[0]}</span>
             <b>${esc(e.what)}</b>${e.time ? ` <span class="m">${esc(e.time)}</span>` : ""}${e.usual ? ` <span class="m" title="Usual release day - can shift by a day or two">(usual date)</span>` : ""}
             ${e.link ? ` <a class="m" href="${esc(e.link)}" target="_blank" rel="noopener">source</a>` : ""}
             ${e.impact ? `<div class="m">→ ${esc(e.impact)}</div>` : ""}</div>`).join("")}
