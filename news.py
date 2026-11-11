@@ -383,7 +383,7 @@ company's own industry - e.g. a chemicals maker's dividend is Chemicals. "Capita
 brokers, AMCs, wealth managers, exchanges, depositories, registrars, rating agencies and SEBI market rules.
 No other text.
 
-STORIES (id | headline | feed folder):
+STORIES (id | headline -- start of description | feed folder):
 {rows}
 """
 
@@ -408,7 +408,9 @@ def tag(stories, pool):
     lookup = {c.lower(): c for c in CATEGORIES}
     for i in range(0, len(stories), 100):
         batch = stories[i:i + 100]
-        rows = "\n".join(f"{s['id']} | {s['title']} | {s['folder']}" for s in batch)
+        # the description too: "Rs 18 dividend per share ..." only names the company in its first line
+        rows = "\n".join(f"{s['id']} | {s['title']}" + (f" -- {s['desc'][:150]}" if s.get("desc") else "") +
+                         f" | {s['folder']}" for s in batch)
         text, _ = pool.ask(TAG_PROMPT.format(cats="\n".join(CATEGORIES), rows=rows),
                            label=f"sorting stories {i + 1}-{i + len(batch)} of {len(stories)}")
         got = {}
@@ -429,18 +431,19 @@ def tag(stories, pool):
             s["importance"] = int(imp.group(0)) if imp else 2
             sent = (p[4] if p else "").strip()[:1]
             s["sentiment"] = sent if sent in "+-=" and sent else "="
-    own_sector(stories)
 
 
-def own_sector(stories):
+def own_sector(stories, cache=None):
     """A story about one company belongs in that company's own sector (the AI sometimes files a chemicals
     maker's dividend under Capital Markets). Uses the sectors we already hold for listed companies."""
     try:
         from names import Resolver
-        R = Resolver()
+        R = Resolver(cache)
     except Exception as e:
         say(f"  (sector check skipped: {e})")
         return
+    single = [s for s in stories if len(s.get("companies") or []) == 1]
+    R.classify_unknown([s["companies"][0] for s in single if not R.sector(s["companies"][0])][:80])
     moved = 0
     for s in stories:
         if not s.get("companies") or s["category"] not in C.SECTORS + ["Markets & Flows", "IPOs, Deals & Funding"]:
@@ -606,6 +609,11 @@ def build(conf=None, log_failed=True):
         s["id"] = sid
         used.add(sid)
         cache["seen"][s["key"]] = now_utc.isoformat()
+    if not cache.get("retag_cm"):
+        for k, t in list(cache["tags"].items()):
+            if t.get("category") == "Capital Markets & Wealth" or (t.get("category") in C.SECTORS and not t.get("companies")):
+                del cache["tags"][k]
+        cache["retag_cm"] = True
     fresh = [s for s in stories if s["key"] not in cache["tags"]]
     for s in stories:
         if s["key"] in cache["tags"]:
@@ -616,8 +624,7 @@ def build(conf=None, log_failed=True):
         tag(fresh, bulk)
         for s in fresh:
             cache["tags"][s["key"]] = {k: s[k] for k in ("category", "companies", "importance", "sentiment")}
-    fk = {s["key"] for s in fresh}
-    own_sector([s for s in stories if s["key"] not in fk])  # earlier-tagged stories too (cheap, no AI)
+    own_sector(stories, cache)  # a story about one company sits in that company's sector
     save_cache(cache, now_utc)
     relevant = [s for s in stories if s["category"] != "Not market-relevant"]
     by_cat = {}
