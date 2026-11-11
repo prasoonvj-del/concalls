@@ -46,7 +46,9 @@ read such calls for READ-ACROSS: a trend the big company describes that will hel
 recovering -> tractor, two-wheeler and rural lenders; a cement major says prices are falling -> smaller cement makers).
 
 For each company give up to 3 signals, only from what the summary says (no general knowledge), only if the trend
-plausibly matters for OTHER listed companies (skip company-specific events like a plant fire or a CEO change):
+plausibly matters for OTHER listed companies. It must be an INDUSTRY-LEVEL trend in demand, pricing, costs, technology,
+policy or customers - not the company's own results (skip "our loans grew 11%", "our PAT rose") and not company-specific
+events (a plant fire, a CEO change). Fewer, sharper signals are better than many weak ones:
 SIG | <id> | tailwind/headwind | <the trend, with the big company's own number if any, max 20 words> | <who else it touches, in plain words, max 14 words> | <industries it touches: 1-4 names copied EXACTLY from the INDUSTRIES list, separated by ;> | <4-8 SPECIFIC lowercase phrases a smaller exposed company would itself use in its concall (e.g. "genai", "ai deals", "data centre", "titanium dioxide") - never generic words like "raw material", "demand", "costs", "growth", "automation">
 
 No other text.
@@ -64,9 +66,12 @@ SECTIONS = ("Highlights", "Demand & industry commentary", "Guidance & outlook", 
 
 def load():
     try:
-        return json.loads(FILE.read_text(encoding="utf-8"))
+        d = json.loads(FILE.read_text(encoding="utf-8"))
     except Exception:
-        return {"done": {}, "items": [], "px": {}}
+        d = {}
+    if d.get("v") != 2:  # first pass kept quote marks round the phrases, so nothing matched - start again
+        d = {"v": 2, "done": {}, "items": [], "px": d.get("px", {}), "sym": d.get("sym", {})}
+    return d
 
 
 def save(d):
@@ -89,7 +94,10 @@ def is_leader(name):
 
 
 GENERIC_KW = {"raw material", "raw materials", "demand", "costs", "cost", "growth", "automation", "margins", "margin",
-              "input costs", "pricing", "price hike", "capex", "orders", "revenue", "volume", "volumes", "digital", "technology"}
+              "input costs", "pricing", "price hike", "capex", "orders", "revenue", "volume", "volumes", "digital", "technology",
+              "working capital", "pipeline", "advances", "credit growth", "formulations", "manufacturing facilities", "strong growth",
+              "double-digit growth", "transformation", "modernization", "modernisation", "market positioning", "portfolio expansion",
+              "regulatory approval", "unmet demand", "credit cost", "disbursement growth", "festive demand", "rural demand"}
 GENERIC = {"companies", "company", "firms", "players", "smaller", "small", "sector", "sectors", "industry", "industries",
             "other", "listed", "services", "products", "makers", "manufacturers", "suppliers", "related", "&"}
 
@@ -162,7 +170,7 @@ def step(lib, pool, limit=12):
             want = {x.strip().lower() for x in p[5].split(";")}
             sig = {"dir": p[2].lower(), "trend": p[3][:200], "who": p[4][:140],
                    "inds": [k for k in I.PARENT if k.lower() in want][:4],
-                   "keywords": [k.strip() for k in p[6].split(",") if k.strip() and k.strip().lower() not in GENERIC_KW][:8]}
+                   "keywords": [k for k in (x.strip(" \"'“”‘’").lower() for x in p[6].split(",")) if k and k not in GENERIC_KW][:8]}
             if not sig["inds"]:
                 continue
             ms = match(lib, sig, c["code"], texts, inds)
