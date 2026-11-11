@@ -20,15 +20,24 @@ PROMPT = """You are a sharp Indian equity analyst. For each company below you ge
 (analyst Q&A, highlights, guidance, risks, key numbers), sometimes last quarter's guidance, and sometimes the
 risks brokers flagged in research notes.
 
-For each company answer two things, using ONLY the text given:
+Be a SCEPTICAL buy-side analyst. Managements always sound confident; that is not the same as answering the
+question. Judge each company on its own evidence. For each company answer two things, using ONLY the text given:
 1. MARKET vs MANAGEMENT. What the market wanted to hear = the concerns analysts pressed on (questions asked by
    several analysts, or pushed repeatedly) and the risks brokers flag. Did management address those concerns
    CONCRETELY (numbers, timelines, specific actions)?
-   addressed = the main concern answered with specifics; partly = some specifics but the main concern stays
-   vague; gap = management dodged it, stayed vague, or focused on other things (e.g. talked revenue growth
-   when analysts asked about debt).
-2. SAID vs DID (only if LAST QUARTER'S GUIDANCE is given). Did this quarter deliver on it?
-   delivered / partly / missed. If no comparable figure or statement, write na.
+   First name the ONE concern analysts pressed hardest (asked by several analysts, or asked again after a
+   weak answer). Then:
+   addressed = that concern got a concrete answer: a number, a date, or a specific action already taken
+               (e.g. "net debt to fall from Rs 900 cr to Rs 500 cr by March via the land sale").
+   partly    = some specifics, but the hardest-pressed part stays open, or the answer is only directional
+               ("we expect improvement", "we are confident", "will normalise").
+   gap       = dodged, declined to guide, repeated old talking points, or steered to other topics
+               (e.g. talked revenue growth when analysts asked about debt), or the summary notes they dodged.
+   Explanations of WHY something went wrong are not a plan to fix it: that is partly at best.
+2. SAID vs DID (only if LAST QUARTER'S GUIDANCE is given). Compare like with like: a guided figure for THIS
+   quarter or year-to-date against what this quarter's call reports. delivered = met or beat; partly = close
+   but short, or some promises met and others not; missed = clearly short, delayed, or guidance cut.
+   If the guidance was for a later period, or there is no comparable figure, write na - do not guess.
 
 Reply with exactly two lines per company, nothing else:
 EXP | <id> | addressed/partly/gap | <market's main concern, max 10 words> | <how management responded, max 22 words>
@@ -67,7 +76,8 @@ def _broker_risks(name):
 
 def step(lib, pool, limit=40):
     """Grades up to `limit` summaries (latest call per company first). Returns how many were graded."""
-    calls = [c for c in lib["calls"].values() if c.get("summary") and "expect" not in c]
+    calls = [c for c in lib["calls"].values() if c.get("summary") and (c.get("expect") or {}).get("ver", 0) < 2
+             and not (c.get("expect") == {"ver": 2})]
     latest = {c["code"]: c for c in sorted(C.latest_per_company(list(lib["calls"].values())), key=lambda c: c["date"])}
     calls = sorted(calls, key=lambda c: (latest.get(c["code"]) is not c, -int(c["date"].replace("-", ""))))[:limit]
     if not calls:
@@ -87,7 +97,7 @@ def step(lib, pool, limit=40):
                          + (f"\n[LAST QUARTER'S GUIDANCE ({prev.get('quarter', '')})]\n{pg}" if pg else "")
                          + (f"\n[BROKER RESEARCH]\n{br}" if br else ""))
         try:
-            out, ai = pool.ask(PROMPT.format(items="\n\n".join(items)), label="expectations")
+            out, ai = pool.ask(PROMPT.format(items="\n\n".join(items)), label="expectations", max_wait=60)
         except C.AIError as e:
             say(f"  stopped: {str(e)[:100]} - the rest next run")
             break
@@ -101,14 +111,14 @@ def step(lib, pool, limit=40):
                 continue
             v = p[2].lower()
             if p[0].upper() == "EXP" and v in ("addressed", "partly", "gap") and len(p) >= 5:
-                c["expect"] = {"v": v, "focus": p[3][:90], "line": p[4][:200]}
-            elif p[0].upper() == "DEL" and v in ("delivered", "partly", "missed"):
-                c["delivery"] = {"v": v, "line": p[3][:200]}
+                c["expect"] = {"v": v, "focus": p[3][:90], "line": p[4][:200], "ver": 2}
+            elif p[0].upper() == "DEL":
+                c["delivery"] = {"v": v, "line": p[3][:200]} if v in ("delivered", "partly", "missed") else {}
         for c in part:
-            if "expect" in c:
+            if (c.get("expect") or {}).get("ver") == 2 and c["expect"].get("v"):
                 done += 1
             else:
-                c["expect"] = {}  # nothing usable - don't keep asking about it
+                c["expect"] = {"ver": 2}  # nothing usable - don't keep asking about it
         C.save_lib(lib)
     say(f"  graded {done}" + (f" ({ai.model})" if ai else ""))
     return done
