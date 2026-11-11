@@ -380,7 +380,8 @@ For every story reply with ONE line, exactly:  <id>|<category>|<companies>|<impo
 Use "Not market-relevant" for gadget reviews, sports, lifestyle and anything an equity investor wouldn't care about.
 A story about one company (results, dividend, buyback, split, order, plant, management change) goes in THAT
 company's own industry - e.g. a chemicals maker's dividend is Chemicals. "Capital Markets & Wealth" is only for
-brokers, AMCs, wealth managers, exchanges, depositories, registrars, rating agencies and SEBI market rules.
+brokers, AMCs, wealth managers, exchanges, depositories, registrars, rating agencies and SEBI market rules -
+NOT for brokerages' stock picks, target prices or index targets (those are Markets & Flows).
 No other text.
 
 STORIES (id | headline -- start of description | feed folder):
@@ -614,6 +615,11 @@ def build(conf=None, log_failed=True):
             if t.get("category") == "Capital Markets & Wealth" or (t.get("category") in C.SECTORS and not t.get("companies")):
                 del cache["tags"][k]
         cache["retag_cm"] = True
+    if not cache.get("retag_cm2"):  # brokerage stock picks were landing in Capital Markets
+        for k, t in list(cache["tags"].items()):
+            if t.get("category") == "Capital Markets & Wealth":
+                del cache["tags"][k]
+        cache["retag_cm2"] = True
     fresh = [s for s in stories if s["key"] not in cache["tags"]]
     for s in stories:
         if s["key"] in cache["tags"]:
