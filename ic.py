@@ -126,9 +126,19 @@ def _real_url(url):
         r = gnewsdecoder(url, interval=1)
         if r.get("status") and r.get("decoded_url"):
             return r["decoded_url"]
-    except Exception:
-        pass
+        _why(str(r.get("message") or r)[:160])
+    except Exception as e:
+        _why(f"{type(e).__name__}: {str(e)[:140]}")
     return url
+
+
+_said = set()
+
+
+def _why(msg):
+    if "gn" not in _said:
+        _said.add("gn")
+        say(f"    (Google News link not decoded: {msg})")
 
 
 def step(stories, pool, limit=15):
