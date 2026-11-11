@@ -1118,6 +1118,7 @@
         ${legend(TONES.map((k) => [k, cssv(TC[k])]))}
         <div class="sgrid">${secs.map((k) => { const o = bySec[k]; return `<button class="stile" data-s="${esc(k)}"><span class="sn">${esc(k)}</span><span class="m">${o.n}</span>
           <span class="mb wide">${TONES.map((t) => o[t] ? `<i style="width:${(100 * o[t]) / o.n}%;background:var(${TC[t]})" title="${o[t]} ${t}"></i>` : "").join("")}</span></button>`; }).join("")}</div></div>
+      <div id="kind"></div>
       <div class="filters"><select id="ks"><option value="">All sectors</option>${secs.slice().sort().map((x) => `<option>${esc(x)}</option>`).join("")}</select>
         <select id="ki" hidden><option value="">All industries</option></select>
         <select id="kq"><option value="">All quarters</option>${quarters.map((q) => `<option>${esc(q)}</option>`).join("")}</select>
@@ -1125,8 +1126,7 @@
         <select id="kso"><option value="">Newest first</option><option value="hi">Best management rating</option><option value="lo">Weakest management rating</option></select>
         <select id="ke"><option value="">vs market: any</option><option value="addressed">✔ Addressed what the market wanted</option><option value="partly">~ Partly addressed</option><option value="gap">✖ Gap - didn't address it</option></select>
         <input type="search" id="kf" placeholder="Search company or any word (cotton, capex, tariff…)"><button id="cclr" class="clr" hidden>✕ Clear filters</button></div>
-      <div id="kov"></div><div class="card" style="padding:4px 8px"><div id="kl"></div></div>
-      <div id="kind"></div>`;
+      <div id="kov"></div><div class="card" style="padding:4px 8px"><div id="kl"></div></div>`;
     let shown = 40, seq = 0;
     const draw = async () => {
       const my = ++seq;
@@ -1143,7 +1143,7 @@
       $("#kind").innerHTML = indKeys.length > 1 ? `<div class="card"><h2>${esc(st.s)} by industry <span class="m">tap one - its companies are compared only with each other</span></h2>
         <div class="sgrid">${indKeys.map((k) => { const o = byInd[k]; return `<button class="stile itile ${k === st.i ? "on" : ""}" data-i="${esc(k)}"><span class="sn">${esc(k)}</span><span class="m">${o.n}</span>
           <span class="mb wide">${TONES.map((t) => o[t] ? `<i style="width:${(100 * o[t]) / o.n}%;background:var(${TC[t]})"></i>` : "").join("")}</span></button>`; }).join("")}</div></div>` : "";
-      $("#kind").querySelectorAll(".itile").forEach((b) => b.onclick = () => { st.i = st.i === b.dataset.i ? "" : b.dataset.i; shown = 40; draw(); scrollTo({ top: 0, behavior: "smooth" }); });
+      $("#kind").querySelectorAll(".itile").forEach((b) => b.onclick = () => { st.i = st.i === b.dataset.i ? "" : b.dataset.i; shown = 40; draw(); });
       const TX = st.f ? await ccText() : {};
       if (my !== seq) return;
       view.querySelectorAll(".stile:not(.itile)").forEach((b) => b.classList.toggle("on", b.dataset.s === st.s));
@@ -1177,7 +1177,7 @@
       const mb = $("#kmore"); if (mb) mb.onclick = () => { shown += 80; draw(); };
     };
     $("#ks").value = st.s;
-    view.querySelectorAll(".stile:not(.itile)").forEach((b) => b.addEventListener("click", () => { $("#ks").value = $("#ks").value === b.dataset.s ? "" : b.dataset.s; shown = 40; draw(); scrollTo({ top: 0, behavior: "smooth" }); }));
+    view.querySelectorAll(".stile:not(.itile)").forEach((b) => b.addEventListener("click", () => { $("#ks").value = $("#ks").value === b.dataset.s ? "" : b.dataset.s; shown = 40; draw(); }));
     ["ks", "kq", "kt", "ke", "kso"].forEach((id) => { $("#" + id).onchange = () => { shown = 40; draw(); }; });
     $("#ki").onchange = () => { st.i = $("#ki").value; shown = 40; draw(); };
     $("#kf").oninput = () => { shown = 40; draw(); };
