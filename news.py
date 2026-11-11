@@ -378,6 +378,9 @@ For every story reply with ONE line, exactly:  <id>|<category>|<companies>|<impo
   major regulation, large M&A); 3 = useful sector/company news; 1 = minor or routine.
 - sentiment for the companies/sector involved: + (positive), - (negative) or = (neutral/mixed).
 Use "Not market-relevant" for gadget reviews, sports, lifestyle and anything an equity investor wouldn't care about.
+A story about one company (results, dividend, buyback, split, order, plant, management change) goes in THAT
+company's own industry - e.g. a chemicals maker's dividend is Chemicals. "Capital Markets & Wealth" is only for
+brokers, AMCs, wealth managers, exchanges, depositories, registrars, rating agencies and SEBI market rules.
 No other text.
 
 STORIES (id | headline | feed folder):
@@ -426,6 +429,32 @@ def tag(stories, pool):
             s["importance"] = int(imp.group(0)) if imp else 2
             sent = (p[4] if p else "").strip()[:1]
             s["sentiment"] = sent if sent in "+-=" and sent else "="
+    own_sector(stories)
+
+
+def own_sector(stories):
+    """A story about one company belongs in that company's own sector (the AI sometimes files a chemicals
+    maker's dividend under Capital Markets). Uses the sectors we already hold for listed companies."""
+    try:
+        from names import Resolver
+        R = Resolver()
+    except Exception as e:
+        say(f"  (sector check skipped: {e})")
+        return
+    moved = 0
+    for s in stories:
+        if not s.get("companies") or s["category"] not in C.SECTORS + ["Markets & Flows", "IPOs, Deals & Funding"]:
+            continue
+        secs = {R.sector(c) for c in s["companies"]} - {""}
+        if len(secs) != 1:
+            continue
+        sec = secs.pop()
+        if sec in CATEGORIES and sec != s["category"] and \
+                (s["category"] in C.SECTORS or len(s["companies"]) == 1):
+            s["category"] = sec
+            moved += 1
+    if moved:
+        say(f"  {moved} stories moved to their company's own sector")
 
 
 def explain_top(stories, pool, n=12, cache=None):
@@ -587,6 +616,8 @@ def build(conf=None, log_failed=True):
         tag(fresh, bulk)
         for s in fresh:
             cache["tags"][s["key"]] = {k: s[k] for k in ("category", "companies", "importance", "sentiment")}
+    fk = {s["key"] for s in fresh}
+    own_sector([s for s in stories if s["key"] not in fk])  # earlier-tagged stories too (cheap, no AI)
     save_cache(cache, now_utc)
     relevant = [s for s in stories if s["category"] != "Not market-relevant"]
     by_cat = {}

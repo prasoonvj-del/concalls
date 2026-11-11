@@ -1046,7 +1046,7 @@
     const st = { s: sector || "", i: "", q: "", f: "", t: "" };
     const bySec = {};
     cc.calls.forEach((c) => { const o = bySec[c.sector] = bySec[c.sector] || { n: 0 }; o.n++; const k = TONES.includes(c.tone) ? c.tone : "Mixed"; o[k] = (o[k] || 0) + 1; });
-    const secs = Object.keys(bySec).sort((a, b) => bySec[b].n - bySec[a].n);
+    const secs = Object.keys(bySec).sort((a, b) => a.localeCompare(b));
     const score = (o) => ((o.Positive || 0) * 3 + (o.Mixed || 0) * 2 + (o.Cautious || 0)) / o.n;
     view.innerHTML = `<h1>Concalls</h1><div class="sub">${plural(cc.calls.length, "summary")} · ${plural(cc.overviews.length, "sector overview")}${nDeck ? ` · <a href="#presentations">${plural(nDeck, "investor deck")} filed recently →</a>` : ""}</div>
       <div class="card"><h2>Management tone by sector <span class="m">tap a sector · bar = share of calls by tone</span></h2>
@@ -1070,7 +1070,7 @@
       const inSec = st.s ? cc.calls.filter((c) => c.sector === st.s) : [];
       const byInd = {};
       inSec.forEach((c) => { const k = c.ind || "Other"; const o = byInd[k] = byInd[k] || { n: 0 }; o.n++; const t = TONES.includes(c.tone) ? c.tone : "Mixed"; o[t] = (o[t] || 0) + 1; });
-      const indKeys = Object.keys(byInd).sort((a, b) => byInd[b].n - byInd[a].n);
+      const indKeys = Object.keys(byInd).sort((a, b) => (a === "Other") - (b === "Other") || a.localeCompare(b));
       $("#ki").hidden = indKeys.length < 2;
       $("#ki").innerHTML = `<option value="">All industries</option>` + indKeys.map((k) => `<option ${k === st.i ? "selected" : ""}>${esc(k)}</option>`).join("");
       $("#kind").innerHTML = indKeys.length > 1 ? `<div class="card"><h2>${esc(st.s)} by industry <span class="m">tap one - its companies are compared only with each other</span></h2>
