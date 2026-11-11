@@ -642,6 +642,13 @@ def build(conf=None, log_failed=True):
     say(f"  {len(relevant)} market-relevant stories in {len(cats)} sectors/topics "
         f"({len(stories) - len(relevant)} set aside as not market-relevant).")
 
+    new_ic = []
+    try:  # brokerages initiating coverage: read the articles, keep a note per initiation
+        import ic
+        new_ic = ic.step(relevant, pool)
+    except Exception as e:
+        say(f"  initiating coverage skipped: {str(e)[:120]}")
+
     say("\nExplaining the most important stories ...")
     try:
         top = explain_top(relevant, pool, cache=cache)
@@ -687,6 +694,11 @@ def build(conf=None, log_failed=True):
     if sections:
         say("\nWriting the big picture ...")
         lines = [f"### {c}\n{sections[c]}\n" for c in cats if c in sections]
+        try:
+            import ic
+            lines += ic.big_lines(new_ic)
+        except Exception:
+            pass
         try:
             big = ask_fitted(pool, BIG_PROMPT.format(date=label, n=len(relevant), hours=conf["hours"]), lines,
                              label="big picture")

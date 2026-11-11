@@ -251,3 +251,6 @@ a.thchip{font-size:11px;border:1px solid var(--s5);color:var(--text);border-radi
 .sone{font-size:13.5px;line-height:1.5}.sone p{margin:0}
 .bigcard h3{font-size:15px;margin:14px 0 6px}.bigcard h3:first-child{margin-top:0}
 .bigcard>h2:first-child{font-size:19px;color:var(--text);margin:0 0 8px}.bigcard>h2 .m{font-size:13px}
+
+.icn{padding:9px 0;border-top:1px solid var(--line,rgba(127,127,127,.15))}.icn:first-of-type{border-top:0}
+.icn .t{font-size:14.5px}.icn ul{margin:4px 0 4px 18px;padding:0;font-size:13.5px;line-height:1.5}.icn .m{font-size:12.5px;margin:2px 0}

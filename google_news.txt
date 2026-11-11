@@ -62,3 +62,7 @@ Google: Corporate | site:indianexpress.com business companies OR economy OR mark
 Google: Sectors | site:powerline.net.in
 Google: Sectors | site:financialexpress.com auto OR automobile
 Google: Corporate | site:businessworld.in companies OR markets
+Google: Markets | site:ndtvprofit.com initiates coverage OR "initiating coverage"
+Google: Markets | site:etnownews.com initiates coverage
+Google: Markets | site:cnbctv18.com initiates coverage
+Google: Markets | site:moneycontrol.com initiates coverage

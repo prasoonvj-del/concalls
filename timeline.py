@@ -125,6 +125,16 @@ def update():
         n += add(key_for(r["company"], by_name), r["uid"], r["date"], "broker",
                  f"{r['broker']}: {r.get('rating', '')}" + (f", target Rs {r['target']:,.0f}" if r.get("target") else "")
                  + (f" ({r['action']})" if r.get("action") else ""), r.get("link", ""))
+    # initiating coverage notes (from the articles)
+    try:
+        import ic
+        for r in ic.load().get("items", []):
+            if r.get("company"):
+                n += add(key_for(r["company"], by_name), "IC|" + r["uid"], r["date"], "broker",
+                         f"{r['broker']} initiates: {r.get('rating', '')}" + (f", target Rs {r['target']:,.0f}" if r.get("target") else "")
+                         + (" - " + r["thesis"][0] if r.get("thesis") else ""), r.get("link", ""))
+    except Exception:
+        pass
     # the story so far: keep each version's one-liner
     try:
         import backstory

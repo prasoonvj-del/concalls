@@ -172,6 +172,13 @@ def build(quiet=False):
     arch = json.loads(arch_path.read_text(encoding="utf-8")) if arch_path.exists() else []
     (data / "newsarchive.js").write_text(_js("DESK_NEWSARCH", None, arch), encoding="utf-8")
     (data / "trackers.js").write_text(_js("DESK_TRACK", None, track), encoding="utf-8")
+    try:  # initiating coverage notes, last 12 months
+        import ic
+        cut = (dt.date.today() - dt.timedelta(days=365)).isoformat()
+        track["ic"] = [r for r in ic.load().get("items", []) if r["date"] >= cut]
+        (data / "trackers.js").write_text(_js("DESK_TRACK", None, track), encoding="utf-8")
+    except Exception as e:
+        say(f"  (initiating coverage notes not added: {e})")
     tabs = []
     if files:
         tabs = [t["name"] for t in json.loads(files[-1].read_text(encoding="utf-8")).get("tabs", []) if t.get("stories")]
