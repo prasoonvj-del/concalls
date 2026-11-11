@@ -227,6 +227,12 @@ def step_concalls(conf):
             industries.overviews(lib, pool, touched_ind, limit=8)
     except Exception as e:
         say(f"  industry overviews skipped: {str(e)[:120]}")
+    try:  # management vs market expectations, said vs did
+        import expect
+        if time.time() < deadline:
+            expect.step(lib, pool, limit=80)
+    except Exception as e:
+        say(f"  expectations skipped: {str(e)[:120]}")
     if time.time() < deadline:
         backfill_metrics(lib, pool, conf["backfill"], deadline)
 
@@ -376,6 +382,11 @@ def main():
                 industries.classify(C.load_lib(), C.Pool(bulk=True), limit=200, minutes=4)
             except Exception as e:
                 say(f"  industry sorting skipped: {str(e)[:120]}")
+            try:
+                import expect
+                expect.step(C.load_lib(), C.Pool(), limit=24)
+            except Exception as e:
+                say(f"  expectations skipped: {str(e)[:120]}")
         try:
             import pivot_sources
             pivot_sources.step(C.Pool(bulk=True), "full" if conf["concalls"] else "news")

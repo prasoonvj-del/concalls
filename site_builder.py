@@ -55,6 +55,7 @@ def concall_data():
                       "ind": (lib.get("industries") or {}).get(c["code"], ""),
                       "quarter": c["quarter"], "date": c["date"], "tone": c.get("tone", ""),
                       "compared": bool(c.get("compared")), "checks": bad,
+                      "ex": c.get("expect") or {}, "dl": c.get("delivery") or {},
                       "pdf": c.get("pdf_url", C.BSE_PDF[0] + c["pdf"]), "html": html})
     overviews = []
     for o in lib["overviews"].values():
