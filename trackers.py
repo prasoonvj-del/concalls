@@ -43,7 +43,7 @@ ORDER | id | company | order value Rs crore | client or awarding body | what the
 CALL | id | brokerage | company | rating (Buy / Sell / Hold / Add / Reduce / Neutral) | target price Rs | action (upgrade / downgrade / initiate - ONLY if the story says the broker is starting coverage / maintain / raise target / cut target) | the broker's main reason as the story states it (max 18 words; - if not given)
 PIVOT | id | company | type (capacity / order / legal / approval / strategy / M&A / funding / rating / management) | what changed (max 15 words) | why it could re-rate or de-rate the stock (max 12 words) | theme (e.g. EV & two-wheelers, Battery materials & cells, Solar manufacturing, Data centres & AI infrastructure, Defence, Railways, Semiconductors & electronics manufacturing, Specialty chemicals, Pharma CDMO, Power T&D, Nuclear, Green hydrogen, M&A & consolidation, Debt reduction & fund-raising, Legal & regulatory, Capacity expansion (other))
 EVENT | id | date YYYY-MM-DD | type (india-policy / india-data / global / company) | what happens (max 10 words) | who in India it affects (sectors or listed companies, max 10 words)
-POLICY | id | status (pending / decided) | body (Cabinet / CCEA / GST Council / RBI / SEBI / ministry name / state govt) | the decision (max 14 words) | expected when, as the story says (e.g. "Wednesday's Cabinet meeting", "this month", - ) | sectors affected and which way (e.g. "Fertilisers +, Agri inputs +") | listed companies named or obviously most exposed (max 6, comma separated; - if none)
+POLICY | id | status (pending / decided) | body (e.g. Cabinet, CCEA, GST Council, RBI, SEBI, Finance Ministry, Bihar govt) | the decision (max 14 words) | expected when, as the story says (e.g. "Wednesday's Cabinet meeting", "this month", - ) | sectors affected and which way (e.g. "Fertilisers +, Agri inputs +") | listed companies named or obviously most exposed (max 6, comma separated; - if none)
 
 Rules:
 - Only facts the story states. Never guess numbers. A company name must be the listed company.
@@ -125,12 +125,12 @@ def extract(stories, pool, cache):
         cache["extract_v"] = 2
     known = cache.setdefault("extract", {})
     fx = market_fx()
-    if not cache.get("policy_v1"):  # stories read before policy decisions were tracked: read the policy ones again
+    if not cache.get("policy_v2"):  # stories read before policy decisions were tracked: read the policy ones again
         pol = re.compile(r"cabinet|ccea|gst council|subsid|\bmsp\b|\bfrp\b|ministry|duty|\bpli\b|scheme|export curb|ban", re.I)
         for s0 in stories:
             if pol.search(s0["title"] + " " + s0.get("desc", "")):
                 cache["extract"].pop(s0["key"], None)
-        cache["policy_v1"] = True
+        cache["policy_v2"] = True
     todo = [s for s in stories if s["key"] not in known and CANDIDATE.search(s["title"] + " " + s.get("desc", ""))]
     for s in stories:
         if s["key"] not in known and s not in todo:
