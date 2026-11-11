@@ -1434,10 +1434,14 @@
       putNotes(getNotes().filter((x) => x.id !== b.dataset.del)); route();
     });
   }
+  // Watchlist, Search and Notes share one tab ("My desk"); a small switch on top moves between them
+  const deskBar = (on) => `<div class="filters seg deskbar">${[["watchlist", "★ Watchlist"], ["search", "🔍 Search"], ["notes", "✎ Notes"]]
+    .map(([k, l]) => `<button class="${k === on ? "on" : ""}" data-go="#${k}">${l}</button>`).join("")}</div>`;
+
   function pageNotes() {
     const all = getNotes();
     const cos = [...new Set(all.map((n) => n.company).filter(Boolean))].sort();
-    view.innerHTML = `<h1>Notes</h1><div class="sub">${plural(all.length, "note")} · saved in this browser - use Export / Import to move them between your tablet and laptop</div>
+    view.innerHTML = `${deskBar("notes")}<h1>Notes</h1><div class="sub">${plural(all.length, "note")} · saved in this browser - use Export / Import to move them between your tablet and laptop</div>
       <div class="filters"><input type="search" id="nq" placeholder="Search your notes">
         <select id="nc"><option value="">All companies</option>${cos.map((c) => `<option>${esc(c)}</option>`).join("")}</select>
         <button class="primary" id="nnew">✎ New note</button> <button id="nexp">Export</button> <button id="nmd">Copy as text</button>
@@ -1493,7 +1497,7 @@
 
   async function pageSearch(q0) {
     q0 = q0 || store.get("lastq", "");
-    view.innerHTML = `<h1>Search</h1><div class="sub">Everything on file: concall summaries, investor decks, pivots, results, orders, broker calls, company timelines and recent news</div>
+    view.innerHTML = `${deskBar("search")}<h1>Search</h1><div class="sub">Everything on file: concall summaries, investor decks, pivots, results, orders, broker calls, company timelines and recent news</div>
       <div class="filters"><input type="search" id="sq" placeholder="e.g. LFP, data centre, transformer capacity, GLP-1, Bloom Energy" value="${esc(q0)}" style="flex:1"></div>
       <div id="sres"></div>`;
     const run = async () => {
@@ -1839,7 +1843,7 @@
       if (name === name.toUpperCase()) name = name.toLowerCase().replace(/\b\w/g, (ch) => ch.toUpperCase());
       return { w, name, list, fresh, last: list.length ? list[0].d : "" };
     }).sort((a, b) => (a.last < b.last ? 1 : -1));
-    view.innerHTML = `<h1>★ Watchlist</h1><div class="sub">Everything on your companies from the last 90 days - news, concalls, results, orders, broker calls and research, pivots, decks · saved in this browser${lastSeen ? ` · "new" = since your last visit (${esc(lastSeen)})` : ""}</div>
+    view.innerHTML = `${deskBar("watchlist")}<h1>★ Watchlist</h1><div class="sub">Everything on your companies from the last 90 days - news, concalls, results, orders, broker calls and research, pivots, decks · saved in this browser${lastSeen ? ` · "new" = since your last visit (${esc(lastSeen)})` : ""}</div>
       <div class="card"><div class="filters"><input id="wadd" list="wdl" placeholder="Add a company - type a few letters" style="flex:1;min-width:220px"><datalist id="wdl"></datalist>
         <button class="primary" id="waddb">Add</button></div>
         <div class="chips" style="margin-top:8px">${wl.map((w) => `<span class="chip">${esc(w)} <a href="javascript:void 0" data-rm="${esc(w)}" title="Remove" style="text-decoration:none">✕</a></span>`).join("") || `<span class="m">Nothing yet - add companies above, or tap ☆ Watch on any company page.</span>`}</div></div>
@@ -1859,7 +1863,7 @@
 
   function pageSettings() {
     view.innerHTML = `<h1>Settings</h1><div class="sub">Saved in this browser only - your watchlist is never published.</div>
-      <div class="card"><h2>Watchlist</h2><p class="help">Easiest: tap <b>☆ Watch</b> on any company page, or use the <a href="#watchlist">★ Watchlist</a> tab. Companies here are pulled to the top of every brief. Separate with commas; part of a name is enough.</p>
+      <div class="card"><h2>Watchlist</h2><p class="help">Easiest: tap <b>☆ Watch</b> on any company page, or use <a href="#watchlist">★ My desk → Watchlist</a>. Companies here are pulled to the top of every brief. Separate with commas; part of a name is enough.</p>
         <input type="text" id="wl" style="width:100%" placeholder="e.g. Trident, Apollo Hospitals, KPR Mill" value="${esc(watchlist().join(", "))}">
         <div style="margin-top:10px"><button class="primary" id="wls">Save</button> <span class="m" id="wlm"></span></div></div>
       <div class="card"><h2>Appearance</h2><select id="th"><option value="auto">Match my device</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
@@ -1894,7 +1898,8 @@
     const h = decodeURIComponent(location.hash.slice(1)) || "today";
     const [tab, ...rest] = h.split("/");
     const arg = rest.join("/");
-    const key = tab === "tab" ? "tab-" + arg : tab === "presentations" ? "concalls" : tab;
+    const key = tab === "tab" ? "tab-" + arg : tab === "presentations" ? "concalls" : ["watchlist", "search", "notes"].includes(tab) ? "mydesk" : tab;
+    if (["watchlist", "search", "notes"].includes(tab)) store.set("mydesk", tab);
     document.querySelectorAll("#tabs a").forEach((a) => a.classList.toggle("on", a.dataset.tab === key));
     const on = document.querySelector("#tabs a.on");
     if (on) on.scrollIntoView({ block: "nearest", inline: "center" });
@@ -1913,6 +1918,7 @@
       else if (tab === "search") await pageSearch(arg ? decodeURIComponent(arg) : "");
       else if (tab === "settings") pageSettings();
       else if (tab === "watchlist") await pageWatchlist();
+      else if (tab === "mydesk") { location.replace("#" + store.get("mydesk", "watchlist")); return; }
       else await pageToday(null);
     } catch (e) {
       view.innerHTML = empty("Something went wrong loading this page: " + esc(e.message));
