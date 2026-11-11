@@ -1532,12 +1532,12 @@
 
     view.innerHTML = `<h1>Markets</h1>
       <div class="sub">Indices, commodities, the rupee and yields${D.markets && D.markets.updated ? " · prices as of " + esc(D.markets.updated.replace("T", " ")) : ""} · tap any tile to add it to the comparison</div>
+      <div id="revw"></div>
       <div class="filters seg" id="per">${Object.keys(PER).map((k) => `<button class="${k === per ? "on" : ""}" data-p="${k}">${k}</button>`).join("")}</div>
       ${M.length ? `<div class="card"><h2>Compare <span class="m">rebased to 100 at the start of the period</span></h2><div id="mleg"></div><div id="mc"></div></div>
       <div class="card"><h2>Indian sector indices <span class="m">change over ${per} · tap to see that sector's peers</span></h2><div id="ms"></div></div>
       ${groups.filter((g) => g !== "India indices").map((g) => `<div class="card"><h2>${esc(g)}</h2><div class="tiles mk" data-g="${esc(g)}"></div></div>`).join("")}
-      <div class="card"><h2>India indices</h2><div class="tiles mk" data-g="India indices"></div></div>` : `<div class="card m">Prices haven't been collected yet - they arrive with the next update.</div>`}
-      <div id="revw"></div>`;
+      <div class="card"><h2>India indices</h2><div class="tiles mk" data-g="India indices"></div></div>` : `<div class="card m">Prices haven't been collected yet - they arrive with the next update.</div>`}`;
 
     $("#per").onclick = (e) => { const b = e.target.closest("button"); if (b) { store.set("mkper", b.dataset.p); route(); } };
     renderReviews($("#revw"), D.weekly || {});
