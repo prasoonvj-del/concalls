@@ -22,10 +22,26 @@
       document.head.appendChild(s);
     });
   }
+  // links are stored short ("g:<token>" for Google News); expand once after loading
+  const expandLinks = (stories) => (stories || []).forEach((st) => (st.sources || []).forEach((x) => {
+    if (x.link && x.link.startsWith("g:")) x.link = "https://news.google.com/rss/articles/" + x.link.slice(2) + "?oc=5";
+  }));
   async function getBrief(date) {
     window.DESK_BRIEFS = window.DESK_BRIEFS || {};
     if (!window.DESK_BRIEFS[date]) await loadScript("data/brief-" + date + ".js");
-    return window.DESK_BRIEFS[date];
+    const b = window.DESK_BRIEFS[date];
+    if (b && !b._x) { expandLinks(b.stories); b._x = 1; }
+    return b;
+  }
+  // Tech / Auto / Sports stories live in their own file, fetched the first time a tab (or one of its stories) is opened
+  async function withTabs(b) {
+    if (!b || b.tabs) return b;
+    window.DESK_TABS = window.DESK_TABS || {};
+    const date = b.date;
+    if (!window.DESK_TABS[date]) { try { await loadScript("data/tabs-" + date + ".js"); } catch (e) { window.DESK_TABS[date] = []; } }
+    b.tabs = window.DESK_TABS[date] || [];
+    b.tabs.forEach((t) => expandLinks(t.stories));
+    return b;
   }
   const CCV = "";
   const BUILD = "";
@@ -584,6 +600,7 @@
   async function openStory(id) {
     await loadCtx();
     const b = currentBrief;
+    if (b && !b.stories.some((x) => x.id === Number(id))) await withTabs(b);
     const all = b ? b.stories.concat(...(b.tabs || []).map((t) => t.stories)) : [];
     const s = all.find((x) => x.id === Number(id));
     if (!s) return;
@@ -1061,12 +1078,14 @@
     const TONES = ["Positive", "Mixed", "Cautious", "Negative"], TC = { Positive: "--pos", Mixed: "--neu", Cautious: "--caution", Negative: "--neg" };
     const nDeck = (window.DESK_PRES || []).length;
     const st = { s: sector || "", i: "", q: "", f: "", t: "" };
+    // tiles count companies, with each company's LATEST call (two quarters of one company shouldn't count twice)
+    const latestPer = (arr) => { const m = new Map(); arr.forEach((c) => { const o = m.get(c.code); if (!o || o.date < c.date) m.set(c.code, c); }); return [...m.values()]; };
     const bySec = {};
-    cc.calls.forEach((c) => { const o = bySec[c.sector] = bySec[c.sector] || { n: 0 }; o.n++; const k = TONES.includes(c.tone) ? c.tone : "Mixed"; o[k] = (o[k] || 0) + 1; });
+    latestPer(cc.calls).forEach((c) => { const o = bySec[c.sector] = bySec[c.sector] || { n: 0 }; o.n++; const k = TONES.includes(c.tone) ? c.tone : "Mixed"; o[k] = (o[k] || 0) + 1; });
     const secs = Object.keys(bySec).sort((a, b) => a.localeCompare(b));
     const score = (o) => ((o.Positive || 0) * 3 + (o.Mixed || 0) * 2 + (o.Cautious || 0)) / o.n;
     view.innerHTML = `<h1>Concalls</h1><div class="sub">${plural(cc.calls.length, "summary")} · ${plural(cc.overviews.length, "sector overview")}${nDeck ? ` · <a href="#presentations">${plural(nDeck, "investor deck")} filed recently →</a>` : ""}</div>
-      <div class="card"><h2>Management tone by sector <span class="m">tap a sector · bar = share of calls by tone</span></h2>
+      <div class="card"><h2>Management tone by sector <span class="m">tap a sector · number = companies · bar = tone of each one's latest call</span></h2>
         ${legend(TONES.map((k) => [k, cssv(TC[k])]))}
         <div class="sgrid">${secs.map((k) => { const o = bySec[k]; return `<button class="stile" data-s="${esc(k)}"><span class="sn">${esc(k)}</span><span class="m">${o.n}</span>
           <span class="mb wide">${TONES.map((t) => o[t] ? `<i style="width:${(100 * o[t]) / o.n}%;background:var(${TC[t]})" title="${o[t]} ${t}"></i>` : "").join("")}</span></button>`; }).join("")}</div></div>
@@ -1084,7 +1103,7 @@
       Object.assign(st, { s: $("#ks").value, q: $("#kq").value, t: $("#kt").value, f: $("#kf").value.toLowerCase() });
       $("#cclr").hidden = !(st.s || st.i || st.q || st.t || st.f);
       // industries inside the chosen sector: tone per industry, tap to narrow down
-      const inSec = st.s ? cc.calls.filter((c) => c.sector === st.s) : [];
+      const inSec = st.s ? latestPer(cc.calls.filter((c) => c.sector === st.s && (!st.q || c.quarter === st.q))) : [];
       const byInd = {};
       inSec.forEach((c) => { const k = c.ind || "Other"; const o = byInd[k] = byInd[k] || { n: 0 }; o.n++; const t = TONES.includes(c.tone) ? c.tone : "Mixed"; o[t] = (o[t] || 0) + 1; });
       const indKeys = Object.keys(byInd).sort((a, b) => (a === "Other") - (b === "Other") || a.localeCompare(b));
@@ -1248,7 +1267,7 @@
 
   async function pageTab(name) {
     if (!IDX.briefs.length) { view.innerHTML = empty("Nothing yet."); return; }
-    const b = currentBrief && currentBrief.date === (current || latest()) ? currentBrief : await getBrief(current || latest());
+    const b = await withTabs(currentBrief && currentBrief.date === (current || latest()) ? currentBrief : await getBrief(current || latest()));
     currentBrief = b; current = b.date;
     const t = (b.tabs || []).find((x) => x.name === name);
     if (!t || !t.stories.length) { view.innerHTML = empty(`No ${esc(name)} stories in this edition.`); return; }

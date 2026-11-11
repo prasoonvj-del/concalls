@@ -79,7 +79,18 @@ def build(quiet=False):
         b = json.loads(f.read_text(encoding="utf-8"))
         for st in b["stories"] + [x for t in b.get("tabs", []) for x in t.get("stories", [])]:
             st["sources"] = st.get("sources", [])[:6]  # the count stays in "outlets"; keeps the page light
+        # Google News links: store just the article token (the site rebuilds the address) - about a third of the file
+        for st in b["stories"] + [x for t in b.get("tabs", []) for x in t.get("stories", [])]:
+            for src in st["sources"]:
+                m = re.match(r"https://news\.google\.com/rss/articles/([^?]+)(\?oc=5)?$", src.get("link", ""))
+                if m:
+                    src["link"] = "g:" + m.group(1)
+        # Tech / Auto / Sports go in their own file, loaded only when one of those tabs is opened
+        tabs = b.pop("tabs", [])
+        b["tabnames"] = [t["name"] for t in tabs]
         (data / f"brief-{b['date']}.js").write_text(_js("DESK_BRIEFS", b["date"], b), encoding="utf-8")
+        (data / f"tabs-{b['date']}.js").write_text(_js("DESK_TABS", b["date"], tabs), encoding="utf-8")
+        b["tabs"] = tabs
         comp = {}
         for s in b["stories"]:
             for n in s["companies"]:
@@ -194,6 +205,7 @@ def build(quiet=False):
     (PUBLIC / "index.html").write_text(page, encoding="utf-8")
     js = (PUBLIC / "app.js").read_text(encoding="utf-8")
     js = js.replace('"data/brief-" + date + ".js"', '"data/brief-" + date + ".js?v=' + stamp + '"')
+    js = js.replace('"data/tabs-" + date + ".js"', '"data/tabs-" + date + ".js?v=' + stamp + '"')
     js = js.replace('loadScript("data/concalls.js")', 'loadScript("data/concalls.js?v=' + stamp + '")')
     js = js.replace('const CCV = ""', 'const CCV = "?v=' + stamp + '"')
     js = js.replace('const BUILD = ""', 'const BUILD = "' + stamp + '"')
