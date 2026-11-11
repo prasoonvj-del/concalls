@@ -58,7 +58,34 @@
     if (window.DESK_OVH[o.k] == null) { try { await loadScript("data/cc/" + o.k + ".js" + CCV); } catch (e) { staleCheck(true); return ""; } }
     const x = window.DESK_OVH[o.k];
     if (!x || typeof x !== "object" || x.c !== o.sector + (o.ind || "")) { staleCheck(true); return ""; }
-    return x.h || "";
+    return rateTables(x.h || "", o.sector);
+  }
+  // overview tables listing companies with their tone (e.g. "Bullish vs cautious") get two more columns:
+  // the management rating and the logic behind it, from each company's latest graded call
+  function rateTables(html, sector) {
+    if (!/<table/i.test(html)) return html;
+    const calls = ((window.DESK_CONCALLS || {}).calls || []).filter((c) => c.sector === sector);
+    const latest = new Map();
+    calls.forEach((c) => { const o = latest.get(c.code); if (!o || o.date < c.date) latest.set(c.code, c); });
+    const pick = (name) => [...latest.values()].find((c) => sameCo(c.company, name));
+    const box = document.createElement("div"); box.innerHTML = html;
+    box.querySelectorAll("table").forEach((t) => {
+      const head = t.querySelector("tr");
+      if (!head) return;
+      const hs = [...head.children].map((h) => h.textContent.trim().toLowerCase());
+      if (hs[0] !== "company" || !hs.some((h) => h.includes("tone") || h.includes("view") || h.includes("stance"))) return;
+      head.insertAdjacentHTML("beforeend", "<th>Mgmt rating</th><th>Why this rating</th>");
+      [...t.querySelectorAll("tr")].slice(1).forEach((tr) => {
+        const name = (tr.children[0] || {}).textContent || "";
+        const c = pick(name.replace(/\*/g, "").trim());
+        if (!c || !(c.ex || {}).v) { tr.insertAdjacentHTML("beforeend", `<td class="m">${c ? "grading…" : "–"}</td><td></td>`); return; }
+        tr.insertAdjacentHTML("beforeend", `<td style="white-space:nowrap">${scoreBadge(c)}</td>
+          <td class="why2"><span class="m">${esc(scoreParts(c).map(([k, v, m]) => `${k} ${v}/${m}`).join(" + "))}</span><br>
+            ${exChip(c)} <span class="m">Market wanted:</span> ${esc(c.ex.focus || "")} <span class="m">→</span> ${esc(c.ex.line || "")}
+            ${c.dl && c.dl.v ? `<br>${dlChip(c)} ${esc(c.dl.line || "")}` : ""}</td>`);
+      });
+    });
+    return box.innerHTML;
   }
   // the site is rebuilt several times a day; a page left open (tablet!) reloads itself when it is out of date
   let staleBusy = false;

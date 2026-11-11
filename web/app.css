@@ -266,3 +266,4 @@ a.thchip{font-size:11px;border:1px solid var(--s5);color:var(--text);border-radi
 .cx2 b{font-size:12.5px}.cx2>div{margin-top:2px}
 details.why{min-width:170px}details.why summary{cursor:pointer;list-style:none;white-space:nowrap}details.why[open]{min-width:320px}details.why .cx2{font-size:12.5px;white-space:normal}
 .ktl{margin:2px 0 10px;font-size:13px;line-height:2}.ktl .tq{white-space:nowrap}.mb.mini{display:inline-flex;width:60px;height:7px;vertical-align:middle}
+.why2{font-size:12.5px;line-height:1.45;min-width:260px}
