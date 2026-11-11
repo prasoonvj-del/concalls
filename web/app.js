@@ -963,7 +963,7 @@
     const trackerList = () => `${tk[3].length ? `<div class="pvg" style="margin-bottom:6px">${tk[3].map((r) => pivotLine(r, false)).join("")}</div>` : ""}<ul class="list">
         ${tk[0].map((r) => `<li><div class="t">Results ${esc(r.quarter)}: revenue ${r.revenue == null ? "–" : "Rs " + fmtM(r.revenue) + " cr"} (<span class="${pctCls(r.rev_yoy)}">${pct(r.rev_yoy)}</span>), net profit ${r.profit == null ? "–" : "Rs " + fmtM(r.profit) + " cr"} (<span class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</span>)${r.read ? " · " + esc(r.read) : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
         ${tk[1].map((r) => `<li><div class="t">Order: ${r.value == null ? "" : "Rs " + fmtM(r.value) + " cr "}${esc(r.client ? "from " + r.client : "")} ${esc(r.what)}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
-        ${tk[2].map((r) => `<li><div class="t">${esc(r.broker)}: ${esc(r.rating)}${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}${r.action ? " (" + esc(r.action) + ")" : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}</ul>`;
+        ${tk[2].map((r) => `<li><div class="t">${esc(r.broker)}: ${esc(r.rating)}${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}${r.action ? " (" + esc(r.action) + ")" : ""}</div>${r.why ? `<div class="m">${esc(r.why)}</div>` : ""}<div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}</ul>`;
     const body = $("#cobody");
     const callHtml = call ? await ccHtml(call) : "";
     const tlist = await getTimeline([call && call.code, ...decks.map((d) => d.code)].filter(Boolean), key);
@@ -1674,12 +1674,16 @@
         rows.forEach((r) => { const k = r.sector || "Other"; const o = bySec[k] = bySec[k] || { pos: 0, neg: 0, neu: 0 }; if (negA(r)) o.neg++; else if (posA(r)) o.pos++; else o.neu++; });
         const cnt = {};
         rows.forEach((r) => { cnt[r.company] = (cnt[r.company] || 0) + 1; });
-        body.innerHTML = `<div class="card"><h2>Brokers' tilt by sector <span class="m">bullish calls → · ← bearish calls</span></h2><div id="kc1"></div></div>
+        const init = rows.filter((r) => /initiat/.test(r.action || "")).sort((a, b) => (a.date < b.date ? 1 : -1));
+        body.innerHTML = `${init.length ? `<div class="card"><h2>Initiating coverage <span class="m">new research coverage by brokerages · ${init.length} in the period</span></h2><ul class="list">
+          ${init.slice(0, st.lim > 25 ? 1000 : 12).map((r) => `<li><div class="t"><a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a> - ${esc(r.broker)}: <b class="${negA(r) ? "dn" : posA(r) ? "up" : ""}">${esc(r.rating || "rating n/a")}</b>${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}</div>
+            ${r.why ? `<div class="m">${esc(r.why)}</div>` : ""}<div class="src">${esc(r.sector || "")} · ${esc(r.date)} ${src(r)}</div></li>`).join("")}</ul></div>` : ""}
+          <div class="card"><h2>Brokers' tilt by sector <span class="m">bullish calls → · ← bearish calls</span></h2><div id="kc1"></div></div>
           <div class="card"><h2>Most-discussed stocks <span class="m">number of broker calls</span></h2><div id="kc2"></div></div>
           <div class="card"><h2>${plural(rows.length, "call")}</h2><div class="tw"><table class="tt"><tr><th>Company</th><th>Broker</th><th>Rating</th><th>Target Rs</th><th>Action</th><th>Date</th></tr>
           ${rows.slice(0, lim).map((r) => `<tr><td>${isWatch(r.company) ? "★ " : ""}<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a><div class="m">${esc(r.sector || "")}</div></td>
             <td>${esc(r.broker)}</td><td class="${negA(r) ? "dn" : posA(r) ? "up" : ""}">${esc(r.rating)}</td><td>${r.target == null ? "–" : fmt(Math.round(r.target))}</td>
-            <td>${esc(r.action)}</td><td>${esc(r.date.slice(5))} ${src(r)}</td></tr>`).join("")}</table>${full.length > lim ? `<button class="kmore">Show all ${full.length}</button>` : ""}</div></div>`;
+            <td>${esc(r.action)}${r.why ? `<div class="m">${esc(r.why)}</div>` : ""}</td><td>${esc(r.date.slice(5))} ${src(r)}</td></tr>`).join("")}</table>${full.length > lim ? `<button class="kmore">Show all ${full.length}</button>` : ""}</div></div>`;
         divergingChart($("#kc1"), Object.entries(bySec).sort((a, b) => (b[1].pos + b[1].neg) - (a[1].pos + a[1].neg)).slice(0, 15).map(([k, o]) => ({
           label: k, pos: o.pos, neg: o.neg, neu: o.neu, total: o.pos + o.neg + o.neu,
           tip: `<b>${esc(k)}</b><br>${o.pos} bullish · ${o.neg} bearish · ${o.neu} neutral<br><span class="m">Tap to filter</span>`,

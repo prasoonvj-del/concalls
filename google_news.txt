@@ -48,3 +48,20 @@ Tab: Sports | India cricket
 Tab: Sports | BCCI OR IPL OR "Ranji Trophy"
 Tab: Sports | cricket Test OR ODI OR T20 match report
 Tab: Sports | "Women's cricket" OR WPL India
+
+# Initiating coverage by brokerages (new research coverage on companies, sectors, themes)
+Google: Markets | "initiates coverage" OR "initiating coverage" OR "initiated coverage" India stock
+Google: Markets | "initiates coverage" Motilal OR ICICI OR HDFC OR Kotak OR Nuvama OR Jefferies OR Nomura OR CLSA OR Emkay OR Axis
+Google: Markets | "initiates coverage" "PL Capital" OR Prabhudas OR Ventura OR SMC OR Anand Rathi OR Elara OR JM OR Antique OR Choice
+Google: Markets | brokerage "sector report" OR "thematic report" India stocks top picks
+
+# Replacements for feeds that stopped working (Reuters, Business Standard, Indian Express, Whalesbook, etc.)
+Google: Markets | site:reuters.com India markets OR companies OR economy
+Google: Corporate | site:business-standard.com companies OR markets
+Google: Corporate | site:indianexpress.com business companies OR economy OR market
+Google: Markets | site:whalesbook.com
+Google: Markets | site:alphastreet.com India earnings call
+Google: Policy | site:indiadatahub.com
+Google: Sectors | site:powerline.net.in
+Google: Sectors | site:financialexpress.com auto OR automobile
+Google: Corporate | site:businessworld.in companies OR markets

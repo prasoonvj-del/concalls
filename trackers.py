@@ -38,7 +38,7 @@ For each story that contains one of these facts, write one line in exactly one o
 
 RESULT | id | company | quarter (like Q2 FY27) | revenue Rs crore | revenue YoY % | net profit Rs crore | profit YoY % | read: strong / weak / mixed / in-line
 ORDER | id | company | order value Rs crore | client or awarding body | what the order is for (max 8 words)
-CALL | id | brokerage | company | rating (Buy / Sell / Hold / Add / Reduce / Neutral) | target price Rs | action (upgrade / downgrade / initiate / maintain / raise target / cut target)
+CALL | id | brokerage | company | rating (Buy / Sell / Hold / Add / Reduce / Neutral) | target price Rs | action (upgrade / downgrade / initiate / maintain / raise target / cut target) | the broker's main reason as the story states it (max 18 words; - if not given)
 PIVOT | id | company | type (capacity / order / legal / approval / strategy / M&A / funding / rating / management) | what changed (max 15 words) | why it could re-rate or de-rate the stock (max 12 words) | theme (e.g. EV & two-wheelers, Battery materials & cells, Solar manufacturing, Data centres & AI infrastructure, Defence, Railways, Semiconductors & electronics manufacturing, Specialty chemicals, Pharma CDMO, Power T&D, Nuclear, Green hydrogen, M&A & consolidation, Debt reduction & fund-raising, Legal & regulatory, Capacity expansion (other))
 EVENT | id | date YYYY-MM-DD | type (india-policy / india-data / global / company) | what happens (max 10 words) | who in India it affects (sectors or listed companies, max 10 words)
 
@@ -232,6 +232,7 @@ def update(stories, pool, cache, now_utc):
                 co = p[2]
                 rec = dict(base, broker=p[1], company=co, rating=p[3].title() if p[3] != "-" else "",
                            target=num(p[4]), action=p[5].lower() if p[5] != "-" else "",
+                           why=p[6].strip() if len(p) > 6 and p[6].strip() not in ("-", "") else "",
                            sector=sector_for(s, by_name, co))
                 uid = f"C|{C.norm(p[1])}|{C.norm(co)}|{base['date']}"
             elif kind == "PIVOT":
