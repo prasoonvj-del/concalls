@@ -114,7 +114,7 @@ def candidates(stories):
     """Initiation stories about Indian companies (US 'X initiates coverage on Palantir' wires are left out)."""
     return [s for s in stories if PAT.search(s["title"] + " " + (s.get("desc") or ""))
             and not LISTICLE.search(s["title"]) and s.get("category") not in ("Global Markets & Macro", "Not market-relevant")
-            and not re.search(r"\$\s?\d|\bNYSE\b|\bNasdaq\b", s["title"])]
+            and not re.search(r"\$\s?\d|\bNYSE\b|\bNasdaq\b| -- ", s["title"])]
 
 
 def _real_url(url):
