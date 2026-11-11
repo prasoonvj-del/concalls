@@ -525,7 +525,7 @@
   // a brokerage initiation note (read from the article; figures checked against it)
   function icNote(r, withCo) {
     const neg = /sell|reduce|underperform|underweight/i.test(r.rating || ""), pos = /buy|add|accumulate|outperform|overweight/i.test(r.rating || "");
-    return `<div class="icn"><div class="t">${withCo && r.company ? `<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a> · ` : ""}${!r.company ? `<b>${esc(r.sector)}</b> (sector report) · ` : ""}${esc(r.broker)}:
+    return `<div class="icn"><div class="t">${withCo && r.company ? `<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a> · ` : ""}${r.init ? `<span class="chip ini">Initiation</span> ` : ""}${!r.company ? `<b>${esc(r.sector)}</b> (sector report) · ` : ""}${esc(r.broker)}:
       <b class="${neg ? "dn" : pos ? "up" : ""}">${esc(r.rating || "rating n/a")}</b>${r.target ? `, target Rs ${fmt(Math.round(r.target))}` : ""}${r.upside ? ` (${r.upside > 0 ? "+" : ""}${r.upside}%)` : ""}</div>
       ${r.thesis && r.thesis.length ? `<ul>${r.thesis.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
       ${r.numbers && r.numbers.length ? `<div class="m"><b>Estimates:</b> ${r.numbers.map(esc).join(" · ")}</div>` : ""}
@@ -822,7 +822,7 @@
           <div class="card md"><h2>${esc(sec.cat)} <span class="m">${plural(sec.ids.length, "story")} · ${sec.pos}▲ ${sec.neg}▼ ${sec.neu}•</span></h2>
             ${marketLine(sec.cat)}
             ${sec.one ? `<p><b>${sec.one}</b></p>` : ""}<div id="sw">${sec.html || `<p class="m">Too few stories today for a write-up - see the list below.</p>`}</div></div>
-          ${secIc.length ? `<div class="card"><h2>Brokers initiating coverage <span class="m">${esc(sec.cat)} · last 90 days</span></h2>${secIc.slice(0, 6).map((r) => icNote(r, true)).join("")}</div>` : ""}
+          ${secIc.length ? `<div class="card"><h2>Broker research <span class="m">${esc(sec.cat)} · initiations and research notes, last 90 days</span></h2>${secIc.slice(0, 6).map((r) => icNote(r, true)).join("")}</div>` : ""}
           ${ov || calls.length || res.length ? `<div class="card"><h2>What managements said <span class="m">concalls${res.length ? " & results" : ""} in this sector</span></h2>
             ${ov ? `<div class="md"><div class="m">Sector overview · ${esc(ov.quarter)} · ${ov.companies.length} companies</div>${await ovHtml(ov)}</div>` : ""}
             ${calls.length ? `<div class="chips">${calls.slice(0, 30).map((c) => `<span class="chip link" data-go="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}${c.tone ? ` <span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}</span>`).join("")}${calls.length > 30 ? `<a class="chip link" href="#concalls/${encodeURIComponent(sec.cat)}">all ${calls.length} →</a>` : ""}</div>` : ""}
@@ -1018,7 +1018,7 @@
     const notesCard = `<div class="card"><h2>My notes <span class="m">${myNotes.length ? plural(myNotes.length, "note") : "only you see these"}</span></h2>
         ${myNotes.map((n2) => noteHtml(n2, false)).join("")}<button id="conote">✎ Add a note on ${esc(key)}</button></div>`;
     const ics = ((window.DESK_TRACK || {}).ic || []).filter((r) => r.company && sameCo(r.company, key));
-    const icCard = ics.length ? `<div class="card"><h2>Brokers initiating coverage <span class="m">what their reports argue · from the news</span></h2>${ics.slice(0, 4).map((r) => icNote(r, false)).join("")}</div>` : "";
+    const icCard = ics.length ? `<div class="card"><h2>Broker research <span class="m">what their reports argue · read from the news articles</span></h2>${ics.slice(0, 4).map((r) => icNote(r, false)).join("")}</div>` : "";
     const sideCards = `${notesCard}${storyCard}${icCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
       <div class="card"><h2>In the news <span class="m">${plural(items.length, "story")} · ${pz}▲ ${nz}▼</span></h2>
         ${items.length >= 4 ? `<div id="cod"></div>` : ""}
@@ -1692,8 +1692,9 @@
         const cnt = {};
         rows.forEach((r) => { cnt[r.company] = (cnt[r.company] || 0) + 1; });
         const init = rows.filter((r) => /initiat/.test(r.action || "")).sort((a, b) => (a.date < b.date ? 1 : -1));
-        const icAll = ((window.DESK_TRACK || {}).ic || []).filter((r) => !$("#ks").value || r.sector === $("#ks").value);
-        body.innerHTML = `${icAll.length ? `<div class="card"><h2>Initiating coverage <span class="m">brokers' new reports, read from the articles · ${icAll.length}</span></h2>${icAll.slice(0, st.lim > 25 ? 1000 : 8).map((r) => icNote(r, true)).join("")}</div>` : ""}
+        const icAll = ((window.DESK_TRACK || {}).ic || []).filter((r) => !$("#ks").value || r.sector === $("#ks").value)
+          .slice().sort((a, b) => (b.init - a.init) || (a.date < b.date ? 1 : -1));
+        body.innerHTML = `${icAll.length ? `<div class="card"><h2>Broker research <span class="m">initiations first, then research notes · read from the articles · ${icAll.length}</span></h2>${icAll.slice(0, st.lim > 25 ? 1000 : 8).map((r) => icNote(r, true)).join("")}</div>` : ""}
           ${!icAll.length && init.length ? `<div class="card"><h2>Initiating coverage <span class="m">new research coverage by brokerages · ${init.length} in the period</span></h2><ul class="list">
           ${init.slice(0, st.lim > 25 ? 1000 : 12).map((r) => `<li><div class="t"><a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a> - ${esc(r.broker)}: <b class="${negA(r) ? "dn" : posA(r) ? "up" : ""}">${esc(r.rating || "rating n/a")}</b>${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}</div>
             ${r.why ? `<div class="m">${esc(r.why)}</div>` : ""}<div class="src">${esc(r.sector || "")} · ${esc(r.date)} ${src(r)}</div></li>`).join("")}</ul></div>` : ""}

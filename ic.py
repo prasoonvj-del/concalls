@@ -23,11 +23,16 @@ from concalls import say
 FILE = C.DATA / "ic.json"
 PAT = re.compile(
     r"initiat\w*\s+(?:a\s+)?(?:research\s+)?coverage|coverage\s+initiat|initiat\w*\s+(?:on|with)\b.{0,60}\b(?:buy|sell|add|hold|"
-    r"accumulate|outperform|overweight|underweight|neutral|reduce)\b|\binitiates?\b.{0,40}\btarget\b", re.I)
+    r"accumulate|outperform|overweight|underweight|neutral|reduce)\b|\binitiates?\b.{0,40}\btarget\b"
+    # single-company research notes written up by Moneycontrol / BusinessLine / Business Standard etc.
+    r"|broker[\u2019']?s call|;\s*target(?: price)? of rs|\btarget(?: price)? (?:of )?rs\.?\s?[\d,]+\s*(?::|by)\s|"
+    r"\b(?:buy|accumulate|add|reduce|sell|hold|neutral)\s[^;:]{3,60}(?:;|\bfor (?:the )?)\s*target", re.I)
+LISTICLE = re.compile(r"stocks to (?:buy|watch)|picks|muhurat|top \d|\d+ stocks|samvat|diwali|stocks? recommendations", re.I)
 
-PROMPT = """Below are news articles about Indian brokerages INITIATING research coverage on a listed company,
-a sector or a theme. For each article return one JSON object:
-{{"id": <article id>, "scope": "company" | "sector" | "theme",
+PROMPT = """Below are news articles about Indian brokerages' RESEARCH REPORTS on a listed company, a sector or a theme
+(new coverage initiations and regular research notes). For each article return one JSON object:
+{{"id": <article id>, "initiation": true if the broker is STARTING coverage (initiating) else false,
+ "scope": "company" | "sector" | "theme",
  "company": "<listed company, or empty for sector/theme reports>",
  "sector": "<the sector or theme the report is about, for sector/theme reports; else empty>",
  "broker": "<brokerage>", "rating": "<Buy/Add/Hold/Reduce/Sell/...>", "target": <target price in Rs or null>,
@@ -38,7 +43,8 @@ a sector or a theme. For each article return one JSON object:
  "picks": ["<sector/theme reports only: up to 6 'Company - rating' the article names>"]}}
 If an article has SEVERAL initiations (e.g. a sector report on five companies), give one object per company
 (same id) only if the article gives a rating for each; otherwise one sector object with picks.
-If the article is not actually about a NEW coverage initiation, return {{"id": <id>, "skip": true}}.
+If the article is not about a broker's research report (e.g. a list of trading tips, or just a price move),
+return {{"id": <id>, "skip": true}}.
 STRICT: use only what the article says. Never add numbers, targets or reasons that are not in the text.
 Use null / [] for anything not stated. Reply with a JSON array only, nothing else.
 
@@ -107,7 +113,7 @@ def _num(v):
 def candidates(stories):
     """Initiation stories about Indian companies (US 'X initiates coverage on Palantir' wires are left out)."""
     return [s for s in stories if PAT.search(s["title"] + " " + (s.get("desc") or ""))
-            and s.get("category") not in ("Global Markets & Macro", "Not market-relevant")
+            and not LISTICLE.search(s["title"]) and s.get("category") not in ("Global Markets & Macro", "Not market-relevant")
             and not re.search(r"\$\s?\d|\bNYSE\b|\bNasdaq\b", s["title"])]
 
 
@@ -125,13 +131,13 @@ def _real_url(url):
     return url
 
 
-def step(stories, pool, limit=12):
+def step(stories, pool, limit=15):
     """Picks new initiation stories out of this run, reads them, files the notes. Returns today's new notes."""
     d = load()
     todo = [s for s in candidates(stories) if s["key"] not in d["seen"]][:limit]
     if not todo:
         return []
-    say(f"\nReading {len(todo)} initiating-coverage articles ...")
+    say(f"\nReading {len(todo)} broker research articles ...")
     texts = {}
     for i, s in enumerate(todo, 1):
         t = article_text(s["sources"])
@@ -139,9 +145,9 @@ def step(stories, pool, limit=12):
         say(f"  {i}. {s['title'][:80]} ({'article' if t else 'headline only'})")
     arts = "\n\n".join(f"[{i}] {s['title']}\n{texts[i]}" for i, s in enumerate(todo, 1))
     try:
-        out, ai = pool.ask(PROMPT.format(articles=arts), label="initiating coverage")
+        out, ai = pool.ask(PROMPT.format(articles=arts), label="broker research")
     except C.AIError as e:
-        say(f"  initiating coverage: AI unavailable ({str(e)[:80]}) - next run")
+        say(f"  broker research: AI unavailable ({str(e)[:80]}) - next run")
         return []
     m = re.search(r"\[.*\]", out, re.S)
     try:
@@ -176,7 +182,7 @@ def step(stories, pool, limit=12):
         if upside is not None and not _grounded(f"{upside:g}", text):
             upside = None
         date = s["when"].strftime("%Y-%m-%d")
-        rec = {"uid": f"{C.norm(subject)}|{C.norm(broker)}|{date[:7]}", "date": date,
+        rec = {"uid": f"{C.norm(subject)}|{C.norm(broker)}|{date[:7]}", "date": date, "init": bool(o.get("initiation")),
                "scope": o.get("scope") or ("company" if company else "sector"),
                "company": company, "sector": (R.sector(company) if R and company else "") or (o.get("sector") or "").strip()
                or s.get("category", ""), "broker": broker, "rating": (o.get("rating") or "").strip().title(),
@@ -196,7 +202,7 @@ def step(stories, pool, limit=12):
     d["seen"] = {k: v for k, v in d["seen"].items() if v >= cut}
     d["items"].sort(key=lambda x: x["date"], reverse=True)
     save(d)
-    say(f"  initiating coverage: {len(new)} new notes ({ai.model})")
+    say(f"  broker research: {len(new)} new notes ({ai.model})")
     return new
 
 
@@ -205,17 +211,17 @@ def big_lines(new):
     if not new:
         return []
     rows = []
-    for r in new[:8]:
-        head = f"{r['broker']} initiates on {r['company'] or r['sector']}: {r['rating']}" + (
+    for r in sorted(new, key=lambda r: not r.get("init"))[:8]:
+        head = f"{r['broker']} {'initiates' if r.get('init') else 'on'} on {r['company'] or r['sector']}: {r['rating']}" + (
             f", target Rs {r['target']:,.0f}" if r.get("target") else "") + (f" ({r['upside']:g}% upside)" if r.get("upside") else "")
         rows.append(head + (" - " + "; ".join(r["thesis"][:2]) if r["thesis"] else ""))
-    return ["### New broker coverage (initiations today)\n" + "\n".join("- " + x for x in rows) + "\n"]
+    return ["### Broker research today (initiations and research notes)\n" + "\n".join("- " + x for x in rows) + "\n"]
 
 
 def backfill(pool, days=14):
     """Once: pick up the initiations already in the last two weeks of briefs."""
     d = load()
-    if d.get("backfilled"):
+    if d.get("backfilled") == 2:
         return
     import news
     stories = []
@@ -233,9 +239,11 @@ def backfill(pool, days=14):
                             "when": when, "sources": x.get("sources", []), "category": x.get("cat", "")})
     seen = set()
     stories = [s for s in stories if not (s["key"] in seen or seen.add(s["key"]))]
-    for _ in range(3):
-        if not step(stories, pool):
+    for _ in range(4):
+        before = len(load()["seen"])
+        step(stories, pool)
+        if len(load()["seen"]) == before:
             break
     d = load()
-    d["backfilled"] = True
+    d["backfilled"] = 2
     save(d)

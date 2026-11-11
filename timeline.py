@@ -131,7 +131,7 @@ def update():
         for r in ic.load().get("items", []):
             if r.get("company"):
                 n += add(key_for(r["company"], by_name), "IC|" + r["uid"], r["date"], "broker",
-                         f"{r['broker']} initiates: {r.get('rating', '')}" + (f", target Rs {r['target']:,.0f}" if r.get("target") else "")
+                         f"{r['broker']} {'initiates' if r.get('init') else 'research'}: {r.get('rating', '')}" + (f", target Rs {r['target']:,.0f}" if r.get("target") else "")
                          + (" - " + r["thesis"][0] if r.get("thesis") else ""), r.get("link", ""))
     except Exception:
         pass

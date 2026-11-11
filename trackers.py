@@ -38,7 +38,7 @@ For each story that contains one of these facts, write one line in exactly one o
 
 RESULT | id | company | quarter (like Q2 FY27) | revenue Rs crore | revenue YoY % | net profit Rs crore | profit YoY % | read: strong / weak / mixed / in-line
 ORDER | id | company | order value Rs crore | client or awarding body | what the order is for (max 8 words)
-CALL | id | brokerage | company | rating (Buy / Sell / Hold / Add / Reduce / Neutral) | target price Rs | action (upgrade / downgrade / initiate / maintain / raise target / cut target) | the broker's main reason as the story states it (max 18 words; - if not given)
+CALL | id | brokerage | company | rating (Buy / Sell / Hold / Add / Reduce / Neutral) | target price Rs | action (upgrade / downgrade / initiate - ONLY if the story says the broker is starting coverage / maintain / raise target / cut target) | the broker's main reason as the story states it (max 18 words; - if not given)
 PIVOT | id | company | type (capacity / order / legal / approval / strategy / M&A / funding / rating / management) | what changed (max 15 words) | why it could re-rate or de-rate the stock (max 12 words) | theme (e.g. EV & two-wheelers, Battery materials & cells, Solar manufacturing, Data centres & AI infrastructure, Defence, Railways, Semiconductors & electronics manufacturing, Specialty chemicals, Pharma CDMO, Power T&D, Nuclear, Green hydrogen, M&A & consolidation, Debt reduction & fund-raising, Legal & regulatory, Capacity expansion (other))
 EVENT | id | date YYYY-MM-DD | type (india-policy / india-data / global / company) | what happens (max 10 words) | who in India it affects (sectors or listed companies, max 10 words)
 
