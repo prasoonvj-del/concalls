@@ -543,6 +543,16 @@
   const DLV = { delivered: ["✔ Delivered", "up"], partly: ["~ Partly", ""], missed: ["✖ Missed", "dn"] };
   const exChip = (c) => c && c.ex && EXV[c.ex.v] ? `<span class="exc ${EXV[c.ex.v][1]}" title="Analysts pressed on: ${esc(c.ex.focus || "")} - ${esc(c.ex.line || "")}">${EXV[c.ex.v][0]}</span>` : "";
   const dlChip = (c) => c && c.dl && DLV[c.dl.v] ? `<span class="exc ${DLV[c.dl.v][1]}" title="${esc(c.dl.line || "")}">${DLV[c.dl.v][0]}</span>` : "";
+  // the rating and its reasons, piece by piece
+  const scoreParts = (c) => [
+    ["Tone", { Positive: 3, Mixed: 2, Cautious: 1, Negative: 0 }[c.tone] ?? 1.5, 3],
+    ["vs market", { addressed: 2, partly: 1, gap: 0 }[(c.ex || {}).v] ?? 1, 2],
+    ["Said vs did", { delivered: 2, partly: 1, missed: 0 }[(c.dl || {}).v] ?? 1, 2],
+    ["Guidance", { raised: 1, cut: -1, initiated: 0.5 }[((c.metrics || {}).guidance)] || 0, 1]];
+  const scoreBadge = (c) => c.ex && c.ex.v ? `<span class="scb ${mgmtScore(c) >= 6 ? "up" : mgmtScore(c) < 4 ? "dn" : ""}" title="${esc(scoreParts(c).map(([k, v, m]) => `${k} ${v}/${m}`).join(" · "))}">${mgmtScore(c).toFixed(1)}/8</span>` : "";
+  const scoreWhy = (c) => !(c.ex && c.ex.v) ? "" : `<div class="cx2"><b>Management rating ${mgmtScore(c).toFixed(1)}/8</b> <span class="m">= ${scoreParts(c).map(([k, v, m]) => `${k} ${v}/${m}`).join(" + ")}${c.dl && c.dl.v ? "" : " (said vs did: no comparable guidance, counted 1)"}</span>
+      <div>${exChip(c)} <span class="m">Market wanted:</span> ${esc(c.ex.focus || "")} <span class="m">→ Management:</span> ${esc(c.ex.line || "")}</div>
+      ${c.dl && c.dl.v ? `<div>${dlChip(c)} <span class="m">Said vs did:</span> ${esc(c.dl.line || "")}</div>` : ""}</div>`;
   const mgmtScore = (c) => ({ Positive: 3, Mixed: 2, Cautious: 1, Negative: 0 }[c.tone] ?? 1.5)
     + ({ addressed: 2, partly: 1, gap: 0 }[(c.ex || {}).v] ?? 1) + ({ delivered: 2, partly: 1, missed: 0 }[(c.dl || {}).v] ?? 1)
     + ({ raised: 1, cut: -1, initiated: 0.5 }[((c.metrics || {}).guidance)] || 0);
@@ -947,11 +957,11 @@
         const list = rows.filter((r) => (!q || r.n.toLowerCase().includes(q)) && (!st.sec || r.sector === st.sec)
           && (!st.has || (st.has === "data" ? (r.m || r.call || r.deck || r.res) : st.has === "call" ? r.call : st.has === "deck" ? r.deck : st.has === "story" ? r.story : r.res))).sort(sorters[st.sort] || sorters.news);
         const bar = (r) => r.m ? `<span class="mb" title="${r.pos} positive, ${r.neg} negative, ${r.m - r.pos - r.neg} neutral"><i style="width:${(100 * r.pos) / r.m}%;background:var(--pos)"></i><i style="width:${(100 * r.neg) / r.m}%;background:var(--neg)"></i></span>` : "";
-        $("#cl").innerHTML = `<tr><th>Company</th><th>News</th><th>Concall</th><th>vs market</th><th>Results</th><th>Deck</th><th>Story</th></tr>` + list.slice(0, shown).map((r) => `<tr>
+        $("#cl").innerHTML = `<tr><th>Company</th><th>News</th><th>Concall</th><th>Mgmt rating</th><th>Results</th><th>Deck</th><th>Story</th></tr>` + list.slice(0, shown).map((r) => `<tr>
           <td><a href="#companies/${encodeURIComponent(r.n)}">${isWatch(r.n) ? "★ " : ""}${esc(r.n)}</a><div class="m">${esc(r.sector || "")}</div></td>
           <td>${r.m ? `${r.m} ${bar(r)}` : `<span class="m">–</span>`}</td>
           <td>${r.call ? `${esc(r.call.quarter)} ${r.call.tone ? `<span class="tone ${esc(r.call.tone)}">${esc(r.call.tone)}</span>` : ""}` : `<span class="m">–</span>`}</td>
-          <td>${r.call && r.call.ex && r.call.ex.v ? `${exChip(r.call)}<div class="m exl">${esc(r.call.ex.focus || "")}</div>` : `<span class="m">–</span>`}</td>
+          <td>${r.call && r.call.ex && r.call.ex.v ? `${scoreBadge(r.call)} ${exChip(r.call)}<div class="m exl">Market wanted: ${esc(r.call.ex.focus || "")}</div>` : `<span class="m">–</span>`}</td>
           <td>${r.res ? `profit <span class="${pctCls(r.res.pat_yoy)}">${pct(r.res.pat_yoy)}</span>` : `<span class="m">–</span>`}</td>
           <td>${r.deck ? `<a href="${esc(r.deck.pdf)}" target="_blank" rel="noopener">PDF</a>${r.deck.one ? " ✦" : ""}` : `<span class="m">–</span>`}</td>
           <td>${r.story ? `<a href="#companies/${encodeURIComponent(r.n)}">✓ ${esc(new Date(r.story + "T00:00").toLocaleDateString("en-IN", { day: "2-digit", month: "short" }))}</a>` : `<span class="m">–</span>`}</td></tr>`).join("")
@@ -1107,11 +1117,12 @@
         ${legend(TONES.map((k) => [k, cssv(TC[k])]))}
         <div class="sgrid">${secs.map((k) => { const o = bySec[k]; return `<button class="stile" data-s="${esc(k)}"><span class="sn">${esc(k)}</span><span class="m">${o.n}</span>
           <span class="mb wide">${TONES.map((t) => o[t] ? `<i style="width:${(100 * o[t]) / o.n}%;background:var(${TC[t]})" title="${o[t]} ${t}"></i>` : "").join("")}</span></button>`; }).join("")}</div></div>
-      <div id="kind"></div><div id="krank"></div>
+      <div id="kind"></div>
       <div class="filters"><select id="ks"><option value="">All sectors</option>${secs.slice().sort().map((x) => `<option>${esc(x)}</option>`).join("")}</select>
         <select id="ki" hidden><option value="">All industries</option></select>
         <select id="kq"><option value="">All quarters</option>${quarters.map((q) => `<option>${esc(q)}</option>`).join("")}</select>
         <select id="kt"><option value="">Any tone</option>${TONES.map((t) => `<option>${t}</option>`).join("")}</select>
+        <select id="kso"><option value="">Newest first</option><option value="hi">Best management rating</option><option value="lo">Weakest management rating</option></select>
         <select id="ke"><option value="">vs market: any</option><option value="addressed">✔ Addressed what the market wanted</option><option value="partly">~ Partly addressed</option><option value="gap">✖ Gap - didn't address it</option></select>
         <input type="search" id="kf" placeholder="Search company or any word (cotton, capex, tariff…)"><button id="cclr" class="clr" hidden>✕ Clear filters</button></div>
       <div id="kov"></div><div class="card" style="padding:4px 8px"><div id="kl"></div></div>`;
@@ -1132,16 +1143,6 @@
         <div class="sgrid">${indKeys.map((k) => { const o = byInd[k]; return `<button class="stile itile ${k === st.i ? "on" : ""}" data-i="${esc(k)}"><span class="sn">${esc(k)}</span><span class="m">${o.n}</span>
           <span class="mb wide">${TONES.map((t) => o[t] ? `<i style="width:${(100 * o[t]) / o.n}%;background:var(${TC[t]})"></i>` : "").join("")}</span></button>`; }).join("")}</div></div>` : "";
       $("#kind").querySelectorAll(".itile").forEach((b) => b.onclick = () => { st.i = st.i === b.dataset.i ? "" : b.dataset.i; shown = 40; draw(); });
-      // management scorecard: companies in the chosen sector / industry ranked by what their managements said
-      const rpool = st.s ? inSec.filter((c) => !st.i || (c.ind || "Other") === st.i) : [];
-      const ranked = rpool.filter((c) => c.tone).map((c) => ({ c, sc: mgmtScore(c) })).sort((a, b) => b.sc - a.sc || (a.c.date < b.c.date ? 1 : -1));
-      const rrow = (x, i) => `<tr><td>${i + 1}</td><td><a href="#companies/${encodeURIComponent(x.c.company)}">${esc(x.c.company)}</a><div class="m">${esc(x.c.quarter)}${x.c.ind && !st.i ? " · " + esc(x.c.ind) : ""}</div></td>
-        <td><span class="tone ${esc(x.c.tone)}">${esc(x.c.tone)}</span></td><td>${exChip(x.c) || "<span class='m'>–</span>"}</td><td>${dlChip(x.c) || "<span class='m'>–</span>"}</td>
-        <td>${esc(((x.c.metrics || {}).guidance || "").replace("none", "–")) || "–"}</td><td><b>${x.sc.toFixed(1)}</b></td></tr>`;
-      $("#krank").innerHTML = ranked.length >= 4 ? `<div class="card"><h2>Management scorecard - ${esc(st.i || st.s)} <span class="m">latest call of each company · tone + addressed what the market wanted + delivered on last guidance + guidance change · hover a chip for the reason</span></h2>
-        <table class="t"><tr><th>#</th><th>Company</th><th>Tone</th><th>vs market</th><th>Said vs did</th><th>Guidance</th><th>Score /8</th></tr>
-        ${ranked.slice(0, 10).map(rrow).join("")}
-        ${ranked.length > 15 ? `<tr><td colspan="7" class="m">… ${ranked.length - 15} in between · least convincing:</td></tr>` + ranked.slice(-5).map((x) => rrow(x, ranked.indexOf(x))).join("") : ranked.slice(10).map((x, j) => rrow(x, 10 + j)).join("")}</table></div>` : "";
       const TX = st.f ? await ccText() : {};
       if (my !== seq) return;
       view.querySelectorAll(".stile:not(.itile)").forEach((b) => b.classList.toggle("on", b.dataset.s === st.s));
@@ -1161,23 +1162,25 @@
       if (my !== seq) return;
       const calls = cc.calls.filter((c) => (!st.s || c.sector === st.s) && (!st.i || (c.ind || "Other") === st.i) && (!st.q || c.quarter === st.q) && (!st.t || c.tone === st.t) && (!$("#ke").value || (c.ex || {}).v === $("#ke").value) &&
         (!st.f || c.company.toLowerCase().includes(st.f) || (TX[c.k] || "").toLowerCase().includes(st.f))).sort((a, b) => (a.date < b.date ? 1 : -1));
+      const so = $("#kso").value;
+      if (so) calls.sort((a, b) => ((b.ex || {}).v ? 1 : 0) - ((a.ex || {}).v ? 1 : 0) || (so === "hi" ? mgmtScore(b) - mgmtScore(a) : mgmtScore(a) - mgmtScore(b)));
       $("#kl").innerHTML = calls.slice(0, shown).map((c) => `<div class="crow">
           <div class="ch"><a class="n" href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a><span class="m">${esc(c.quarter)}${st.s ? "" : " · " + esc(c.sector)}${c.ind && !st.i ? " · " + esc(c.ind) : ""} · ${esc(c.date.slice(5))}</span>
           <span class="r2">${deckFor(c) ? `<a class="badge" href="${esc(deckFor(c).pdf)}" target="_blank" rel="noopener" title="Investor deck filed with this call">deck</a>` : ""}${c.compared ? `<span class="badge" title="Includes what changed vs last quarter">vs last qtr</span>` : ""}
           ${c.checks.length ? `<span class="badge w" title="Figures not found word-for-word in the transcript">⚠ ${c.checks.length}</span>` : ""}
-          ${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}</span></div>
+          ${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}${scoreBadge(c)}</span></div>
           <div class="cp">${esc(c.one || "")} <a href="#companies/${encodeURIComponent(c.company)}">full summary →</a></div>
-          ${c.ex && c.ex.v ? `<div class="cx2">${exChip(c)} <span class="m">Market wanted:</span> ${esc(c.ex.focus || "")} <span class="m">· Management:</span> ${esc(c.ex.line || "")}${c.dl && c.dl.v ? ` <span class="m">· Said vs did:</span> ${dlChip(c)} ${esc(c.dl.line || "")}` : ""}</div>` : ""}</div>`).join("")
+          ${scoreWhy(c)}</div>`).join("")
         + (calls.length > shown ? `<button id="kmore" style="margin:8px">Show ${Math.min(80, calls.length - shown)} more${calls.length - shown > 80 ? ` (${calls.length - shown} left)` : ""}</button>` : "")
         || empty("Nothing matches.");
       const mb = $("#kmore"); if (mb) mb.onclick = () => { shown += 80; draw(); };
     };
     $("#ks").value = st.s;
     view.querySelectorAll(".stile:not(.itile)").forEach((b) => b.addEventListener("click", () => { $("#ks").value = $("#ks").value === b.dataset.s ? "" : b.dataset.s; shown = 40; draw(); }));
-    ["ks", "kq", "kt", "ke"].forEach((id) => { $("#" + id).onchange = () => { shown = 40; draw(); }; });
+    ["ks", "kq", "kt", "ke", "kso"].forEach((id) => { $("#" + id).onchange = () => { shown = 40; draw(); }; });
     $("#ki").onchange = () => { st.i = $("#ki").value; shown = 40; draw(); };
     $("#kf").oninput = () => { shown = 40; draw(); };
-    $("#cclr").onclick = () => { ["ks", "kq", "kt", "kf", "ke"].forEach((id) => { $("#" + id).value = ""; }); st.i = ""; shown = 40; draw(); };
+    $("#cclr").onclick = () => { ["ks", "kq", "kt", "kf", "ke", "kso"].forEach((id) => { $("#" + id).value = ""; }); st.i = ""; shown = 40; draw(); };
     draw();
   }
 
@@ -1251,16 +1254,17 @@
 
     let sortKey = yKey, dir = -1;
     const drawTable = () => {
-      const val = (c, k) => (k === "company" ? c.company : k === "tone" ? (TONE_N[c.tone] ?? -1) : k === "guidance" ? (c.metrics.guidance || "") : c.metrics[k]);
+      const val = (c, k) => (k === "company" ? c.company : k === "mg" ? ((c.ex || {}).v ? mgmtScore(c) : null) : k === "tone" ? (TONE_N[c.tone] ?? -1) : k === "guidance" ? (c.metrics.guidance || "") : c.metrics[k]);
       const sorted = rows.slice().sort((a, b) => {
         const x = val(a, sortKey), y = val(b, sortKey);
         if (x == null) return 1; if (y == null) return -1;
         return (x > y ? 1 : x < y ? -1 : 0) * dir;
       });
       const th = (k, label, unit) => `<th data-k="${k}" title="Sort">${esc(label)}${unit ? `<br><span class="m">${esc(unit)}</span>` : ""}${sortKey === k ? (dir < 0 ? " ▼" : " ▲") : ""}</th>`;
-      $("#pt").innerHTML = `<tr>${th("company", "Company")}${th("tone", "Tone")}${cols.map((k) => th(k, MET[k][0], MET[k][1])).join("")}${th("guidance", "Guidance")}</tr>` +
+      $("#pt").innerHTML = `<tr>${th("company", "Company")}${th("tone", "Tone")}${th("mg", "Mgmt rating", "/8 · tap for why")}${cols.map((k) => th(k, MET[k][0], MET[k][1])).join("")}${th("guidance", "Guidance")}</tr>` +
         sorted.map((c) => `<tr><td><a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a><br><span class="m">${esc(c.quarter)}</span></td>
           <td>${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : "–"}${c.prev_tone && c.prev_tone !== c.tone ? `<br><span class="m">was ${esc(c.prev_tone)}</span>` : ""}</td>
+          <td>${(c.ex || {}).v ? `<details class="why"><summary>${scoreBadge(c)} ${exChip(c)} ${dlChip(c)}</summary>${scoreWhy(c)}</details>` : "–"}</td>
           ${cols.map((k) => `<td class="num">${fmtM(c.metrics[k])}${c.unchecked.includes(k) && c.metrics[k] != null ? ' <span title="Not stated word-for-word in the transcript - likely calculated">⚠</span>' : ""}</td>`).join("")}
           <td>${esc(c.metrics.guidance && c.metrics.guidance !== "none" ? c.metrics.guidance : "–")}</td></tr>`).join("");
       $("#pt").querySelectorAll("th").forEach((t) => t.onclick = () => { const k = t.dataset.k; dir = sortKey === k ? -dir : -1; sortKey = k; drawTable(); });
