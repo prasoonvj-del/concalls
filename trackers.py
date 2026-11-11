@@ -28,7 +28,9 @@ CANDIDATE = re.compile(
     r"|\bipo\b|policy|meeting|\bcpi\b|\bgdp\b|inflation|next week|scheduled|record date|to announce|due on"
     r"|board meet|\bfed\b|budget|auction|listing"
     r"|capacity|plant|expansion|commission|approval|usfda|clearance|acqui|merger|demerger|stake|court|tribunal"
-    r"|arbitration|verdict|nclt|settlement|pivot|launch|capex|upgrade|qip|fund rais|debt-free|order book|award|patent", re.I)
+    r"|arbitration|verdict|nclt|settlement|pivot|launch|capex|upgrade|qip|fund rais|debt-free|order book|award|patent"
+    r"|cabinet|ccea|gst council|subsid|\bmsp\b|\bfrp\b|ministry|minister|notif|duty|tariff|\bpli\b|scheme|draft|consult"
+    r"|likely to approve|to consider|proposal|\brbi\b|\bmpc\b|repo rate|sebi board|trai|cerc|ethanol|incentive|ban|export curb", re.I)
 
 EXTRACT_PROMPT = """You read Indian market news and pull out hard facts into a fixed format. Today is {today}.
 Below are news stories, each with an id in brackets, a headline and sometimes a short description.
@@ -41,6 +43,7 @@ ORDER | id | company | order value Rs crore | client or awarding body | what the
 CALL | id | brokerage | company | rating (Buy / Sell / Hold / Add / Reduce / Neutral) | target price Rs | action (upgrade / downgrade / initiate - ONLY if the story says the broker is starting coverage / maintain / raise target / cut target) | the broker's main reason as the story states it (max 18 words; - if not given)
 PIVOT | id | company | type (capacity / order / legal / approval / strategy / M&A / funding / rating / management) | what changed (max 15 words) | why it could re-rate or de-rate the stock (max 12 words) | theme (e.g. EV & two-wheelers, Battery materials & cells, Solar manufacturing, Data centres & AI infrastructure, Defence, Railways, Semiconductors & electronics manufacturing, Specialty chemicals, Pharma CDMO, Power T&D, Nuclear, Green hydrogen, M&A & consolidation, Debt reduction & fund-raising, Legal & regulatory, Capacity expansion (other))
 EVENT | id | date YYYY-MM-DD | type (india-policy / india-data / global / company) | what happens (max 10 words) | who in India it affects (sectors or listed companies, max 10 words)
+POLICY | id | status (pending / decided) | body (Cabinet / CCEA / GST Council / RBI / SEBI / ministry name / state govt) | the decision (max 14 words) | expected when, as the story says (e.g. "Wednesday's Cabinet meeting", "this month", - ) | sectors affected and which way (e.g. "Fertilisers +, Agri inputs +") | listed companies named or obviously most exposed (max 6, comma separated; - if none)
 
 Rules:
 - Only facts the story states. Never guess numbers. A company name must be the listed company.
@@ -56,6 +59,10 @@ Rules:
   government / RBI / SEBI / GST Council / ministry decisions, economic data, central banks abroad, OPEC, big IPOs,
   results or events of LARGE Indian companies, or of foreign companies with a clear Indian link
   (e.g. Bloom Energy -> MTAR Technologies, Walmart -> home-textile exporters). Not small-company results.
+- POLICY for Indian government / regulator decisions that move sectors: pending = the story says it is proposed,
+  likely, under consideration, on the agenda, or a draft (e.g. "Cabinet likely to approve fertiliser subsidy");
+  decided = approved, notified or announced in this story. Subsidies, MSP / FRP, duties, PLI schemes, GST rates,
+  bans and export curbs, tariff orders, RBI / SEBI rule changes. Not routine statements or speeches.
 - A story can give several lines (e.g. two brokerages). Stories with none of these facts: write nothing.
 - Output only the lines, nothing else.
 
@@ -105,7 +112,7 @@ def parse_lines(text, ids):
             continue
         kind = parts[0].upper()
         sid = re.sub(r"\D", "", parts[1])
-        if kind not in ("RESULT", "ORDER", "CALL", "EVENT", "PIVOT") or not sid or int(sid) not in ids:
+        if kind not in ("RESULT", "ORDER", "CALL", "EVENT", "PIVOT", "POLICY") or not sid or int(sid) not in ids:
             continue
         out.append([kind, int(sid)] + parts[2:])
     return out
@@ -118,6 +125,13 @@ def extract(stories, pool, cache):
         cache["extract_v"] = 2
     known = cache.setdefault("extract", {})
     fx = market_fx()
+    if not cache.get("policy_v1"):  # stories read before policy decisions were tracked: read the policy ones again
+        pol = re.compile(r"cabinet|ccea|gst council|subsid|\bmsp\b|\bfrp\b|ministry|duty|\bpli\b|scheme|export curb|ban", re.I)
+        for s0 in stories:
+            if pol.search(s0["title"] + " " + s0.get("desc", "")):
+                cache["extract"].pop(s0["key"], None)
+        cache["policy_v1"] = True
+        known = set(cache["extract"])
     todo = [s for s in stories if s["key"] not in known and CANDIDATE.search(s["title"] + " " + s.get("desc", ""))]
     for s in stories:
         if s["key"] not in known and s not in todo:
@@ -194,8 +208,9 @@ def update(stories, pool, cache, now_utc):
         sec = lib["sectors"].get(c["code"])
         if sec:
             by_name[C.norm(c["company"])] = sec
-    idx = {k: {r["uid"]: r for r in data[k]} for k in ("results", "orders", "calls", "events", "pivots")}
-    KINDS = {"RESULT": "results", "ORDER": "orders", "CALL": "calls", "EVENT": "events", "PIVOT": "pivots"}
+    data.setdefault("policy", [])
+    idx = {k: {r["uid"]: r for r in data[k]} for k in ("results", "orders", "calls", "events", "pivots", "policy")}
+    KINDS = {"RESULT": "results", "ORDER": "orders", "CALL": "calls", "EVENT": "events", "PIVOT": "pivots", "POLICY": "policy"}
     added = 0
     for s in stories:
         lines = cache["extract"].get(s["key"]) or []
@@ -246,6 +261,14 @@ def update(stories, pool, cache, now_utc):
                 uid = f"P|{C.norm(co)}|{re.sub(r'[^a-z0-9]', '', rec['what'].lower())[:30]}"
                 if any(u.startswith(f"P|{C.norm(co)}|") and idx["pivots"][u]["date"] == base["date"] for u in idx["pivots"]):
                     continue
+            elif kind == "POLICY":
+                st_ = p[1].lower().strip()
+                if st_ not in ("pending", "decided") or p[3] in ("-", ""):
+                    continue
+                cos = [x.strip() for x in p[6].split(",") if x.strip() and x.strip() != "-"][:6] if len(p) > 6 else []
+                rec = dict(base, status=st_, body=p[2] if p[2] != "-" else "", what=p[3], when_txt=p[4] if p[4] != "-" else "",
+                           sectors=p[5] if p[5] != "-" else "", cos=cos)
+                uid = f"G|{st_}|{re.sub(r'[^a-z0-9]', '', rec['what'].lower())[:40]}"
             else:  # EVENT
                 d = p[1]
                 if not re.match(r"^\d{4}-\d{2}-\d{2}$", d):
@@ -271,6 +294,16 @@ def update(stories, pool, cache, now_utc):
         data[k] = sorted([r for r in idx[k].values() if r["date"] >= cutoff], key=lambda r: r["date"], reverse=True)
     past = (now_utc.astimezone(IST) - dt.timedelta(days=7)).strftime("%Y-%m-%d")
     data["events"] = sorted([r for r in idx["events"].values() if r["when"] >= past], key=lambda r: r["when"])
+    # policy pipeline: pending decisions for 30 days, decisions taken for 10; a decision taken retires its pending twin
+    tok = lambda t: set(re.findall(r"[a-z]{4,}", t.lower()))
+    done = [r for r in idx["policy"].values() if r["status"] == "decided"]
+    for r in idx["policy"].values():
+        if r["status"] == "pending" and any(d["date"] >= r["date"] and len(tok(d["what"]) & tok(r["what"])) >= 2 for d in done):
+            r["status"] = "done"
+    p30 = (now_utc.astimezone(IST) - dt.timedelta(days=30)).strftime("%Y-%m-%d")
+    p10 = (now_utc.astimezone(IST) - dt.timedelta(days=10)).strftime("%Y-%m-%d")
+    data["policy"] = sorted([r for r in idx["policy"].values() if (r["status"] == "pending" and r["date"] >= p30)
+                             or (r["status"] == "decided" and r["date"] >= p10)], key=lambda r: r["date"], reverse=True)
     say(f"  trackers: {added} new facts · {len(data['results'])} results, {len(data['orders'])} orders, "
         f"{len(data['calls'])} broker calls, {len(data['pivots'])} pivots, {len([e for e in data['events'] if e['when'] >= today])} upcoming events")
     data["updated"] = now_utc.astimezone(IST).isoformat(timespec="minutes")
@@ -736,6 +769,9 @@ def india_usual(days=14):
         for day, what, kind, impact in INDIA_RULES:
             if d.day == day:
                 out.append({"when": d.isoformat(), "what": what, "kind": kind, "impact": impact, "usual": True})
+        if d.weekday() == 2:  # the Union Cabinet usually meets on Wednesdays; its agenda isn't published in advance
+            out.append({"when": d.isoformat(), "what": "Union Cabinet meeting (usual day) - see decisions in the pipeline",
+                        "kind": "india-policy", "impact": "sectors in the policy pipeline", "usual": True})
         # F&O monthly expiry: last Tuesday of the month (NSE)
         if d.weekday() == 1 and (d + dt.timedelta(days=7)).month != d.month:
             out.append({"when": d.isoformat(), "what": "NSE monthly F&O expiry", "kind": "india-data",

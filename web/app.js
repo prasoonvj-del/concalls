@@ -726,10 +726,10 @@
           ${t.context ? `<p class="cx" title="Tap to read all"><b>Background</b> ${esc(t.context)}</p>` : ""}
           <div class="ctxs" data-cos="${esc(JSON.stringify(s.companies.slice(0, 3)))}"></div></div>`;
       }).join("")}</div></div>` : ""}
+      <div id="wah"></div>
       <div class="card"><h2>Sector by sector <span class="m">tap a row for the full sector page</span></h2><div class="secs2">${b.sections.map((s) => `<div class="srow" data-go="#sectors/${encodeURIComponent(s.cat)}">
           <div><b>${esc(s.cat)}</b><div class="m">${s.ids.length} · ${s.pos}▲ ${s.neg}▼</div><span class="mb">${s.ids.length ? `<i style="width:${(100 * s.pos) / s.ids.length}%;background:var(--pos)"></i><i style="width:${(100 * s.neg) / s.ids.length}%;background:var(--neg)"></i>` : ""}</span></div>
           <div>${s.one ? `<div class="md sone">${s.one}</div>` : `<span class="m">-</span>`}</div></div>`).join("")}</div></div>
-      <div id="wah"></div>
       ${wl.length ? `<div class="card"><h2>Your watchlist <span class="m">${esc(wl.join(", "))}</span></h2>${
         wlStories.length ? `<div id="wlf"></div>` : `<div class="m">No news on your watchlist in this brief.</div>`}</div>` : ""}
       <div class="tiles">
@@ -1342,6 +1342,21 @@
   }
 
   /** Week ahead: what can move Indian stocks in the next two weeks (shown on Today). */
+  // government & regulator decisions: decided in the last days, and pending ones the news says are coming
+  function polHtml() {
+    const P = ((window.DESK_TRACK || {}).trackers || {}).policy || [];
+    if (!P.length) return "";
+    const secs = (t) => esc(t || "").replace(/([^,;]+?)\s*\+/g, '<span class="up">$1 ▲</span>').replace(/([^,;]+?)\s*[-−–]\s*(?=,|;|$)/g, '<span class="dn">$1 ▼</span>');
+    const cos = (r) => (r.cos || []).map((c) => `<a href="#companies/${encodeURIComponent(c)}">${esc(c)}</a>`).join(", ");
+    const row = (r) => `<li><span class="chip">${esc(r.body || "Govt")}</span> <b>${esc(r.what)}</b>${r.when_txt ? ` <span class="m">· ${esc(r.when_txt)}</span>` : ""}
+      ${r.sectors ? `<div class="m">Sectors: ${secs(r.sectors)}</div>` : ""}${(r.cos || []).length ? `<div class="m">Companies: ${cos(r)}</div>` : ""}
+      <div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`;
+    const dec = P.filter((r) => r.status === "decided"), pend = P.filter((r) => r.status === "pending");
+    return `<div class="grid g2 pol">
+      <div><h3>Policy pipeline <span class="m">reported as coming up - Cabinet usually meets on Wednesdays</span></h3>${pend.length ? `<ul class="list">${pend.slice(0, 8).map(row).join("")}</ul>` : `<div class="m">Nothing flagged in the news right now.</div>`}</div>
+      <div><h3>Just decided <span class="m">last 10 days - check how the sectors reacted</span></h3>${dec.length ? `<ul class="list">${dec.slice(0, 8).map(row).join("")}</ul>` : `<div class="m">No major decisions in the news.</div>`}</div></div>`;
+  }
+
   function renderWeekAhead(host) {
     const T = (window.DESK_TRACK || {}).trackers || {};
     const today = new Date().toISOString().slice(0, 10);
@@ -1385,6 +1400,7 @@
     const kf = store.get("wakind", "");
     host.innerHTML = `<div class="card"><h2>Week ahead <span class="m">next two weeks · what can move Indian stocks · scroll sideways for later days</span></h2>
         <div class="filters seg" id="wak">${[["", "All"], ["india", "India policy & data"], ["global", "Global"], ["co", "Companies"]].map(([k, l]) => `<button data-k="${k}" class="${k === kf ? "on" : ""}">${l}</button>`).join("")}</div>
+        ${polHtml()}
         <div id="wal"></div></div>`;
     const drawAgenda = () => {
       const k = store.get("wakind", "");
