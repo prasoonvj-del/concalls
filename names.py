@@ -21,6 +21,41 @@ GENERIC_TAIL = {
     "international", "global", "incorporated", "indiaprivate", "indialimited", "infra",
 }
 ALIASES = {
+    # government companies: headlines nearly always use the short form
+    "rcf": "Rashtriya Chemicals and Fertilizers",
+    "nfl": "National Fertilizers",
+    "fact": "Fertilisers and Chemicals Travancore",
+    "gnfc": "Gujarat Narmada Valley Fertilizers and Chemicals",
+    "gsfc": "Gujarat State Fertilizers and Chemicals",
+    "bhel": "Bharat Heavy Electricals",
+    "beml": "BEML",
+    "sail": "Steel Authority of India",
+    "nmdc": "NMDC",
+    "nalco": "National Aluminium Company",
+    "moil": "MOIL",
+    "hzl": "Hindustan Zinc",
+    "bpcl": "Bharat Petroleum Corporation",
+    "hpcl": "Hindustan Petroleum Corporation",
+    "ioc": "Indian Oil Corporation",
+    "iocl": "Indian Oil Corporation",
+    "gail": "GAIL (India)",
+    "mrpl": "Mangalore Refinery and Petrochemicals",
+    "nhpc": "NHPC",
+    "sjvn": "SJVN",
+    "pfc": "Power Finance Corporation",
+    "rec": "REC",
+    "ireda": "Indian Renewable Energy Development Agency",
+    "irfc": "Indian Railway Finance Corporation",
+    "hudco": "Housing and Urban Development Corporation",
+    "rvnl": "Rail Vikas Nigam",
+    "ircon": "IRCON International",
+    "nbcc": "NBCC (India)",
+    "rites": "RITES",
+    "irctc": "Indian Railway Catering and Tourism Corporation",
+    "concor": "Container Corporation of India",
+    "bdl": "Bharat Dynamics",
+    "mdl": "Mazagon Dock Shipbuilders",
+    "grse": "Garden Reach Shipbuilders and Engineers",
     "mandm": "Mahindra & Mahindra", "mahindra": "Mahindra & Mahindra", "landt": "Larsen & Toubro", "lt": "Larsen & Toubro",
     "sbi": "State Bank of India", "ril": "Reliance Industries", "reliance": "Reliance Industries",
     "tcs": "Tata Consultancy Services", "hul": "Hindustan Unilever", "hdfcbank": "HDFC Bank", "icici": "ICICI Bank",
@@ -34,6 +69,42 @@ ALIASES = {
 }
 # a few large companies that may have no concall in our library yet
 KNOWN_SECTORS = {
+    "Rashtriya Chemicals and Fertilizers": "Fertilisers & Agrochemicals",
+    "National Fertilizers": "Fertilisers & Agrochemicals",
+    "Fertilisers and Chemicals Travancore": "Fertilisers & Agrochemicals",
+    "Gujarat Narmada Valley Fertilizers and Chemicals": "Fertilisers & Agrochemicals",
+    "Gujarat State Fertilizers and Chemicals": "Fertilisers & Agrochemicals",
+    "Bharat Heavy Electricals": "Capital Goods & Engineering",
+    "BEML": "Capital Goods & Engineering",
+    "Steel Authority of India": "Metals & Mining",
+    "NMDC": "Metals & Mining",
+    "National Aluminium Company": "Metals & Mining",
+    "MOIL": "Metals & Mining",
+    "Hindustan Zinc": "Metals & Mining",
+    "Bharat Petroleum Corporation": "Oil & Gas",
+    "Hindustan Petroleum Corporation": "Oil & Gas",
+    "Indian Oil Corporation": "Oil & Gas",
+    "Indian Oil Corporation": "Oil & Gas",
+    "GAIL (India)": "Oil & Gas",
+    "Mangalore Refinery and Petrochemicals": "Oil & Gas",
+    "NHPC": "Power & Utilities",
+    "SJVN": "Power & Utilities",
+    "Power Finance Corporation": "NBFC & Financial Services",
+    "REC": "NBFC & Financial Services",
+    "Indian Renewable Energy Development Agency": "NBFC & Financial Services",
+    "Indian Railway Finance Corporation": "NBFC & Financial Services",
+    "Housing and Urban Development Corporation": "NBFC & Financial Services",
+    "Rail Vikas Nigam": "Construction & Infrastructure",
+    "IRCON International": "Construction & Infrastructure",
+    "NBCC (India)": "Construction & Infrastructure",
+    "RITES": "Construction & Infrastructure",
+    "Indian Railway Catering and Tourism Corporation": "Hotels & Travel",
+    "Container Corporation of India": "Logistics & Shipping",
+    "Bharat Dynamics": "Defence & Aerospace",
+    "Mazagon Dock Shipbuilders": "Defence & Aerospace",
+    "Garden Reach Shipbuilders and Engineers": "Defence & Aerospace",
+    "Hindustan Aeronautics": "Defence & Aerospace",
+    "Bharat Electronics": "Defence & Aerospace",
     "Mahindra & Mahindra": "Automobiles", "Maruti Suzuki India": "Automobiles", "Bharti Airtel": "Telecom",
     "Reliance Industries": "Oil & Gas", "State Bank of India": "Banks", "Larsen & Toubro": "Capital Goods & Engineering",
     "Eternal": "Retail & E-commerce", "InterGlobe Aviation": "Hotels & Travel", "Infosys": "IT & Software",
@@ -105,8 +176,10 @@ class Resolver:
         cname, code = self.resolve(name)
         if code and self.sectors.get(code):
             return self.sectors[code]
-        if cname in KNOWN_SECTORS:
-            return KNOWN_SECTORS[cname]
+        kn = {n(k): v for k, v in KNOWN_SECTORS.items()}
+        for k in (n(cname), n(ALIASES.get(n(name), ""))):
+            if k and k in kn:
+                return kn[k]
         got = self.cache.get("cosector", {}).get(n(cname))
         return got or fallback
 
