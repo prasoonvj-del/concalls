@@ -405,15 +405,32 @@ STORIES:
 """
 
 
+def _tag_rows(batch):
+    # the description too: "Rs 18 dividend per share ..." only names the company in its first line
+    return "\n".join(f"{s['id']} | {s['title']}" + (f" -- {s['desc'][:150]}" if s.get("desc") else "") +
+                     f" | {s['folder']}" for s in batch)
+
+
+def _tag_ask(pool, batch, label):
+    """An empty reply (often a safety block on one headline) shouldn't stop the news: try the halves,
+    and leave a batch that still fails untagged (it lands in Services & Others) rather than failing the run."""
+    try:
+        return pool.ask(TAG_PROMPT.format(cats="\n".join(CATEGORIES), rows=_tag_rows(batch)), label=label)[0]
+    except C.AIError as e:
+        if len(batch) <= 12 or "empty answer" not in str(e):
+            if "empty answer" in str(e):
+                say(f"  {len(batch)} stories left unsorted (the AI declined them)")
+                return ""
+            raise
+    half = len(batch) // 2
+    return _tag_ask(pool, batch[:half], label + " (a)") + "\n" + _tag_ask(pool, batch[half:], label + " (b)")
+
+
 def tag(stories, pool):
     lookup = {c.lower(): c for c in CATEGORIES}
     for i in range(0, len(stories), 100):
         batch = stories[i:i + 100]
-        # the description too: "Rs 18 dividend per share ..." only names the company in its first line
-        rows = "\n".join(f"{s['id']} | {s['title']}" + (f" -- {s['desc'][:150]}" if s.get("desc") else "") +
-                         f" | {s['folder']}" for s in batch)
-        text, _ = pool.ask(TAG_PROMPT.format(cats="\n".join(CATEGORIES), rows=rows),
-                           label=f"sorting stories {i + 1}-{i + len(batch)} of {len(stories)}")
+        text = _tag_ask(pool, batch, f"sorting stories {i + 1}-{i + len(batch)} of {len(stories)}")
         got = {}
         for line in text.splitlines():
             parts = [p.strip() for p in line.strip().lstrip("-* ").split("|")]  # a trailing "-" is a sentiment
