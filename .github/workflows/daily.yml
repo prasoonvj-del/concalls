@@ -61,6 +61,8 @@ jobs:
           if [ "$EVENT" = "issues" ]; then
             TITLE="${{ github.event.issue.title }}"
             case "$TITLE" in [Ss]tory:*|[Cc]oncall:*) MODE=story-only ;; *) GO=false ;; esac
+            # only the owner's requests run (anyone can open an issue on a public repo)
+            if [ "${{ github.event.issue.user.login }}" != "${{ github.repository_owner }}" ]; then GO=false; fi
           elif [ "${{ inputs.force }}" != "true" ]; then
             LAST=$(gh api repos/${{ github.repository }}/commits/data --jq .commit.committer.date 2>/dev/null || echo "")
             if [ -n "$LAST" ]; then

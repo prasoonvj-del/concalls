@@ -16,6 +16,7 @@ Each company is written once and refreshed only after ~45 days or when a new con
 """
 import datetime as dt
 import json
+import os
 import re
 import time
 from urllib.parse import quote_plus
@@ -340,6 +341,8 @@ def requested():
     """{code: issue_number} for open "Story: <code> ..." issues."""
     out = {}
     for it in _gh("GET", "/issues", params={"state": "open", "per_page": 50}) or []:
+        if (it.get("user") or {}).get("login", "") != os.environ.get("GITHUB_REPOSITORY_OWNER", "prasoonvj-del"):
+            continue  # only the owner's requests spend the AI allowance
         m = re.match(r"\s*story:\s*(\d{5,6})", it.get("title", ""), re.I)
         if m and "pull_request" not in it:
             out.setdefault(m.group(1), []).append(it["number"])

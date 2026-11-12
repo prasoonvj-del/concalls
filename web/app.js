@@ -160,6 +160,10 @@
   const screenerLink = (code) => `https://www.screener.in/company/${code}/`;
   const concallRequestLink = (code, name) => `https://github.com/prasoonvj-del/concalls/issues/new?title=${encodeURIComponent("Concall: " + code + " " + name)}&body=${encodeURIComponent("Requested from the Market Desk website. Just press Submit - the latest concall is found on BSE and summarised within about 10 minutes; this issue closes itself.")}`;
   const REPO = "prasoonvj-del/concalls";
+  // request buttons (they spend the AI allowance) show only on the owner's devices: open the site once with ?owner=1
+  if (/[?&]owner=1/.test(location.search)) store.set("owner", true);
+  if (/[?&]owner=0/.test(location.search)) store.set("owner", false);
+  const isOwner = () => !!store.get("owner", false);
   const requestLink = (code, name) => `https://github.com/${REPO}/issues/new?title=${encodeURIComponent("Story: " + code + " " + name)}&body=${encodeURIComponent("Requested from the Market Desk website. Just press Submit - the story is written within about 10 minutes and this issue closes itself.")}`;
   async function getConcalls() {
     if (!window.DESK_CONCALLS) {
@@ -1088,8 +1092,8 @@
       .map((r) => Object.assign(r, { total: r.pos + r.neg + r.neu, tip: `<b>${r.label}</b><br>${r.pos} positive · ${r.neg} negative · ${r.neu} neutral` }));
     const hasTk = tk[0].length + tk[1].length + tk[2].length + tk[3].length > 0;
     const askCard = !call && bsCode ? `<div class="card"><h2>Concall</h2><div class="m">No concall summary for this company yet - it may file its transcript later, or under a heading we only started reading today.</div>
-        <p><a class="btn" href="${concallRequestLink(bsCode, key)}" target="_blank" rel="noopener">Summarise its latest concall</a></p>
-        <div class="m">Opens a one-line request on GitHub - press "Submit"; the transcript is found on BSE and summarised here in about 10 minutes.</div></div>` : "";
+        ${isOwner() ? `<p><a class="btn" href="${concallRequestLink(bsCode, key)}" target="_blank" rel="noopener">Summarise its latest concall</a></p>` : ""}
+        ${isOwner() ? `<div class="m">Opens a one-line request on GitHub - press "Submit"; the transcript is found on BSE and summarised here in about 10 minutes.</div>` : ""}</div>` : "";
     const concallCard = call ? `<div class="card md"><h2>Concall ${esc(call.quarter)} <span class="m">filed ${esc(call.date)}</span></h2>
         <div style="margin-bottom:8px">${call.tone ? `<span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>` : ""} ${call.compared ? `<span class="badge">vs last quarter</span>` : ""}
         ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""}</div>
@@ -1103,9 +1107,9 @@
         ${story.one ? `<p><b>${esc(story.one)}</b></p>` : ""}<div id="bspx"></div>
         ${story.moves && story.moves.length ? `<div class="m" style="margin:2px 0 8px">Shaded: biggest 4-week moves - ${story.moves.map((m) => `<span class="${m.pct >= 0 ? "up" : "dn"}">${esc(m.from.slice(2, 7))} ${m.pct > 0 ? "+" : ""}${Math.round(m.pct)}%</span>`).join(" · ")}</div>` : ""}
         ${story.html}<div class="m">Researched on the web ${esc(story.at)}${story.sources ? " · sources: " + esc(story.sources) : ""} · price moves from real share-price data. Check before acting ·
-        <a href="${requestLink(bsCode, story.company)}" target="_blank" rel="noopener">refresh it</a></div></div>`
+        ${isOwner() ? `<a href="${requestLink(bsCode, story.company)}" target="_blank" rel="noopener">refresh it</a>` : ""}</div></div>`
       : bsCode ? `<div class="card"><h2>The story so far</h2><div class="m">Not written yet for this company${(() => { const M = window.DESK_BSIDX.meta || {}; const i = (M.next || []).findIndex((n) => sameCo(n, key)); return i >= 0 ? ` - it's number ${i + 1} in the queue` : ""; })()}.</div>
-        <p><a class="btn" href="${requestLink(bsCode, call ? call.company : key)}" target="_blank" rel="noopener">Write it now</a></p>
+        ${isOwner() ? `<p><a class="btn" href="${requestLink(bsCode, call ? call.company : key)}" target="_blank" rel="noopener">Write it now</a></p>` : ""}
         <div class="m">Opens a one-line request on GitHub - press "Submit" and the story appears here in about 10 minutes.</div></div>` : "";
     const myNotes = getNotes().filter((n2) => n2.company && sameCo(n2.company, key));
     const notesCard = `<div class="card"><h2>My notes <span class="m">${myNotes.length ? plural(myNotes.length, "note") : "only you see these"}</span></h2>

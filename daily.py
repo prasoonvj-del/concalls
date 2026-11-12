@@ -100,6 +100,8 @@ def concall_requests():
     import backstory
     asked = {}
     for it in backstory._gh("GET", "/issues", params={"state": "open", "per_page": 50}) or []:
+        if (it.get("user") or {}).get("login", "") != os.environ.get("GITHUB_REPOSITORY_OWNER", "prasoonvj-del"):
+            continue  # only the owner's requests spend the AI allowance
         m = re.match(r"\s*concall:\s*(\d{5,6})", it.get("title", ""), re.I)
         if m and "pull_request" not in it:
             asked.setdefault(m.group(1), []).append(it["number"])

@@ -272,3 +272,4 @@ details.why{min-width:170px}details.why summary{cursor:pointer;list-style:none;w
 .ktl{margin:2px 0 10px;font-size:13px;line-height:2}.ktl .tq{white-space:nowrap}.mb.mini{display:inline-flex;width:60px;height:7px;vertical-align:middle}
 .why2{font-size:12.5px;line-height:1.45;min-width:260px}
 .pol{margin:4px 0 10px;gap:18px}.pol h3{font-size:14.5px;margin:2px 0 6px}.pol .list li{padding:6px 0;font-size:13.5px}
+.foot{max-width:1200px;margin:10px auto 70px;padding:0 20px;font-size:12px;color:var(--text-2);text-align:center}
