@@ -335,6 +335,10 @@ class AI:
             flash.insert(0, m)
         if getattr(self, "lite_first", False):  # routine jobs: Flash-Lite models (bigger free limits) first
             flash.sort(key=lambda i: "lite" not in i)
+        if getattr(self, "no_lite", False):  # quality work: full models only - wait for tomorrow rather than use Lite
+            flash = [i for i in flash if "lite" not in i]
+            if not flash:
+                raise QuotaOver("No full-quality model available")
         self.model = flash[0]
         self.backups = flash[1:]
         say(f"  Models to try, in order: {', '.join(flash[:5])}")
@@ -468,8 +472,14 @@ class Pool:
     bulk side jobs (pivots, decks, tab write-ups, sorting) go Mistral first to keep Gemini free for
     summaries and the big picture. A provider that fails is skipped for 15 minutes."""
 
-    def __init__(self, bulk=False):
+    def __init__(self, bulk=False, quality=False):
         self.primary = AI("ai")
+        if quality:  # full Gemini models only, no Lite and no small-context backups: better to wait a day
+            self.primary.no_lite = True
+            self.chain, self.down, self.pause = [self.primary], {}, self.primary.pause
+            self.mistral = self.backup = self.sambanova = None
+            self.primary.patient = True
+            return
         if bulk:  # Google's free Flash allowance is only a few dozen requests a day: keep it for concall summaries,
             self.primary.lite_first = True  # the big picture and overviews; routine jobs start on Flash-Lite
         extra = {}
@@ -1114,9 +1124,10 @@ def overview(sector, lib, pool, industry=None):
     key = f"{sector}|{industry}|{q}" if industry else f"{sector}|{q}"
     label = f"{sector} - {industry}" if industry else sector
     names = sorted(c["company"] for c in calls)
-    stamp = [c.get("compared", False) for c in sorted(calls, key=lambda c: c["company"])]
+    # a summary rewritten by a full model (draft -> final) also counts as a change
+    stamp = [[c.get("compared", False), "lite" in (c.get("model") or "lite")] for c in sorted(calls, key=lambda c: c["company"])]
     old = lib["overviews"].get(key, {})
-    if old.get("companies") == names and old.get("compared") == stamp:
+    if old.get("companies") == names and old.get("compared") == stamp and "lite" not in (old.get("model") or "lite"):
         return False  # already up to date
     say(f"\nWriting the {label} overview for {q} from {len(calls)} companies ...")
     texts = [(c["company"], (here(c["summary"])).read_text(encoding="utf-8").split("\n---\n")[0]) for c in calls]
@@ -1129,7 +1140,7 @@ def overview(sector, lib, pool, industry=None):
         return ai.ask(OVERVIEW_PROMPT.format(sector=label, quarter=q, n=len(calls), body=body), label="overview")
 
     try:
-        out, _ = pool.run(job)
+        out, ai_used = pool.run(job)
     except AIError as e:
         say(f"    overview failed: {e}")
         return False
@@ -1138,7 +1149,7 @@ def overview(sector, lib, pool, industry=None):
     path = folder / (f"_INDUSTRY OVERVIEW - {safe_name(industry)} - {q}.md" if industry else f"_SECTOR OVERVIEW - {q}.md")
     path.write_text(out + f"\n\n*Based on: {', '.join(names)}*\n", encoding="utf-8")
     lib["overviews"][key] = {"sector": sector, "industry": industry or "", "quarter": q, "companies": names,
-                             "compared": stamp, "file": path.relative_to(BASE).as_posix()}
+                             "compared": stamp, "file": path.relative_to(BASE).as_posix(), "model": ai_used.model}
     save_lib(lib)
     say(f"    saved: {path.relative_to(BASE)}")
     return True

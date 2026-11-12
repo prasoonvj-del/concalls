@@ -141,6 +141,60 @@ def concall_requests():
             backstory._gh("PATCH", f"/issues/{n}", json={"state": "closed"})
 
 
+def is_draft(call):
+    """Written by a Lite model (or unknown) - to be redone by a full model."""
+    m = (call.get("model") or "").lower()
+    return bool(call.get("summary")) and (not m or "lite" in m)
+
+
+def upgrade_summaries(lib, qpool, deadline):
+    """Quality over speed: rewrite quick drafts with a full Gemini model, most useful first - watchlist,
+    then large companies, then the newest calls. Stops when today's full-quality allowance is used;
+    tomorrow carries on. Returns the sectors whose overviews should be refreshed."""
+    import readacross
+    watch = watchlist()
+    latest = {c["code"]: c for c in C.latest_call_each(list(lib["calls"].values()))}
+    todo = [c for c in latest.values() if is_draft(c) and not c.get("skip")]
+    prio = lambda c: (not any(w in c["company"].lower() for w in watch), not readacross.is_leader(c["company"]),
+                      -int(c["date"].replace("-", "")))
+    todo.sort(key=prio)
+    if not todo:
+        return set()
+    say(f"\nFull-quality rewrite of quick drafts: {len(todo)} waiting (watchlist, large companies, newest first) ...")
+    touched, done = set(), 0
+    for c in todo:
+        if time.time() > deadline:
+            break
+        old = (c.get("summary"), c.get("model"))
+        prev = C.find_prev(lib, c)
+        say(f"  [{done + 1}] {c['company']} ({c.get('quarter', '')}, draft by {old[1] or '?'})")
+        try:
+            C.summarise_one(c, lib, qpool, prev if prev and prev.get("summary") else None)
+        except C.AIError as e:
+            say(f"  stopping: no full-quality model left today ({str(e)[:80]}) - the rest continue tomorrow")
+            break
+        if old[0] and old[0] != c.get("summary"):
+            try:
+                (C.BASE / old[0]).unlink()
+            except Exception:
+                pass
+        c.pop("expect", None)
+        c.pop("delivery", None)
+        try:  # its read-across signals are redone from the better summary
+            d = readacross.load()
+            if d["done"].pop(c["id"], None):
+                d["items"] = [x for x in d["items"] if x.get("src_code") != c["code"] or x["date"] != c["date"]]
+                readacross.save(d)
+        except Exception:
+            pass
+        touched.add(C.sector_of(lib, c))
+        done += 1
+        C.save_lib(lib)
+        time.sleep(qpool.pause)
+    say(f"  rewrote {done} with a full model; {len(todo) - done} still to go")
+    return touched
+
+
 def step_concalls(conf):
     say("\n================ CONCALLS ================")
     lib = C.load_lib()
@@ -158,8 +212,9 @@ def step_concalls(conf):
         lib["rescan_meet"] = True
         C.save_lib(lib)
     try:
-        pool = C.Pool()
+        pool = C.Pool(bulk=True)  # quick drafts on Flash-Lite; full-quality versions follow in upgrade_summaries()
         pool.ask("Reply with exactly: OK", label="check", max_wait=45)
+        qpool = C.Pool(quality=True)
     except C.AIError as e:
         say(f"AI not available: {e}")
         return
@@ -169,13 +224,7 @@ def step_concalls(conf):
         import industries
         industries.classify(lib, C.Pool(bulk=True))
         lib = C.load_lib()
-        # sectors whose line-up changed (companies moved by the industry sorting) get a fresh overview
-        redo = 0
-        for sector in C.SECTORS:
-            if redo >= 5:
-                break
-            if C.overview(sector, lib, pool):
-                redo += 1
+        # (sector overviews are refreshed after the summaries, with a full-quality model only)
     except Exception as e:
         say(f"  industry sorting skipped: {str(e)[:120]}")
     recheck_figures(lib)
@@ -219,29 +268,33 @@ def step_concalls(conf):
                 break
         time.sleep(pool.pause)
     touched_ind = set()
-    for sector in sorted(touched):
+    touched |= upgrade_summaries(lib, qpool, deadline)
+    # overviews written by a Lite model earlier: a few each run get a full-quality rewrite
+    lite_ov = sorted({o["sector"] for o in lib.get("overviews", {}).values()
+                      if not o.get("industry") and "lite" in (o.get("model") or "lite")} - touched)[:3]
+    for sector in sorted(touched) + lite_ov:
         try:
-            C.overview(sector, lib, pool)
+            C.overview(sector, lib, qpool)
         except C.AIError as e:
-            say(f"    overview failed: {e}")
+            say(f"    overview waits for a full-quality model: {str(e)[:80]}")
     try:
         import industries
         touched_ind = {industries.industry_of(lib, c) for c in lib["calls"].values() if C.sector_of(lib, c) in touched}
         if time.time() < deadline:
-            industries.overviews(lib, pool, touched_ind, limit=8)
+            industries.overviews(lib, qpool, touched_ind, limit=8)
     except Exception as e:
         say(f"  industry overviews skipped: {str(e)[:120]}")
     late = time.time() > RUN_START + 58 * 60  # leave the last minutes for the timeline and the website
     try:  # management vs market expectations, said vs did
         import expect
         if time.time() < deadline and not late:
-            expect.step(lib, pool, limit=80)
+            expect.step(lib, qpool, limit=80)
     except Exception as e:
         say(f"  expectations skipped: {str(e)[:120]}")
     try:  # read-across: what big companies' calls signal for smaller listed players
         import readacross
         if time.time() < deadline and not late:
-            readacross.step(lib, pool, limit=24)
+            readacross.step(lib, qpool, limit=24)
         if not late:
             readacross.outcomes()
     except Exception as e:
@@ -399,14 +452,19 @@ def main():
                 industries.classify(C.load_lib(), C.Pool(bulk=True), limit=200, minutes=4)
             except Exception as e:
                 say(f"  industry sorting skipped: {str(e)[:120]}")
+            try:  # leftover full-quality requests go to rewriting drafts first
+                if _t.time() < RUN_START + 40 * 60:
+                    upgrade_summaries(C.load_lib(), C.Pool(quality=True), _t.time() + 8 * 60)
+            except Exception as e:
+                say(f"  full-quality rewrite skipped: {str(e)[:120]}")
             try:
                 import expect
-                expect.step(C.load_lib(), C.Pool(), limit=24)
+                expect.step(C.load_lib(), C.Pool(quality=True), limit=24)
             except Exception as e:
                 say(f"  expectations skipped: {str(e)[:120]}")
             try:
                 import readacross
-                readacross.step(C.load_lib(), C.Pool(), limit=8)
+                readacross.step(C.load_lib(), C.Pool(quality=True), limit=8)
             except Exception as e:
                 say(f"  read-across skipped: {str(e)[:120]}")
         try:

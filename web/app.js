@@ -1096,7 +1096,8 @@
         ${isOwner() ? `<div class="m">Opens a one-line request on GitHub - press "Submit"; the transcript is found on BSE and summarised here in about 10 minutes.</div>` : ""}</div>` : "";
     const concallCard = call ? `<div class="card md"><h2>Concall ${esc(call.quarter)} <span class="m">filed ${esc(call.date)}</span></h2>
         <div style="margin-bottom:8px">${call.tone ? `<span class="tone ${esc(call.tone)}">${esc(call.tone)}</span>` : ""} ${call.compared ? `<span class="badge">vs last quarter</span>` : ""}
-        ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""}</div>
+        ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""}
+        ${call.draft ? `<span class="badge" title="Written by a lighter AI model; a full-quality version replaces it as the free allowance allows">Quick draft · full version coming</span>` : ""}</div>
         ${call.checks.length ? `<div class="warn">Highlighted figures weren't found word-for-word in the transcript - check them in the PDF.</div>` : ""}
         ${callHtml}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p></div>` : "";
     const deckCard = decks.length ? `<div class="card md"><h2>Investor deck <span class="m">${when(decks[0].when)}</span></h2>
@@ -1231,7 +1232,7 @@
           <div class="ch"><a class="n" href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a><span class="m">${esc(c.quarter)}${st.s ? "" : " · " + esc(c.sector)}${c.ind && !st.i ? " · " + esc(c.ind) : ""} · ${esc(c.date.slice(5))}</span>
           <span class="r2">${deckFor(c) ? `<a class="badge" href="${esc(deckFor(c).pdf)}" target="_blank" rel="noopener" title="Investor deck filed with this call">deck</a>` : ""}${c.compared ? `<span class="badge" title="Includes what changed vs last quarter">vs last qtr</span>` : ""}
           ${c.checks.length ? `<span class="badge w" title="Figures not found word-for-word in the transcript">⚠ ${c.checks.length}</span>` : ""}
-          ${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}${scoreBadge(c)}</span></div>
+          ${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}${scoreBadge(c)}${c.draft ? ` <span class="m" title="Quick draft by a lighter model - full version coming">· draft</span>` : ""}</span></div>
           <div class="cp">${esc(c.one || "")} <a href="#companies/${encodeURIComponent(c.company)}">full summary →</a></div>
           ${scoreWhy(c)}${RA().filter((r) => r.src_code === c.code && r.date === c.date).map((r) => `<div class="cx2">${raDir(r)} <span class="m">Read-across:</span> ${esc(r.trend)} <span class="m">→</span> ${r.matches.slice(0, 5).map((m) => `<a href="#companies/${encodeURIComponent(m.company)}">${esc(m.company)}</a>`).join(", ")}</div>`).join("")}</div>`).join("")
         + (calls.length > shown ? `<button id="kmore" style="margin:8px">Show ${Math.min(80, calls.length - shown)} more${calls.length - shown > 80 ? ` (${calls.length - shown} left)` : ""}</button>` : "")
