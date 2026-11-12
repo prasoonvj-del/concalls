@@ -333,9 +333,23 @@ def group(articles):
             continue
         keys.update({k1, k2})
         uniq.append(a)
+    # names: capitalised words that are rare today ("RCF", "HAL", "Mukand") - two headlines about different
+    # companies in the same template ("X Q2 results: net profit rises ...") must never become one story
+    df = {}
+    for a in uniq:
+        for w in tokens(a["title"]):
+            df[w] = df.get(w, 0) + 1
+    lim = max(3, len(uniq) // 400)
+
+    def names(title):  # headlines lead with their subject: look at the first few words only
+        head = " ".join(re.split(r"[:|;,]", title)[0].split()[:4])
+        caps = {w.lower() for w in re.findall(r"\b[A-Z][A-Za-z&]+", head)}
+        return {w for w in tokens(title) if w in caps and not w.isdigit() and df.get(w, 0) <= lim}
+
     stories, index = [], {}
     for a in uniq:
         t = tokens(a["title"])
+        nm = names(a["title"])
         best, best_score = None, 0
         counts = {}
         for w in t:
@@ -344,11 +358,14 @@ def group(articles):
         for sid, inter in counts.items():
             score = inter / max(1, min(len(t), len(stories[sid]["tokens"])))
             same = (inter >= 3 and score >= 0.6) or (inter >= 4 and score >= 0.5)
+            other = stories[sid]["names"]
+            if same and nm and other and not (nm & other):
+                same = False  # different companies, same headline template
             if same and score > best_score:
                 best, best_score = sid, score
         if best is None:
             sid = len(stories)
-            stories.append({"tokens": t, "items": [a]})
+            stories.append({"tokens": t, "items": [a], "names": nm})
             for w in t:
                 index.setdefault(w, []).append(sid)
         else:
@@ -480,24 +497,45 @@ def own_sector(stories, cache=None):
 
 def explain_top(stories, pool, n=12, cache=None):
     """Context / why it matters / what to watch for the day's most important stories.
-    Explanations are remembered, so a later run only explains newly important stories."""
-    top = sorted(stories, key=lambda s: (-s["importance"], -s["outlets"], -s["when"].timestamp()))[:n]
-    if cache is not None:
-        known = cache.setdefault("explain", {})
-        fresh = [s for s in top if s["key"] not in known]
-        if fresh:
-            for e in explain_top(fresh, pool, n=len(fresh)):
-                s = next(x for x in fresh if x["id"] == e["id"])
-                known[s["key"]] = {k: e[k] for k in ("context", "why", "watch")}
-        return [dict(known[s["key"]], id=s["id"]) for s in top if s["key"] in known]
+    The same event told by different outlets in different words (three inflation headlines) is shown once:
+    the AI marks repeats. Explanations are remembered, so a later run only explains new stories."""
+    cand = sorted(stories, key=lambda s: (-s["importance"], -s["outlets"], -s["when"].timestamp()))[:n + 8]
+    if cache is not None and not cache.get("explain_v2"):  # explained before repeats were marked: once more
+        cache["explain"], cache["explain_v2"] = {}, True
+    known = cache.setdefault("explain", {}) if cache is not None else {}
+    fresh = [s for s in cand if s["key"] not in known]
+    if fresh:
+        covered = [s for s in cand if s["key"] in known and not known[s["key"]].get("dup")][:n]
+        for e in _explain(fresh, covered, pool):
+            s = next(x for x in fresh if x["id"] == e["id"])
+            known[s["key"]] = {"dup": True} if e.get("dup") else {k: e[k] for k in ("context", "why", "watch")}
+    return [dict(known[s["key"]], id=s["id"]) for s in cand if s["key"] in known and not known[s["key"]].get("dup")][:n]
+
+
+DUP_RULE = """
+Some stories may report the SAME event or data release as another one (e.g. the same inflation print from different
+outlets, or a preview of a print that is already out). For such a repeat write only:
+### [<id>]
+Same as: [<id of the earlier story or of an ALREADY COVERED one>]
+Keep the first-listed story as the explained one. Different companies' results are NOT repeats.
+"""
+
+
+def _explain(top, covered, pool):
     if not top:
         return []
     lines = [story_line(s) for s in top]
-    text = ask_fitted(pool, EXPLAIN_PROMPT, lines, label="explaining top stories")
+    head = EXPLAIN_PROMPT.replace("\nSTORIES:", DUP_RULE + (
+        "\nALREADY COVERED (do not explain these again):\n" + "\n".join(f"[{s['id']}] {s['title']}" for s in covered) + "\n"
+        if covered else "") + "\nSTORIES:")
+    text = ask_fitted(pool, head, lines, label="explaining top stories")
     out = []
     for block in re.split(r"^###\s*", text, flags=re.M):
         m = re.match(r"\[?(\d+)\]?", block.strip())
         if not m:
+            continue
+        if re.search(r"(?im)^\s*Same as:", block):
+            out.append({"id": int(m.group(1)), "dup": True})
             continue
 
         def field(name):
@@ -506,8 +544,8 @@ def explain_top(stories, pool, n=12, cache=None):
 
         out.append({"id": int(m.group(1)), "context": field("Context"), "why": field("Why it matters"),
                     "watch": field("What to watch")})
-    known = {s["id"] for s in top}
-    return [o for o in out if o["id"] in known]
+    ids = {s["id"] for s in top}
+    return [o for o in out if o["id"] in ids]
 
 
 def story_line(s):
@@ -669,7 +707,7 @@ def build(conf=None, log_failed=True):
 
     say("\nExplaining the most important stories ...")
     try:
-        top = explain_top(relevant, bulk, cache=cache)
+        top = explain_top(relevant, pool, cache=cache)  # the front page: full model while it lasts
     except C.AIError as e:
         say(f"    failed: {e}")
         top = []
