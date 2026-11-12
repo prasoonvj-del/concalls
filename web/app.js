@@ -58,7 +58,18 @@
     if (window.DESK_OVH[o.k] == null) { try { await loadScript("data/cc/" + o.k + ".js" + CCV); } catch (e) { staleCheck(true); return ""; } }
     const x = window.DESK_OVH[o.k];
     if (!x || typeof x !== "object" || x.c !== o.sector + (o.ind || "")) { staleCheck(true); return ""; }
-    return raInto(rateTables(x.h || "", o.sector), o.sector, o.ind || "");
+    return raInto(rateTables(watchUp(x.h || ""), o.sector), o.sector, o.ind || "");
+  }
+  // "What to watch next quarter" sits just above the "Bullish vs cautious" table
+  function watchUp(html) {
+    const box = document.createElement("div"); box.innerHTML = html;
+    const hs = [...box.querySelectorAll("h1,h2,h3,h4")];
+    const w = hs.find((e) => /what to watch/i.test(e.textContent)), b = hs.find((e) => /bullish/i.test(e.textContent));
+    if (!w || !b || w.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) return html;
+    const part = [w];
+    for (let n = w.nextElementSibling; n && !/^H[1-4]$/.test(n.tagName); n = n.nextElementSibling) part.push(n);
+    part.forEach((n) => b.parentNode.insertBefore(n, b));
+    return box.innerHTML;
   }
   // read-across signals for the sector (or industry), placed in its overview just above "Company one-liners"
   function raInto(html, sector, ind) {

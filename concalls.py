@@ -112,10 +112,10 @@ Write a sector overview in Markdown: what are managements across the sector sayi
 ## Capex & capacity
 ## What changed since last quarter
 (only if the summaries include last-quarter comparisons: guidance raised/cut, tone shifts, delivery on promises)
+## What to watch next quarter
 ## Bullish vs cautious
 (table: Company | Tone | Key reason)
 ## Company one-liners
-## What to watch next quarter
 
 SUMMARIES:
 {body}
