@@ -191,6 +191,8 @@ def build(quiet=False):
         import readacross
         cut2 = (dt.date.today() - dt.timedelta(days=200)).isoformat()
         track["ra"] = [r for r in readacross.load().get("items", []) if r["date"] >= cut2 and r.get("matches")]
+        # small file of its own: the Concalls and Sectors pages need it without the whole trackers file
+        (data / "readacross.js").write_text(_js("DESK_RA", None, track["ra"]), encoding="utf-8")
         (data / "trackers.js").write_text(_js("DESK_TRACK", None, track), encoding="utf-8")
     except Exception as e:
         say(f"  (initiating coverage notes not added: {e})")
@@ -211,6 +213,7 @@ def build(quiet=False):
     js = js.replace('"data/brief-" + date + ".js"', '"data/brief-" + date + ".js?v=' + stamp + '"')
     js = js.replace('"data/tabs-" + date + ".js"', '"data/tabs-" + date + ".js?v=' + stamp + '"')
     js = js.replace('loadScript("data/concalls.js")', 'loadScript("data/concalls.js?v=' + stamp + '")')
+    js = js.replace('loadScript("data/readacross.js")', 'loadScript("data/readacross.js?v=' + stamp + '")')
     js = js.replace('const CCV = ""', 'const CCV = "?v=' + stamp + '"')
     js = js.replace('const BUILD = ""', 'const BUILD = "' + stamp + '"')
     (data / "build.js").write_text(f'window.DESK_BUILD_NOW = "{stamp}";', encoding="utf-8")

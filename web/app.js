@@ -58,7 +58,22 @@
     if (window.DESK_OVH[o.k] == null) { try { await loadScript("data/cc/" + o.k + ".js" + CCV); } catch (e) { staleCheck(true); return ""; } }
     const x = window.DESK_OVH[o.k];
     if (!x || typeof x !== "object" || x.c !== o.sector + (o.ind || "")) { staleCheck(true); return ""; }
-    return rateTables(x.h || "", o.sector);
+    return raInto(rateTables(x.h || "", o.sector), o.sector, o.ind || "");
+  }
+  // read-across signals for the sector (or industry), placed in its overview just above "Company one-liners"
+  function raInto(html, sector, ind) {
+    const calls = (window.DESK_CONCALLS || {}).calls || [];
+    const inSec = (m) => { const c = calls.find((x) => x.code === m.code); return c && c.sector === sector && (!ind || c.ind === ind); };
+    const ra = RA().filter((r) => r.matches.some(inSec) || (!ind && r.sector === sector)).slice(0, 6);
+    if (!ra.length) return html;
+    const block = `<h2>Read-across <span class="m" style="font-weight:400;font-size:13px">what big companies' calls signal for this space · matched from each company's own call</span></h2>
+      ${ra.map((r) => { const ms = r.matches.filter(inSec); const show = ms.length ? ms : r.matches;
+        return `<div class="icn"><div class="t">${raDir(r)} <a href="#companies/${encodeURIComponent(r.src)}">${esc(r.src)}</a> <span class="m">(${esc(r.quarter)})</span>: ${esc(r.trend)}</div>
+          <ul>${show.slice(0, 5).map((m) => `<li><a href="#companies/${encodeURIComponent(m.company)}">${esc(m.company)}</a>${raRet(m, r)} <span class="m">- "${esc((m.why || "").replace(/^[-–•\s]+/, "").replace(/^Tone:\s*\w+\s*-\s*/i, ""))}"</span></li>`).join("")}</ul></div>`; }).join("")}`;
+    const box = document.createElement("div"); box.innerHTML = html;
+    const h = [...box.querySelectorAll("h2,h3,h4")].find((e) => /one-?liners/i.test(e.textContent));
+    if (h) h.insertAdjacentHTML("beforebegin", block); else box.insertAdjacentHTML("beforeend", block);
+    return box.innerHTML;
   }
   // overview tables listing companies with their tone (e.g. "Bullish vs cautious") get two more columns:
   // the management rating and the logic behind it, from each company's latest graded call
@@ -150,6 +165,7 @@
     if (!window.DESK_CONCALLS) {
       try { await loadScript("data/concalls.js"); } catch (e) { window.DESK_CONCALLS = { calls: [], overviews: [] }; }
     }
+    if (!window.DESK_RA) { try { await loadScript("data/readacross.js"); } catch (e) { window.DESK_RA = []; } }
     return window.DESK_CONCALLS;
   }
   async function getPres() {
@@ -585,7 +601,7 @@
     + ({ raised: 1, cut: -1, initiated: 0.5 }[((c.metrics || {}).guidance)] || 0);
 
   // read-across: a big company's call signals something for smaller players (matched from their own concalls)
-  const RA = () => ((window.DESK_TRACK || {}).ra || []);
+  const RA = () => window.DESK_RA || ((window.DESK_TRACK || {}).ra || []);
   const raDir = (r) => `<span class="exc ${r.dir === "tailwind" ? "up" : "dn"}">${r.dir === "tailwind" ? "▲ Tailwind" : "▼ Headwind"}</span>`;
   const raRet = (m, r) => m.ret == null ? "" : ` <span class="${m.ret - (r.nifty || 0) >= 0 ? "up" : "dn"}" title="since ${esc(r.date)}; Nifty ${r.nifty == null ? "n/a" : (r.nifty > 0 ? "+" : "") + r.nifty + "%"}">${m.ret > 0 ? "+" : ""}${m.ret}%</span>`;
   const raNote = (r) => `<div class="icn"><div class="t">${raDir(r)} <a href="#companies/${encodeURIComponent(r.src)}">${esc(r.src)}</a> <span class="m">(${esc(r.quarter)} call)</span>: ${esc(r.trend)}</div>
@@ -893,8 +909,6 @@
           <div class="card md"><h2>${esc(sec.cat)} <span class="m">${plural(sec.ids.length, "story")} · ${sec.pos}▲ ${sec.neg}▼ ${sec.neu}•</span></h2>
             ${marketLine(sec.cat)}
             ${sec.one ? `<p><b>${sec.one}</b></p>` : ""}<div id="sw">${sec.html || `<p class="m">Too few stories today for a write-up - see the list below.</p>`}</div></div>
-          ${(() => { const ra = RA().filter((r) => r.sector === sec.cat || r.matches.some((m) => (cc.calls.find((c) => c.code === m.code) || {}).sector === sec.cat)).slice(0, 5);
-            return ra.length ? `<div class="card"><h2>Read-across <span class="m">what big companies' calls signal for ${esc(sec.cat)} · matched from smaller companies' own calls</span></h2>${ra.map(raNote).join("")}</div>` : ""; })()}
           ${secIc.length ? `<div class="card"><h2>Broker research <span class="m">${esc(sec.cat)} · initiations and research notes, last 90 days</span></h2>${secIc.slice(0, 6).map((r) => icNote(r, true)).join("")}</div>` : ""}
           ${ov || calls.length || res.length ? `<div class="card"><h2>What managements said <span class="m">concalls${res.length ? " & results" : ""} in this sector</span></h2>
             ${ov ? `<div class="md"><div class="m">Sector overview · ${esc(ov.quarter)} · ${ov.companies.length} companies</div>${await ovHtml(ov)}</div>` : ""}
