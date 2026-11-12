@@ -591,9 +591,9 @@ def build(conf=None, log_failed=True):
         return None
     try:
         pool = C.Pool()
-        bulk = C.Pool(bulk=True)  # tagging and tab write-ups: Mistral first, keeping Gemini for the brief itself
+        bulk = C.Pool(bulk=True)  # all news work on Lite; the full model's small free allowance goes to concalls (big picture excepted)
         say("Checking the AI connection ...")
-        pool.ask("Reply with exactly: OK", label="check", max_wait=45)
+        bulk.ask("Reply with exactly: OK", label="check", max_wait=45)
     except C.AIError as e:
         say(f"  PROBLEM: {e}")
         return None
@@ -645,14 +645,14 @@ def build(conf=None, log_failed=True):
     new_ic = []
     try:  # brokerages initiating coverage: read the articles, keep a note per initiation
         import ic
-        new_ic = ic.step(relevant, pool)
-        ic.backfill(pool)
+        new_ic = ic.step(relevant, bulk)
+        ic.backfill(bulk)
     except Exception as e:
         say(f"  initiating coverage skipped: {str(e)[:120]}")
 
     say("\nExplaining the most important stories ...")
     try:
-        top = explain_top(relevant, pool, cache=cache)
+        top = explain_top(relevant, bulk, cache=cache)
     except C.AIError as e:
         say(f"    failed: {e}")
         top = []
@@ -660,7 +660,7 @@ def build(conf=None, log_failed=True):
 
     try:  # results, order wins, broker calls and dated events -> data/trackers.json
         import trackers
-        trackers.update(relevant, pool, cache, now_utc)
+        trackers.update(relevant, bulk, cache, now_utc)
         save_cache(cache, now_utc)
     except Exception as e:
         say(f"  trackers skipped: {str(e)[:150]}")
