@@ -55,7 +55,7 @@ def concall_data():
                       "ind": (lib.get("industries") or {}).get(c["code"], ""),
                       "quarter": c["quarter"], "date": c["date"], "tone": c.get("tone", ""),
                       "compared": bool(c.get("compared")), "checks": bad,
-                      "ex": c.get("expect") or {}, "dl": c.get("delivery") or {},
+                      "ex": c.get("expect") or {}, "dl": c.get("delivery") or {}, "ft": c.get("ft") or {},
                       "draft": "lite" in (c.get("model") or "lite").lower(),
                       "pdf": c.get("pdf_url", C.BSE_PDF[0] + c["pdf"]), "html": html})
     overviews = []

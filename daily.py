@@ -487,6 +487,11 @@ def main():
     except Exception:
         pass
     try:
+        import watch
+        watch.keep_policy()
+    except Exception as e:
+        say(f"  follow-through: {str(e)[:120]}")
+    try:
         import timeline
         timeline.update()
     except Exception:

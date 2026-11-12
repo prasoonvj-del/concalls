@@ -142,7 +142,10 @@
     return all.filter((e) => !seen.has(e.u) && seen.add(e.u)).sort((a, b) => (a.d < b.d ? 1 : -1));
   }
   const TLK = { concall: ["Concall", "--s1"], deck: ["Deck", "--s3"], pivot: ["Pivot", "--s5"], result: ["Results", "--s2"],
-    order: ["Order", "--s4"], broker: ["Broker", "--neu"], story: ["Price story", "--caution"] };
+    order: ["Order", "--s4"], broker: ["Broker", "--neu"], story: ["Price story", "--caution"], policy: ["Govt", "--s6"] };
+  // follow-through: what a later concall said about this event
+  const FTV = { showed: ["✅ Showed up", "pos"], partly: ["◐ Partly", "cau"], notyet: ["⏳ Not yet", "neu"], reversed: ["✖ Went the other way", "neg"], silent: ["— Not addressed", "neu"] };
+  const ftLine = (f) => f && FTV[f.v] ? `<div class="ftv ftv-${FTV[f.v][1]}">→ ${esc(f.q || "Next")} call: <b>${FTV[f.v][0]}</b>${f.x ? " · " + esc(f.x) : ""}</div>` : "";
   function timelineHtml(list) {
     let month = "";
     return list.map((e) => {
@@ -150,7 +153,7 @@
       const head = m !== month ? `<div class="tlm">${m}</div>` : ""; month = m;
       const [lbl, col] = TLK[e.k] || [e.k, "--neu"];
       return `${head}<div class="tle"><span class="m tld">${esc(e.d.slice(8))}</span><span class="kc" style="background:var(${e.s === "-" ? "--neg" : col})">${lbl}</span>
-        <span>${esc(e.t)}${fixLink(e.l) ? ` <a class="m" href="${esc(fixLink(e.l))}" target="_blank" rel="noopener">source</a>` : ""}</span></div>`;
+        <span>${esc(e.t)}${fixLink(e.l) ? ` <a class="m" href="${esc(fixLink(e.l))}" target="_blank" rel="noopener">source</a>` : ""}${ftLine(e.f)}</span></div>`;
     }).join("");
   }
   async function getDir() {
@@ -594,15 +597,23 @@
   const scoreParts = (c) => [
     ["Tone", { Positive: 3, Mixed: 2, Cautious: 1, Negative: 0 }[c.tone] ?? 1.5, 3],
     ["vs market", { addressed: 2, partly: 1, gap: 0 }[(c.ex || {}).v] ?? 1, 2],
-    ["Said vs did", { delivered: 2, partly: 1, missed: 0 }[(c.dl || {}).v] ?? 1, 2],
+    ["Said vs did", saidDid(c), 2],
     ["Guidance", { raised: 1, cut: -1, initiated: 0.5 }[((c.metrics || {}).guidance)] || 0, 1]];
   const scoreBadge = (c) => c.ex && c.ex.v ? `<span class="scb ${mgmtScore(c) >= 6 ? "up" : mgmtScore(c) < 4 ? "dn" : ""}" title="${esc(scoreParts(c).map(([k, v, m]) => `${k} ${v}/${m}`).join(" · "))}">${mgmtScore(c).toFixed(1)}/8</span>` : "";
-  const scoreWhy = (c) => !(c.ex && c.ex.v) ? "" : `<div class="cx2"><b>Management rating ${mgmtScore(c).toFixed(1)}/8</b> <span class="m">= ${scoreParts(c).map(([k, v, m]) => `${k} ${v}/${m}`).join(" + ")}${c.dl && c.dl.v ? "" : " (said vs did: no comparable guidance, counted 1)"}</span>
+  const scoreWhy = (c) => !(c.ex && c.ex.v) ? "" : `<div class="cx2"><b>Management rating ${mgmtScore(c).toFixed(1)}/8</b> <span class="m">= ${scoreParts(c).map(([k, v, m]) => `${k} ${v}/${m}`).join(" + ")}${c.dl && c.dl.v || ftTally(c) ? "" : " (said vs did: no comparable guidance, counted 1)"}</span>
       <div>${exChip(c)} <span class="m">Market wanted:</span> ${esc(c.ex.focus || "")} <span class="m">→ Management:</span> ${esc(c.ex.line || "")}</div>
-      ${c.dl && c.dl.v ? `<div>${dlChip(c)} <span class="m">Said vs did:</span> ${esc(c.dl.line || "")}</div>` : ""}</div>`;
-  const mgmtScore = (c) => ({ Positive: 3, Mixed: 2, Cautious: 1, Negative: 0 }[c.tone] ?? 1.5)
-    + ({ addressed: 2, partly: 1, gap: 0 }[(c.ex || {}).v] ?? 1) + ({ delivered: 2, partly: 1, missed: 0 }[(c.dl || {}).v] ?? 1)
-    + ({ raised: 1, cut: -1, initiated: 0.5 }[((c.metrics || {}).guidance)] || 0);
+      ${c.dl && c.dl.v ? `<div>${dlChip(c)} <span class="m">Said vs did:</span> ${esc(c.dl.line || "")}</div>` : ""}
+      ${ftTally(c) ? `<div><span class="m">Follow-through on ${esc(ftTally(c))}</span></div>` : ""}</div>`;
+  const mgmtScore = (c) => scoreParts(c).reduce((a, p) => a + p[1], 0);
+  // said vs did = last quarter's guidance delivered + earlier events (orders, capex, approvals) followed through
+  function saidDid(c) {
+    const sc = [], dl = { delivered: 2, partly: 1, missed: 0 }[(c.dl || {}).v];
+    if (dl != null) sc.push(dl);
+    const f = c.ft || {}, n = (f.showed || 0) + (f.partly || 0) + (f.notyet || 0) + (f.reversed || 0);
+    if (n) sc.push((2 * (f.showed || 0) + (f.partly || 0) + (f.notyet || 0)) / n);
+    return sc.length ? Math.round(sc.reduce((a, b) => a + b, 0) / sc.length * 10) / 10 : 1;
+  }
+  const ftTally = (c) => { const f = c.ft || {}; const bits = [["showed", "showed up"], ["partly", "partly"], ["notyet", "not yet"], ["reversed", "went the other way"]].filter(([k]) => f[k]).map(([k, l]) => `${f[k]} ${l}`); return bits.length ? `earlier events: ${bits.join(", ")}` : ""; };
 
   // read-across: a big company's call signals something for smaller players (matched from their own concalls)
   const RA = () => window.DESK_RA || ((window.DESK_TRACK || {}).ra || []);

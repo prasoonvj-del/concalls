@@ -143,6 +143,17 @@ def update():
                 n += add(code, f"bs|{code}|{b['at']}", b["at"], "story", f"Share-price story: {b['one']}")
     except Exception:
         pass
+    # government decisions that name the company (kept in the follow-through file after the trackers drop them)
+    try:
+        import watch
+        W = watch.load()
+        for uid, r in W["policy"].items():
+            for co in r.get("cos") or []:
+                if co and co != "-":
+                    n += add(key_for(co, by_name), "GOV|" + uid, r["d"], "policy",
+                             f"{r.get('body') if r.get('body') and 'ministry name' not in r['body'].lower() else 'Govt'}: {r['what']}" + (f" ({r['sectors']})" if r.get("sectors") else ""))
+    except Exception:
+        W = None
     themes = {r["uid"]: r.get("theme") for r in T.get("pivots", []) if r.get("theme")}
     for lst in cos.values():
         for e in lst:
@@ -159,6 +170,16 @@ def update():
         for e in lst:
             if e.get("l") and not e["l"].startswith("http"):
                 e["l"] = C.BSE_PDF[0] + e["l"]
+    # follow-through: the latest verdict from a later concall, next to the event
+    if W:
+        for lst in cos.values():
+            for e in lst:
+                rec = W["items"].get(e["u"])
+                c = watch.latest(rec) if rec else None
+                if c:
+                    e["f"] = {"q": c["q"], "v": c["v"], "x": c.get("x", "")}
+                else:
+                    e.pop("f", None)
     # tidy: newest first, capped
     for k, lst in cos.items():
         lst.sort(key=lambda e: e["d"], reverse=True)

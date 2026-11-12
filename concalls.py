@@ -926,7 +926,7 @@ def est_tokens(s):
     return len(s) // 4
 
 
-def build_summary(ai, call, text, prev):
+def build_summary(ai, call, text, prev, watch_items=None):
     """One call if the provider can take the whole transcript; otherwise notes per part, then a summary."""
     head = SUMMARY_PROMPT.format(company=call["company"], date=call["date"])
     tail = ""
@@ -944,6 +944,11 @@ def build_summary(ai, call, text, prev):
                  "addition, a legal case still pending, guidance missed again), say so in one line under Highlights "
                  "or Risks. Do not repeat the record otherwise.\n")
         tail += f"\n\nOUR RECORD (oldest first):\n{rec}"
+    if watch_items:  # follow-through: did earlier events show up in this call?
+        import watch
+        h2, t2 = watch.prompt_parts(watch_items)
+        head += h2
+        tail += t2
     text = text[:ai.max_chars]
     budget = ai.max_input_tokens
     if not budget or est_tokens(head + text + tail) <= budget:
@@ -1030,8 +1035,17 @@ def summarise_one(call, lib, pool, prev=None):
         prev_text = re.sub(r"^# .*\n(\*Filed.*\*\n)?", "", (here(prev["summary"])).read_text(encoding="utf-8"))
         prev_text = prev_text.split("\n---\n")[0]  # without the number-check note
         prev_info = {"quarter": prev["quarter"], "text": prev_text}
-    out, ai = pool.run(lambda a: build_summary(a, call, text, prev_info))
+    try:
+        import watch
+        items = watch.company_items(call, lib)
+    except Exception as e:
+        say(f"    (follow-through items skipped: {str(e)[:80]})")
+        items = []
+    out, ai = pool.run(lambda a: build_summary(a, call, text, prev_info, items))
     metrics, out = parse_metrics(out)
+    verdicts = {}
+    if items:
+        verdicts, out = watch.parse(out, items)
     q = re.search(r"\*\*Quarter:\*\*\s*Q\s*([1-4])\s*[-' ]*FY\s*'?(\d{2,4})", out, re.I)
     call["quarter"] = f"Q{q.group(1)} FY{int(q.group(2)) % 100:02d}" if q else filing_quarter(call)
     tone = re.search(r"\*\*Tone:\*\*\s*\**\s*([A-Za-z]+)", out)
@@ -1048,6 +1062,19 @@ def summarise_one(call, lib, pool, prev=None):
         call["metrics_unchecked"] = metrics_unchecked(metrics, source)
     call["compared"] = bool(prev_info)
     note = ""
+    if items:  # added after the figure check: the events quote news figures, not the transcript's
+        out = out.rstrip() + "\n" + watch.section(items, verdicts)
+        watch.record(call, items, verdicts)
+        tally = {}
+        for v, _ in verdicts.values():
+            if v != "silent":
+                tally[v] = tally.get(v, 0) + 1
+        call["ft"] = tally
+    else:
+        call.pop("ft", None)
+        if verdicts:
+            said = sum(1 for v, _ in verdicts.values() if v != "silent")
+            say(f"    follow-through: {len(items)} earlier event(s) checked, {said} addressed on the call")
     if bad:
         note = ("\n---\n**Check these figures** - not found word-for-word in the transcript "
                 f"(may be calculated by the AI, or misread): {', '.join(bad)}\n")
@@ -1135,13 +1162,19 @@ def overview(sector, lib, pool, industry=None):
         return False  # already up to date
     say(f"\nWriting the {label} overview for {q} from {len(calls)} companies ...")
     texts = [(c["company"], (here(c["summary"])).read_text(encoding="utf-8").split("\n---\n")[0]) for c in calls]
+    try:  # what we were watching: last overview's watch list + government decisions for the sector
+        import watch
+        extra = watch.overview_parts(sector, q, lib, industry)
+    except Exception as e:
+        say(f"    (watch list skipped: {str(e)[:80]})")
+        extra = ""
 
     def job(ai):
         per = None
         if ai.max_input_tokens:  # small-limit provider: give each company an equal share
             per = max(800, (ai.max_input_tokens - 1500) * 4 // len(texts))
         body = "\n\n".join(f"=== {n} ===\n" + (t[:per] if per else t) for n, t in texts)
-        return ai.ask(OVERVIEW_PROMPT.format(sector=label, quarter=q, n=len(calls), body=body), label="overview")
+        return ai.ask(OVERVIEW_PROMPT.format(sector=label, quarter=q, n=len(calls), body=body) + extra, label="overview")
 
     try:
         out, ai_used = pool.run(job)
