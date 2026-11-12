@@ -1306,10 +1306,10 @@
         return (x > y ? 1 : x < y ? -1 : 0) * dir;
       });
       const th = (k, label, unit) => `<th data-k="${k}" title="Sort">${esc(label)}${unit ? `<br><span class="m">${esc(unit)}</span>` : ""}${sortKey === k ? (dir < 0 ? " ▼" : " ▲") : ""}</th>`;
-      $("#pt").innerHTML = `<tr>${th("company", "Company")}${th("tone", "Tone")}${th("mg", "Mgmt rating", "/8 · tap for why")}${cols.map((k) => th(k, MET[k][0], MET[k][1])).join("")}${th("guidance", "Guidance")}</tr>` +
-        sorted.map((c) => `<tr><td><a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a><br><span class="m">${esc(c.quarter)}</span></td>
-          <td>${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : "–"}${c.prev_tone && c.prev_tone !== c.tone ? `<br><span class="m">was ${esc(c.prev_tone)}</span>` : ""}</td>
-          <td>${(c.ex || {}).v ? `<details class="why"><summary>${scoreBadge(c)} ${exChip(c)} ${dlChip(c)}</summary>${scoreWhy(c)}</details>` : "–"}</td>
+      $("#pt").innerHTML = `<tr>${th("company", "Company")}${th("mg", "Tone & rating", "/8 · tap")}${cols.map((k) => th(k, MET[k][0], MET[k][1])).join("")}${th("guidance", "Guidance")}</tr>` +
+        sorted.map((c) => `<tr><td><a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company.replace(/\s+(Ltd|Limited)\.?(-\$)?$|-\$$/i, ""))}</a><br><span class="m">${esc(c.quarter)}</span></td>
+          <td>${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : "–"}${c.prev_tone && c.prev_tone !== c.tone ? `<br><span class="m">was ${esc(c.prev_tone)}</span>` : ""}
+            ${(c.ex || {}).v ? `<details class="why"><summary>${scoreBadge(c)}</summary><div class="whypop">${scoreWhy(c)}</div></details>` : ""}</td>
           ${cols.map((k) => `<td class="num">${fmtM(c.metrics[k])}${c.unchecked.includes(k) && c.metrics[k] != null ? ' <span title="Not stated word-for-word in the transcript - likely calculated">⚠</span>' : ""}</td>`).join("")}
           <td>${esc(c.metrics.guidance && c.metrics.guidance !== "none" ? c.metrics.guidance : "–")}</td></tr>`).join("");
       $("#pt").querySelectorAll("th").forEach((t) => t.onclick = () => { const k = t.dataset.k; dir = sortKey === k ? -dir : -1; sortKey = k; drawTable(); });
