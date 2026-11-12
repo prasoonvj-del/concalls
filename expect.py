@@ -12,6 +12,7 @@ Stored on each call in the library:
 Batches of 8 summaries per AI request; new calls first, then the backlog, `limit` per run.
 """
 import re
+import time
 
 import concalls as C
 from concalls import say
@@ -74,7 +75,7 @@ def _broker_risks(name):
         return ""
 
 
-def step(lib, pool, limit=40):
+def step(lib, pool, limit=40, deadline=None):
     """Grades up to `limit` summaries (latest call per company first). Returns how many were graded."""
     calls = [c for c in lib["calls"].values() if c.get("summary") and (c.get("expect") or {}).get("ver", 0) < 2
              and not (c.get("expect") == {"ver": 2})]
@@ -85,6 +86,9 @@ def step(lib, pool, limit=40):
     say(f"\nManagement vs market expectations: grading {len(calls)} calls ...")
     done, ai = 0, None
     for i in range(0, len(calls), 8):
+        if deadline and time.time() > deadline:
+            say("  out of time - the rest next run")
+            break
         part = calls[i:i + 8]
         items = []
         for n, c in enumerate(part, 1):

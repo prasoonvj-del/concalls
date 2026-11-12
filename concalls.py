@@ -606,9 +606,13 @@ def bse():
     return _sess
 
 
-def bse_query(frm, to, subcategory, cat=None, scrip=""):
+def bse_query(frm, to, subcategory, cat=None, scrip="", budget=None):
     rows, page = [], 1
+    stop = time.time() + budget if budget else None
     while page <= 300:
+        if stop and time.time() > stop:
+            say(f"  BSE list: stopped after {page - 1} pages (time budget) - rest next run")
+            break
         params = {"pageno": page, "strCat": cat or ("Company Update" if subcategory != "-1" else "-1"),
                   "strPrevDate": frm.strftime("%Y%m%d"), "strToDate": to.strftime("%Y%m%d"),
                   "strScrip": scrip, "strSearch": "P", "strType": "C", "subcategory": subcategory}

@@ -134,7 +134,7 @@ def match(lib, sig, src_code, texts, inds):
     return out[:8]
 
 
-def step(lib, pool, limit=12):
+def step(lib, pool, limit=12, deadline=None):
     """New read-across signals from large companies' latest calls (at most `limit` calls per run)."""
     d = load()
     latest = C.latest_per_company(list(lib["calls"].values()))
@@ -150,6 +150,9 @@ def step(lib, pool, limit=12):
     inds = lib.get("industries", {})
     added = 0
     for i in range(0, len(todo), 4):
+        if deadline and time.time() > deadline:
+            say("  out of time - the rest next run")
+            break
         part = todo[i:i + 4]
         items = "\n\n".join(f"=== id {n}: {c['company']} ({c.get('quarter', '')})\n" + "\n".join(
             f"[{s}]\n{_section(texts.get(c['code'], (c, ''))[1], s, 1200)}" for s in SECTIONS

@@ -462,7 +462,9 @@ def update_calendar(days=10):
     if last and now.isoformat() < (dt.datetime.fromisoformat(last) + dt.timedelta(hours=6)).isoformat():
         return
     to = now.date()
-    rows = C.bse_query(to - dt.timedelta(days=days), to, "-1", cat="Board Meeting")
+    if data["calendar"]:
+        days = min(days, 3)          # older filings were read on earlier runs
+    rows = C.bse_query(to - dt.timedelta(days=days), to, "-1", cat="Board Meeting", budget=240)
     lib = C.load_lib()
     seen = {r["uid"]: r for r in data["calendar"]}
     for row in rows:

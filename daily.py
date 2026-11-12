@@ -288,13 +288,13 @@ def step_concalls(conf):
     try:  # management vs market expectations, said vs did
         import expect
         if time.time() < deadline and not late:
-            expect.step(lib, qpool, limit=80)
+            expect.step(lib, qpool, limit=80, deadline=deadline)
     except Exception as e:
         say(f"  expectations skipped: {str(e)[:120]}")
     try:  # read-across: what big companies' calls signal for smaller listed players
         import readacross
         if time.time() < deadline and not late:
-            readacross.step(lib, qpool, limit=24)
+            readacross.step(lib, qpool, limit=24, deadline=deadline)
         if not late:
             readacross.outcomes()
     except Exception as e:
@@ -447,8 +447,11 @@ def main():
         except Exception:
             say(f"\n!! 'Story so far' failed:\n{traceback.format_exc()}")
         if not conf["concalls"]:
+            stop = RUN_START + 52 * 60  # news runs: AI extras only while time is left
             try:
                 import industries
+                if _t.time() > stop - 6 * 60:
+                    raise RuntimeError("out of time this run")
                 industries.classify(C.load_lib(), C.Pool(bulk=True), limit=200, minutes=4)
             except Exception as e:
                 say(f"  industry sorting skipped: {str(e)[:120]}")
@@ -459,12 +462,16 @@ def main():
                 say(f"  full-quality rewrite skipped: {str(e)[:120]}")
             try:
                 import expect
-                expect.step(C.load_lib(), C.Pool(quality=True), limit=24)
+                if _t.time() > stop:
+                    raise RuntimeError("out of time this run")
+                expect.step(C.load_lib(), C.Pool(quality=True), limit=24, deadline=stop)
             except Exception as e:
                 say(f"  expectations skipped: {str(e)[:120]}")
             try:
                 import readacross
-                readacross.step(C.load_lib(), C.Pool(quality=True), limit=8)
+                if _t.time() > stop:
+                    raise RuntimeError("out of time this run")
+                readacross.step(C.load_lib(), C.Pool(quality=True), limit=8, deadline=stop)
             except Exception as e:
                 say(f"  read-across skipped: {str(e)[:120]}")
         try:
