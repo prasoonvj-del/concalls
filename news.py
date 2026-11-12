@@ -679,7 +679,7 @@ def build(conf=None, log_failed=True):
         say(f"[{i}/{len(todo)}] {c} ({len(by_cat[c])} stories, {new} new)")
         head = SECTION_PROMPT.format(cat=c, n=len(by_cat[c][:250]), hours=conf["hours"])
         try:
-            sections[c] = ask_fitted(pool, head, [story_line(s) for s in by_cat[c][:250]], label=c)
+            sections[c] = ask_fitted(bulk, head, [story_line(s) for s in by_cat[c][:250]], label=c)
             cache["sections"][c] = {"keys": keys, "text": sections[c]}
             save_cache(cache, now_utc)
         except C.QuotaOver as e:

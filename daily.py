@@ -12,6 +12,8 @@ Settings: the [cloud] section of config.ini. API keys: GEMINI_API_KEY / GROQ_API
 """
 import configparser
 import os
+import time as _t
+RUN_START = _t.time()  # the workflow step is stopped at 75 minutes - everything here finishes well before
 import re
 import time
 import traceback
@@ -179,7 +181,7 @@ def step_concalls(conf):
     recheck_figures(lib)
     queue, is_watch = plan_concalls(lib, conf)
     budget = conf["limit"]
-    deadline = time.time() + conf["minutes"] * 60
+    deadline = min(time.time() + conf["minutes"] * 60, RUN_START + 52 * 60)
     say(f"\n{len(queue)} companies have a call without a summary. Doing up to {budget} AI summaries this run "
         f"(watchlist first, then sectors in turn).")
     touched, fails, done = set(), 0, 0
@@ -229,17 +231,19 @@ def step_concalls(conf):
             industries.overviews(lib, pool, touched_ind, limit=8)
     except Exception as e:
         say(f"  industry overviews skipped: {str(e)[:120]}")
+    late = time.time() > RUN_START + 58 * 60  # leave the last minutes for the timeline and the website
     try:  # management vs market expectations, said vs did
         import expect
-        if time.time() < deadline:
+        if time.time() < deadline and not late:
             expect.step(lib, pool, limit=80)
     except Exception as e:
         say(f"  expectations skipped: {str(e)[:120]}")
     try:  # read-across: what big companies' calls signal for smaller listed players
         import readacross
-        if time.time() < deadline:
+        if time.time() < deadline and not late:
             readacross.step(lib, pool, limit=24)
-        readacross.outcomes()
+        if not late:
+            readacross.outcomes()
     except Exception as e:
         say(f"  read-across skipped: {str(e)[:120]}")
     if time.time() < deadline:
@@ -377,11 +381,15 @@ def main():
             say(f"\n!! Concall request failed:\n{traceback.format_exc()}")
         try:
             import decks
+            if _t.time() > RUN_START + 60 * 60:
+                raise RuntimeError("out of time this run - decks continue next run")
             decks.step(C.Pool(bulk=True), "full" if conf["concalls"] else "news")
         except Exception:
             say(f"\n!! Deck summaries failed:\n{traceback.format_exc()}")
         try:
             import backstory
+            if _t.time() > RUN_START + 60 * 60:
+                raise RuntimeError("out of time this run")
             backstory.step("full" if conf["concalls"] else "news")
         except Exception:
             say(f"\n!! 'Story so far' failed:\n{traceback.format_exc()}")
@@ -403,6 +411,8 @@ def main():
                 say(f"  read-across skipped: {str(e)[:120]}")
         try:
             import pivot_sources
+            if _t.time() > RUN_START + 62 * 60:
+                raise RuntimeError("out of time this run")
             pivot_sources.step(C.Pool(bulk=True), "full" if conf["concalls"] else "news")
         except Exception:
             say(f"\n!! Pivots from summaries failed:\n{traceback.format_exc()}")
