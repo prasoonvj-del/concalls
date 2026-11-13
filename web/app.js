@@ -927,12 +927,16 @@
       .filter((c, i, all) => all.findIndex((x) => x.code === c.code) === i);
     const T = (window.DESK_TRACK || {}).trackers || {};
     const res = (T.results || []).filter((r) => r.sector === sec.cat);
-    view.innerHTML = `<h1>Sectors</h1><div class="sub">${esc(b.label)} · <a href="#today/${b.date}">back to the brief</a></div>
+    const oldNav = $(".secnav"), keep = oldNav ? [oldNav.scrollTop, oldNav.scrollLeft] : null;
+    const at = b.sections.indexOf(sec), prev = b.sections[at - 1], next = b.sections[at + 1];
+    const stepLink = (s, dir) => s ? `<a class="secstep" href="#sectors/${encodeURIComponent(s.cat)}">${dir < 0 ? "‹ " : ""}${esc(s.cat)}${dir > 0 ? " ›" : ""}</a>` : "<span></span>";
+    view.innerHTML = `<h1>Sectors</h1><div class="sub">${esc(b.label)} · <a href="#today/${b.date}">back to the brief</a> · <span class="m">← → keys or swipe to move between sectors</span></div>
       <div class="side">
         <div class="card secnav">${b.sections.map((s) => `<a href="#sectors/${encodeURIComponent(s.cat)}" class="${s.cat === sec.cat ? "on" : ""}">
           <span>${esc(s.cat)}</span><span class="m">${s.ids.length}</span></a>`).join("")}</div>
         <div>
-          <div class="card md"><h2>${esc(sec.cat)} <span class="m">${plural(sec.ids.length, "story")} · ${sec.pos}▲ ${sec.neg}▼ ${sec.neu}•</span></h2>
+          <div class="card md"><h2 class="sech">${esc(sec.cat)} <span class="m">${plural(sec.ids.length, "story")} · ${sec.pos}▲ ${sec.neg}▼ ${sec.neu}•</span>
+            <span class="secarr">${prev ? `<a href="#sectors/${encodeURIComponent(prev.cat)}" title="${esc(prev.cat)}">‹</a>` : ""}${next ? `<a href="#sectors/${encodeURIComponent(next.cat)}" title="${esc(next.cat)}">›</a>` : ""}</span></h2>
             ${marketLine(sec.cat)}
             ${sec.one ? `<p><b>${sec.one}</b></p>` : ""}<div id="sw">${sec.html || `<p class="m">Too few stories today for a write-up - see the list below.</p>`}</div></div>
           ${secIc.length ? `<div class="card"><h2>Broker research <span class="m">${esc(sec.cat)} · initiations and research notes, last 90 days</span></h2>${secIc.slice(0, 6).map((r) => icNote(r, true)).join("")}</div>` : ""}
@@ -941,9 +945,41 @@
             ${calls.length ? `<div class="chips">${calls.slice(0, 30).map((c) => `<span class="chip link" data-go="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}${c.tone ? ` <span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}</span>`).join("")}${calls.length > 30 ? `<a class="chip link" href="#concalls/${encodeURIComponent(sec.cat)}">all ${calls.length} →</a>` : ""}</div>` : ""}
             ${res.length ? `<div class="m" style="margin-top:8px">Results this season: ${res.slice(0, 12).map((r) => `<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a> <span class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</span>`).join(" · ")}${res.length > 12 ? ` · <a href="#trackers/results">all →</a>` : ""}</div>` : ""}</div>` : ""}
           <div class="card"><h2>Stories</h2><div id="sl"></div></div>
+          <div class="secsteps">${stepLink(prev, -1)}${stepLink(next, 1)}</div>
         </div></div>`;
     storyFeed($("#sl"), sec.ids.map((i) => byId[i]).filter(Boolean), { ph: "Search " + sec.cat + " stories" });
+    // the list keeps its place; the chosen sector stays in view; the page opens at the sector's top
+    const nav = $(".secnav"), on = nav.querySelector("a.on");
+    if (keep) { nav.scrollTop = keep[0]; nav.scrollLeft = keep[1]; }
+    if (on) {
+      if (on.offsetTop < nav.scrollTop || on.offsetTop + on.offsetHeight > nav.scrollTop + nav.clientHeight)
+        nav.scrollTop = on.offsetTop - nav.clientHeight / 2;
+      if (on.offsetLeft < nav.scrollLeft || on.offsetLeft + on.offsetWidth > nav.scrollLeft + nav.clientWidth)
+        nav.scrollLeft = on.offsetLeft - 20;
+    }
+    if (!keep) scrollTo(0, 0);  // arriving from another page
+    else {
+      const narrow = innerWidth <= 900, top = (narrow ? nav : nav.nextElementSibling).getBoundingClientRect().top + scrollY - 70;
+      if (scrollY > top || !narrow) scrollTo(0, Math.max(0, top));
+    }
+    secMove = (d) => { const t = b.sections[at + d]; if (t) go("#sectors/" + encodeURIComponent(t.cat)); };
   }
+  let secMove = null;
+  addEventListener("keydown", (e) => {
+    if (!secMove || !location.hash.startsWith("#sectors") || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || "")) return;
+    if (e.key === "ArrowRight") secMove(1); else if (e.key === "ArrowLeft") secMove(-1);
+  });
+  // a clear sideways swipe on the sector content moves to the next / previous sector
+  let swX = null, swY = null;
+  addEventListener("touchstart", (e) => { const t = e.touches[0]; swX = t.clientX; swY = t.clientY; }, { passive: true });
+  addEventListener("touchend", (e) => {
+    if (swX == null || !secMove || !location.hash.startsWith("#sectors")) return;
+    const t = e.changedTouches[0], dx = t.clientX - swX, dy = t.clientY - swY;
+    const inNav = e.target.closest && (e.target.closest(".secnav") || e.target.closest("table") || e.target.closest(".xgrid"));
+    swX = null;
+    if (!inNav && Math.abs(dx) > 90 && Math.abs(dx) > 2.5 * Math.abs(dy)) secMove(dx < 0 ? 1 : -1);
+  }, { passive: true });
 
   // repeat headlines (same story from several outlets / days) -> one line with "+n similar"
   function groupNews(items) {
