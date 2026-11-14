@@ -1,0 +1,628 @@
+{
+ "seen": {
+  "buyaartiindustriestargetofrs600motilaloswal": "2026-11-11",
+  "hovdegroupinitiatescoverageoneastwestbancorpnasdaqewbc": "2026-11-10",
+  "brokerscallnlcindiabuy": "2026-11-05",
+  "brokerscalllupinaccumulate": "2026-11-05",
+  "brokerscalllicindiabuy": "2026-11-06",
+  "accumulatetheramcocementsltdfortargetrs925byelaracapital": "2026-11-06",
+  "buycampusactivewearltdfortargetrs290bymotilaloswalfinancialservicesltd": "2026-11-06",
+  "addapollohospitalsltdforthetargetrs9600bychoiceinstitutionalequitiesltd": "2026-11-06",
+  "neutralvardhmantextilesltdfortargetrs570bymotilaloswalfinancialservicesltd": "2026-11-08",
+  "brokerscallhealthcareglobalenterprisesbuy": "2026-11-09",
+  "brokerscallmrsbectorfoodbuy": "2026-11-09",
+  "neutraltatachemicalsltdfortargetrs600bymotilaloswalfinancialservicesltd": "2026-11-09",
+  "buyfortishealthcaretargetofrs1075icicisecurities": "2026-11-09",
+  "buyfortishospitalstargetofrs940motilaloswal": "2026-11-09",
+  "ewbcinitiatescoverageonhovdegroupratingsettooutperfo": "2026-11-10",
+  "moneyviewsharesareup58fromipopricejump4todayafterbofacoveragewhatitsaidcheckpricetarget": "2026-11-11",
+  "stifelinitiatescoverageofcitytherapeuticsatbuysetspricetargetat34": "2026-11-11",
+  "stifelinitiatedcoverageoncitytherapeuticswithanewpricetarget": "2026-11-11",
+  "buyaartiindustriesltdfortargetrs600bymotilaloswalfinancialservicesltd": "2026-11-11",
+  "btiginitiatesmongodbstockcoveragewithbuyratingonaitailwinds": "2026-11-11",
+  "stockstobuysellorholdtodaynovember11icicibankiiflfinancenuvamawealthdatapatternsgodigitandothers": "2026-11-11",
+  "jpmorganinitiatescoverageofemcorgroupatneutralsetspricetargetat700": "2026-11-11",
+  "analystinitiatedcoverageonemcorgroupwithanewpricetarget": "2026-11-11",
+  "nomuraassignsbuyratingtothreemajorstockscheckthetargetpriceupsidepotential": "2026-11-11",
+  "nsesharesbrokerageinitiatescoveragewithbuyhighlightsvaluationdiscounttobse": "2026-11-12",
+  "brokerscallvardhmantextilesbuy": "2026-11-11",
+  "nseshareshitfreshhighsriseover2nuvamasees14upsidecallsthestockexchangeacompellingbuy": "2026-11-12",
+  "up118from52weeklowrolexringshitsyearhighisthesmallcapstockstillagoodbuychecktargetrationale": "2026-11-12",
+  "jefferiesinitiatescoverageofcorningatbuysetspricetargetat134": "2026-11-12",
+  "jefferiesinitiatedcoverageonbeldenwithanewpricetarget": "2026-11-11",
+  "brokerscallmahindramahindrabuy": "2026-11-12",
+  "motilaloswalinitiatescoverageonhimadrispecialitychemicalwithbuyratingpegs39upside": "2026-11-12",
+  "nsesharesinfocusnuvamainitiateswithbuychecktargetprice": "2026-11-12",
+  "emkayinitiatescoverageonthispureplayaistockwith27upsideprofitseendoubling": "2026-11-13",
+  "sebinitiatescoverageoffjorddefencegroupwithabuyratingandatargetpriceofnok19": "2026-11-13",
+  "rothcapitalinitiatedcoverageonanalogdeviceswithanewpricetarget": "2026-11-13",
+  "pipersandlerinitiatedcoverageoninniogroupwithanewpricetarget": "2026-11-13",
+  "wellsfargoinitiateskorsanabiosciencesstockatoverweight44targetbyinvestingcom": "2026-11-13",
+  "barclaysinitiatescoverageofultracleanhldgsatequalweightsetspricetargetat65": "2026-11-13"
+ },
+ "items": [
+  {
+   "uid": "fractalanalytics|emkayresearch|2026-11",
+   "date": "2026-11-13",
+   "init": true,
+   "scope": "company",
+   "company": "Fractal Analytics",
+   "sector": "IT & Software",
+   "broker": "Emkay Research",
+   "rating": "Buy",
+   "target": 1000.0,
+   "upside": 27.1,
+   "thesis": [
+    "Enterprise spending on artificial intelligence",
+    "Strong relationships with large global clients",
+    "Demand for complex analytics and AI programmes",
+    "Ability to win large contracts and expand accounts"
+   ],
+   "numbers": [
+    "Revenue CAGR around 14% (Fractal.ai)",
+    "Adjusted EBITDA CAGR 44% (Fractal.ai)",
+    "Gross margin stood at 46% in FY26"
+   ],
+   "risks": [
+    "Delayed spending decisions or postponed transformation projects",
+    "Slower pace of product adoption could delay margin benefits"
+   ],
+   "picks": [],
+   "title": "Emkay initiates coverage on this pure-play AI stock with 27% upside; profit seen doubling",
+   "link": "https://www.financialexpress.com/market/emkay-initiates-coverage-on-this-pure-play-ai-stock-with-27-upside-profit-seen-doubling-4383392/",
+   "src": "article"
+  },
+  {
+   "uid": "fjorddefencegroup|seb|2026-11",
+   "date": "2026-11-13",
+   "init": true,
+   "scope": "company",
+   "company": "Fjord Defence Group",
+   "sector": "Defence & Aerospace",
+   "broker": "SEB",
+   "rating": "Buy",
+   "target": 19.0,
+   "upside": null,
+   "thesis": [],
+   "numbers": [],
+   "risks": [],
+   "picks": [],
+   "title": "SEB initiates coverage of Fjord Defence Group with a buy rating and a target price of NOK 19",
+   "link": "https://www.marketscreener.com/news/seb-initiates-coverage-of-fjord-defence-group-with-a-buy-rating-and-a-target-price-of-nok-19-ce785ed9da89f520",
+   "src": "article"
+  },
+  {
+   "uid": "nationalstockexchangeofindia|nuvamainstitutionalequities|2026-11",
+   "date": "2026-11-12",
+   "init": true,
+   "scope": "company",
+   "company": "National Stock Exchange of India",
+   "sector": "Capital Markets & Wealth",
+   "broker": "Nuvama Institutional Equities",
+   "rating": "Buy",
+   "target": 2220.0,
+   "upside": null,
+   "thesis": [
+    "Dominant market position and valuation discount to BSE Ltd.",
+    "Three decades of entrenched liquidity and network effects.",
+    "Potential upside from recovery in market participation and volatility spikes.",
+    "Regulatory headwinds are largely behind the exchange."
+   ],
+   "numbers": [
+    "Revenue CAGR around 11% over FY26-FY29",
+    "Market share of around 93% in cash",
+    "P/E of 40.5x and 37.1x for FY27 and FY28 estimated"
+   ],
+   "risks": [
+    "Regulatory changes related to options",
+    "Market participation fluctuations"
+   ],
+   "picks": [],
+   "title": "NSE shares: Brokerage initiates coverage with 'Buy'; highlights valuation discount to BSE",
+   "link": "https://www.businesstoday.in/markets/stocks/story/nse-shares-brokerage-initiates-coverage-with-buy-highlights-valuation-discount-to-bse-566970-2026-11-12",
+   "src": "article"
+  },
+  {
+   "uid": "nationalstockexchangeofindia|motilaloswalfinancialservices|2026-11",
+   "date": "2026-11-12",
+   "init": true,
+   "scope": "company",
+   "company": "National Stock Exchange of India",
+   "sector": "Capital Markets & Wealth",
+   "broker": "Motilal Oswal Financial Services Ltd",
+   "rating": "Buy",
+   "target": 2300.0,
+   "upside": null,
+   "thesis": [],
+   "numbers": [],
+   "risks": [],
+   "picks": [],
+   "title": "NSE shares: Brokerage initiates coverage with 'Buy'; highlights valuation discount to BSE",
+   "link": "https://www.businesstoday.in/markets/stocks/story/nse-shares-brokerage-initiates-coverage-with-buy-highlights-valuation-discount-to-bse-566970-2026-11-12",
+   "src": "article"
+  },
+  {
+   "uid": "rolexrings|incredequities|2026-11",
+   "date": "2026-11-12",
+   "init": true,
+   "scope": "company",
+   "company": "Rolex Rings",
+   "sector": "Auto Components",
+   "broker": "InCred Equities",
+   "rating": "Buy",
+   "target": 251.0,
+   "upside": 28.0,
+   "thesis": [
+    "Entering fresh operating upcycle after prolonged period of muted growth",
+    "Recovery driven by US export bounce, European China+1 sourcing, domestic demand",
+    "Spare manufacturing capacity allows higher volumes without proportional capex",
+    "Debt-free, cash-generative business model with net cash of Rs 367 crore"
+   ],
+   "numbers": [
+    "Revenue CAGR 16% over FY26-FY28E",
+    "EBITDA CAGR 22% over FY26-FY28E",
+    "PAT CAGR 37% over FY26-FY28E"
+   ],
+   "risks": [],
+   "picks": [],
+   "title": "Up 118% from 52-week low, Rolex Rings hits year-high! Is the small-cap stock still a good buy? Check target, rationale",
+   "link": "https://www.livemint.com/market/stock-market-news/up-118-from-52-week-low-rolex-rings-hits-year-high-is-the-small-cap-stock-still-a-good-buy-check-target-rationale-11794466259464.html",
+   "src": "article"
+  },
+  {
+   "uid": "nexumgroupag|srcresearch|2026-11",
+   "date": "2026-11-12",
+   "init": true,
+   "scope": "company",
+   "company": "Nexum Group AG",
+   "sector": "NBFC & Financial Services",
+   "broker": "SRC Research",
+   "rating": "Buy",
+   "target": null,
+   "upside": 80.0,
+   "thesis": [
+    "Lean structure, shorter project durations, lower risk and financing costs",
+    "Only acquires projects with existing or preliminary planning permission",
+    "Carries no legacy liabilities on its balance sheet",
+    "Operates in a market with housing supply shortages"
+   ],
+   "numbers": [
+    "Project durations of 18 to 30 months enable rapid capital turnover",
+    "Deal pipeline comprises development volume of over one billion euros"
+   ],
+   "risks": [],
+   "picks": [],
+   "title": "Nexum Group AG: SRC Research initiates coverage with a ‘Buy’ recommendation and a target price of €2.00",
+   "link": "https://www.marketscreener.com/news/nexum-group-ag-src-research-initiates-coverage-with-a-a-buya-recommendation-and-a-target-price-o-ce785ed8db88f021",
+   "src": "article"
+  },
+  {
+   "uid": "aartiindustries|motilaloswal|2026-11",
+   "date": "2026-11-11",
+   "init": true,
+   "scope": "company",
+   "company": "Aarti Industries",
+   "sector": "Chemicals",
+   "broker": "Motilal Oswal",
+   "rating": "Buy",
+   "target": 600.0,
+   "upside": null,
+   "thesis": [
+    "MMA's competitive octane-enhancement economics and restrictions on MTBE support its adoption",
+    "Energy segment capacity expanded by ~24% to 360ktpa in Jul'26, enabling deeper penetration across US, Europe, and Africa",
+    "3-5 products under development could broaden portfolio beyond MMA and support energy segment growth",
+    "Growth driven by fuel additive expansion, higher utilization, and Zone IV ramp-up"
+   ],
+   "numbers": [
+    "Revenue CAGR 16% over FY26-29",
+    "EBITDA CAGR 23% over FY26-29",
+    "PAT CAGR 35% over FY26-29"
+   ],
+   "risks": [],
+   "picks": [],
+   "title": "Buy Aarti Industries; target of Rs 600: Motilal Oswal",
+   "link": "https://www.moneycontrol.com/news/business/stocks/buy-aarti-industries-target-of-rs-600-motilal-oswal-14076909.html",
+   "src": "article"
+  },
+  {
+   "uid": "moneyview|bofasecurities|2026-11",
+   "date": "2026-11-11",
+   "init": true,
+   "scope": "company",
+   "company": "Moneyview",
+   "sector": "NBFC & Financial Services",
+   "broker": "BofA Securities",
+   "rating": "Neutral",
+   "target": 65.0,
+   "upside": 18.0,
+   "thesis": [
+    "Operates in a large addressable market with opportunity to increase customer lifetime value.",
+    "Hybrid lending model balances growth and capital efficiency.",
+    "Valuation already reflects much optimism following strong post-listing performance.",
+    "Risk-reward profile has become more balanced after sharp rally."
+   ],
+   "numbers": [
+    "PAT CAGR of 62% between FY26 and FY29",
+    "ROE projected to improve from 19% in FY26 to 28% by FY29",
+    "Trades at 2x FY28E P/BV and 8.4x FY28E P/E"
+   ],
+   "risks": [
+    "Dependence on a single major product, lending partners, and regulatory arrangements.",
+    "Unsecured lending book exposes company to deterioration in credit cycle."
+   ],
+   "picks": [],
+   "title": "Moneyview shares are up 58% from IPO price, jump 4% today after BofA coverage - what it said, check price target",
+   "link": "https://www.livemint.com/market/moneyview-shares-are-up-58-from-ipo-price-jump-4-today-after-bofa-coverage-what-it-said-check-price-target-11794377585073.html",
+   "src": "article"
+  },
+  {
+   "uid": "mrf|clsa|2026-11",
+   "date": "2026-11-11",
+   "init": true,
+   "scope": "company",
+   "company": "M.R.F.",
+   "sector": "Capital Markets & Wealth",
+   "broker": "CLSA",
+   "rating": "Outperform",
+   "target": 165238.0,
+   "upside": 32.0,
+   "thesis": [
+    "Price hikes and cost-reduction measures help offset commodity inflation.",
+    "Price revisions to support margins and improve profitability from Q3 FY27.",
+    "Softer commodity price environment and crude oil decline expected to aid margins from FY28.",
+    "Valuation appears attractive with PEG ratio of 0.43 relative to expected earnings growth."
+   ],
+   "numbers": [
+    "Q2 FY27 EBITDA margin of 10.7%",
+    "Q2 FY27 Revenue from Operations increased 17.4% YoY to Rs 8,660 crore",
+    "Q2 FY27 Net profit declined 26.6% YoY to Rs 387 crore"
+   ],
+   "risks": [
+    "Continued volatility in commodity markets with elevated raw material and logistics costs."
+   ],
+   "picks": [],
+   "title": "Norne Securities Initiates Coverage of Outlet Group With Buy Rating and Target Price of NOK 47 - BN",
+   "link": "https://tradebrains.in/indian-markets/mrf-stock-in-focus-after-clsa-initiates-buy-rating-check-target-price-12800266",
+   "src": "article"
+  },
+  {
+   "uid": "datapatternsindia|choiceinstitutionalequities|2026-11",
+   "date": "2026-11-11",
+   "init": false,
+   "scope": "company",
+   "company": "Data Patterns (India)",
+   "sector": "Defence & Aerospace",
+   "broker": "Choice Institutional Equities",
+   "rating": "Buy",
+   "target": 4810.0,
+   "upside": null,
+   "thesis": [
+    "Gradual movement up value chain from subsystems to complete indigenous defense solutions expands addressable market",
+    "Firm order book and negotiated orders provide total order visibility of Rs 2,680 crore (2.9x FY26 revenue)",
+    "ST Advanced Composites acquisition strengthens in-house capabilities for integrated system offerings",
+    "Investments in complete systems and reusable technology platforms support long-term revenue scale-up"
+   ],
+   "numbers": [
+    "Firm order-book at Rs 1,724 crore and negotiated orders at Rs 956 crore",
+    "Management FY27 guidance of 20-25% revenue growth",
+    "Management FY27 guidance of 35-40% EBITDA margin"
+   ],
+   "risks": [
+    "Uneven execution of large defense programmes",
+    "Achieving FY27 guidance requires meaningful execution improvement in H2FY27"
+   ],
+   "picks": [],
+   "title": "Broker’s Call: Data Patterns India (Buy)",
+   "link": "https://www.thehindubusinessline.com/markets/brokers-call-data-patterns-india-buy/article71685796.ece",
+   "src": "article"
+  },
+  {
+   "uid": "vardhmantextiles|religarebroking|2026-11",
+   "date": "2026-11-11",
+   "init": false,
+   "scope": "company",
+   "company": "Vardhman Textiles",
+   "sector": "Textiles & Apparel",
+   "broker": "Religare Broking",
+   "rating": "Buy",
+   "target": 726.0,
+   "upside": null,
+   "thesis": [
+    "Robust Q2FY27 performance supported by improved demand and higher realisations.",
+    "Higher utilisation of recently commissioned capacities and recovery in fabric volumes.",
+    "Healthy balance sheet provides execution flexibility."
+   ],
+   "numbers": [
+    "Revenue increased 15.6 per cent YoY to ₹2,793 crore",
+    "EBITDA rose 65.8 per cent to ₹635 crore",
+    "PAT increased 92.3 per cent to ₹364 crore"
+   ],
+   "risks": [
+    "Near-term fabric margins",
+    "Sustainability of inventory-led gains"
+   ],
+   "picks": [],
+   "title": "Broker’s Call: Vardhman Textiles (Buy)",
+   "link": "https://www.thehindubusinessline.com/markets/brokers-call-vardhman-textiles-buy/article71685708.ece",
+   "src": "article"
+  },
+  {
+   "uid": "eastwestbancorp|hovdegroup|2026-11",
+   "date": "2026-11-10",
+   "init": true,
+   "scope": "company",
+   "company": "East West Bancorp",
+   "sector": "Markets & Flows",
+   "broker": "Hovde Group",
+   "rating": "Outperform",
+   "target": 153.0,
+   "upside": 16.82,
+   "thesis": [
+    "Started coverage with an outperform rating and a price target indicating potential upside."
+   ],
+   "numbers": [
+    "Reported $2.76 EPS for the quarter"
+   ],
+   "risks": [],
+   "picks": [],
+   "title": "EWBC Initiates Coverage On Hovde Group -- Rating Set to Outperfo",
+   "link": "https://www.gurufocus.com/news/9189082/ewbc-initiates-coverage-on-hovde-group-rating-set-to-outperform",
+   "src": "article"
+  },
+  {
+   "uid": "tatachemicals|motilaloswalfinancialservices|2026-11",
+   "date": "2026-11-09",
+   "init": false,
+   "scope": "company",
+   "company": "Tata Chemicals",
+   "sector": "Chemicals",
+   "broker": "Motilal Oswal Financial Services Ltd",
+   "rating": "Neutral",
+   "target": 600.0,
+   "upside": null,
+   "thesis": [
+    "Indian standalone business reported healthy performance driven by higher volumes in salt and realizations.",
+    "International operations remained weak due to global soda ash oversupply and Chinese export pressure."
+   ],
+   "numbers": [
+    "Consolidated EBITDA declined 29% YoY to INR3.8b",
+    "Revenue/EBITDA CAGR of 9%/20% over FY26-28"
+   ],
+   "risks": [],
+   "picks": [],
+   "title": "Neutral Tata Chemicals Ltd For Target Rs.600 by Motilal Oswal Financial Services Ltd",
+   "link": "https://investmentguruindia.com/newsdetail/neutral-tata-chemicals-ltd-for-target-rs-600-by-motilal-oswal-financial-services-ltd874168",
+   "src": "article"
+  },
+  {
+   "uid": "fortishealthcare|icicisecurities|2026-11",
+   "date": "2026-11-09",
+   "init": false,
+   "scope": "company",
+   "company": "Fortis Healthcare",
+   "sector": "Hospitals & Diagnostics",
+   "broker": "ICICI Securities",
+   "rating": "Buy",
+   "target": 1075.0,
+   "upside": null,
+   "thesis": [
+    "Hospitals division outperformed expectations on the back of patient volumes and ARPP surge.",
+    "Management devised a bed-expansion plan ensuring sufficient capacity to maintain growth."
+   ],
+   "numbers": [],
+   "risks": [],
+   "picks": [],
+   "title": "Buy Fortis Healthcare: target of Rs 1075: ICICI Securities",
+   "link": "https://www.moneycontrol.com/news/business/earnings/buy-fortis-healthcare-target-of-rs-1075-icici-securities-3-14075402.html/amp",
+   "src": "article"
+  },
+  {
+   "uid": "fortishospitals|motilaloswal|2026-11",
+   "date": "2026-11-09",
+   "init": false,
+   "scope": "company",
+   "company": "Fortis Hospitals",
+   "sector": "Hospitals & Diagnostics",
+   "broker": "Motilal Oswal",
+   "rating": "Buy",
+   "target": 940.0,
+   "upside": null,
+   "thesis": [
+    "Performance driven by stronger-than-anticipated profitability in diagnostics and hospital business.",
+    "Aspirates to increase bed capacity through brownfield expansion, O&M arrangements, and inorganic opportunities."
+   ],
+   "numbers": [
+    "Hospital revenue grew 18.8% YoY"
+   ],
+   "risks": [],
+   "picks": [],
+   "title": "Buy Fortis Hospitals; target of Rs 940: Motilal Oswal",
+   "link": "https://www.moneycontrol.com/news/business/earnings/buy-fortis-hospitals-target-of-rs-940-motilal-oswal-14075290.html/amp",
+   "src": "article"
+  },
+  {
+   "uid": "vardhmantextiles|motilaloswalfinancialservices|2026-11",
+   "date": "2026-11-08",
+   "init": false,
+   "scope": "company",
+   "company": "Vardhman Textiles",
+   "sector": "Textiles & Apparel",
+   "broker": "Motilal Oswal Financial Services Ltd",
+   "rating": "Neutral",
+   "target": 570.0,
+   "upside": null,
+   "thesis": [
+    "Revenue grew led by strong growth in the yarn portfolio driven by higher realizations.",
+    "Spinning utilization remained close to 100% supported by improving demand."
+   ],
+   "numbers": [
+    "Revenue grew 15.5% YoY to INR28.7b in 2QFY27",
+    "Revenue/EBITDA/APAT CAGR of 10/24/27% over FY26-28"
+   ],
+   "risks": [
+    "High dependence on the cotton-yarn spread",
+    "Delay in announced capex"
+   ],
+   "picks": [],
+   "title": "Neutral Vardhman Textiles Ltd For Target Rs.570 by Motilal Oswal Financial Services Ltd",
+   "link": "https://investmentguruindia.com/newsdetail/neutral-vardhman-textiles-ltd-for-target-rs-570-by-motilal-oswal-financial-services-ltd822483",
+   "src": "article"
+  },
+  {
+   "uid": "licindia|emkayglobal|2026-11",
+   "date": "2026-11-06",
+   "init": false,
+   "scope": "company",
+   "company": "LIC India",
+   "sector": "Insurance",
+   "broker": "Emkay Global",
+   "rating": "Buy",
+   "target": 550.0,
+   "upside": null,
+   "thesis": [
+    "Management remains optimistic about growth in H2 driven by new product launches and improved agent productivity.",
+    "VNB margins expanded year-on-year led by higher share of protection and annuity products."
+   ],
+   "numbers": [
+    "VNB grew around 17 per cent y-o-y to ₹3,710 crore"
+   ],
+   "risks": [
+    "Slowdown in APE growth led by decline in Individual APE.",
+    "Worsened persistency across cohorts."
+   ],
+   "picks": [],
+   "title": "Broker’s call: LIC India (Buy)",
+   "link": "https://www.thehindubusinessline.com/markets/brokers-call-lic-india-buy/article71674554.ece",
+   "src": "article"
+  },
+  {
+   "uid": "ramcocements|elaracapital|2026-11",
+   "date": "2026-11-06",
+   "init": false,
+   "scope": "company",
+   "company": "The Ramco Cements",
+   "sector": "Cement & Building Materials",
+   "broker": "Elara Capital",
+   "rating": "Accumulate",
+   "target": 925.0,
+   "upside": null,
+   "thesis": [
+    "EBITDA came ahead of estimates with the lowest QoQ decline in EBITDA per tonne in the coverage universe.",
+    "Strong growth in construction chemical volume and active steps to dispose of non-core assets."
+   ],
+   "numbers": [
+    "Cement volume grew by 8% YoY",
+    "Construction chemical volume grew by ~38% YoY"
+   ],
+   "risks": [
+    "Sub-par demand",
+    "Weak cement price and extended period of high fuel price"
+   ],
+   "picks": [],
+   "title": "Accumulate The Ramco Cements Ltd for Target Rs 925 by Elara Capital",
+   "link": "https://investmentguruindia.com/newsdetail/accumulate-the-ramco-cements-ltd-for-target-rs-925-by-elara-capital721324",
+   "src": "article"
+  },
+  {
+   "uid": "campusactivewear|motilaloswalfinancialservices|2026-11",
+   "date": "2026-11-06",
+   "init": false,
+   "scope": "company",
+   "company": "Campus Activewear",
+   "sector": "Consumer Durables",
+   "broker": "Motilal Oswal Financial Services Ltd",
+   "rating": "Buy",
+   "target": 290.0,
+   "upside": null,
+   "thesis": [
+    "Revenue grew 17% YoY led by volume growth and increase in ASP.",
+    "Promoter family has no plans to sell its stake in the foreseeable future, addressing stock overhang."
+   ],
+   "numbers": [
+    "Revenue/EBITDA/PAT CAGRs of ~15%/19%/23% over FY26-29"
+   ],
+   "risks": [],
+   "picks": [],
+   "title": "Buy Campus Activewear Ltd For Target Rs.290 by Motilal Oswal Financial Services Ltd",
+   "link": "https://investmentguruindia.com/newsdetail/buy-campus-activewear-ltd-for-target-rs-290-by-motilal-oswal-financial-services-ltd571964",
+   "src": "article"
+  },
+  {
+   "uid": "apollohospitals|choiceinstitutionalequities|2026-11",
+   "date": "2026-11-06",
+   "init": false,
+   "scope": "company",
+   "company": "Apollo Hospitals",
+   "sector": "Hospitals & Diagnostics",
+   "broker": "Choice Institutional Equities Ltd",
+   "rating": "Add",
+   "target": 9600.0,
+   "upside": null,
+   "thesis": [
+    "Strong growth outlook driven by hospital capacity expansion, diagnostics growth, and pharmacy expansion.",
+    "Improving occupancy, higher clinical complexity, and online-offline synergies expected to drive margins."
+   ],
+   "numbers": [
+    "Revenue/EBITDA/APAT to expand at a CAGR of 17.9%/21.3%/27.9% over FY26–29E"
+   ],
+   "risks": [],
+   "picks": [],
+   "title": "Add Apollo Hospitals Ltd for the Target Rs.9,600 by Choice Institutional Equities Ltd",
+   "link": "https://investmentguruindia.com/newsdetail/add-apollo-hospitals-ltd-for-the-target-rs-9-600-by-choice-institutional-equities-ltd303388",
+   "src": "article"
+  },
+  {
+   "uid": "nlcindia|elarasecurities|2026-11",
+   "date": "2026-11-05",
+   "init": false,
+   "scope": "company",
+   "company": "NLC India",
+   "sector": "Power & Utilities",
+   "broker": "Elara Securities",
+   "rating": "Buy",
+   "target": 387.0,
+   "upside": null,
+   "thesis": [
+    "Aggressive expansion plan targeting substantial increases in mining, thermal, and renewable energy capacities.",
+    "Stock has corrected 19 per cent in the past three months."
+   ],
+   "numbers": [
+    "Revenue CAGR of 10 per cent in FY26-29E",
+    "EBITDA CAGR of 17 per cent in FY26-29E"
+   ],
+   "risks": [],
+   "picks": [],
+   "title": "Broker’s Call: NLC India (Buy)",
+   "link": "https://www.thehindubusinessline.com/markets/brokers-call-nlc-india-buy/article71669777.ece",
+   "src": "article"
+  },
+  {
+   "uid": "lupin|plcapital|2026-11",
+   "date": "2026-11-05",
+   "init": false,
+   "scope": "company",
+   "company": "Lupin",
+   "sector": "Pharma & Healthcare Products",
+   "broker": "PL Capital",
+   "rating": "Accumulate",
+   "target": 2250.0,
+   "upside": null,
+   "thesis": [
+    "Strong US sales and India formulation growth.",
+    "Niche pipeline including 505 (b) (2) opportunity and biosimilars to compensate for increased competition."
+   ],
+   "numbers": [
+    "Q2-FY27 revenue grew 14 per cent year on year to ₹7,780 crore"
+   ],
+   "risks": [
+    "Increased competition in key products like gTolvaptan and gMirabegron."
+   ],
+   "picks": [],
+   "title": "Broker’s Call: Lupin (Accumulate)",
+   "link": "https://www.thehindubusinessline.com/markets/brokers-call-lupin-accumulate/article71669718.ece",
+   "src": "article"
+  }
+ ],
+ "backfilled": 2,
+ "relink": 1
+}
