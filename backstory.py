@@ -26,6 +26,7 @@ import concalls as C
 say = C.say
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 STORE = C.DATA / "backstories.json"
+FAILS = C.DATA / "backstory_fails.json"  # companies whose answer came back incomplete today
 REFRESH_DAYS = 45
 ALLOWANCE = {"full": (6, 12), "news": (2, 6), "request": (5, 10)}  # (companies, minutes) per update
 
@@ -225,7 +226,7 @@ def concall_notes(lib, code):
 # Groq models that can search the web themselves, best first. The last one is GPT-OSS with Groq's
 # built-in browser-search tool. The first that works for this key is remembered for the run.
 SEARCHERS = [("groq/compound", None), ("groq/compound-mini", None),
-             ("openai/gpt-oss-120b", [{"type": "browser_search"}]), ("openai/gpt-oss-20b", [{"type": "browser_search"}])]
+             ("openai/gpt-oss-120b", [{"type": "browser_search"}])]  # (the 20b model cut answers short: not used)
 COMPOUND = SEARCHERS[0][0]
 _working = {}
 
@@ -425,7 +426,11 @@ def step(mode="full"):
             return (today - dt.date.fromisoformat(s1["at"])).days > 20
         return (today - dt.date.fromisoformat(s1["at"])).days > REFRESH_DAYS or c["date"] > s1.get("call_date", "")
 
-    todo = [c for code, c in latest.items() if due(code, c)]
+    try:
+        fails = json.loads(FAILS.read_text(encoding="utf-8")) if FAILS.exists() else {}
+    except ValueError:
+        fails = {}
+    todo = [c for code, c in latest.items() if due(code, c) and fails.get(code) != today.isoformat()]
     todo.sort(key=lambda c: (c["code"] in asked, any(w in c["company"].lower() for w in watch),
                              c["code"] not in store, c["date"]), reverse=True)
     if mode == "request":
@@ -487,10 +492,19 @@ def step(mode="full"):
             src = src or m.group(1).strip()
             text = text[:m.start()].rstrip()
         biz = ""  # part 1: the business profile, shown at the top of the company page
-        m = re.search(r"(?ims)^#+\s*The business\s*$(.*?)(?=^#+\s|^\s*\**\s*in one line|\Z)", text)
+        m = re.search(r"(?ims)^#+\s*(?:PART\s*1\W*)?The business\s*$(.*?)(?=^#+\s|^\s*\**\s*in one line|\Z)", text)
         if m:
             biz = m.group(1).strip()
             text = (text[:m.start()] + text[m.end():]).strip()
+        else:  # no heading: whatever comes before the story is the profile
+            m = re.search(r"(?im)^\s*\**\s*in one line|^#+\s*How the story unfolded", text)
+            if m and m.start() > 200:
+                biz, text = text[:m.start()].strip(), text[m.start():].strip()
+        if not re.search(r"(?i)how the story unfolded", text) or len(text) < 700 or len(biz) < 150:
+            say(f"  {c['company']}: the answer came back incomplete - trying again tomorrow")
+            fails[code] = today.isoformat()
+            FAILS.write_text(json.dumps(fails), encoding="utf-8")
+            continue
         text = re.sub(r"(?im)^\s*\**\s*PART\s*[12][^\n]*$", "", text).strip()
         one = ""
         m = re.search(r"(?im)^\s*\**\s*(?:in one line|one[\s\-‑]line story)\s*:?\s*\**\s*:?\s*(.+)$", text)
