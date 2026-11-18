@@ -445,9 +445,19 @@ def _tag_ask(pool, batch, label):
 
 def tag(stories, pool):
     lookup = {c.lower(): c for c in CATEGORIES}
+    out_of_ai = False
     for i in range(0, len(stories), 100):
         batch = stories[i:i + 100]
-        text = _tag_ask(pool, batch, f"sorting stories {i + 1}-{i + len(batch)} of {len(stories)}")
+        text = ""
+        if not out_of_ai:
+            try:
+                text = _tag_ask(pool, batch, f"sorting stories {i + 1}-{i + len(batch)} of {len(stories)}")
+            except C.QuotaOver:  # the day's allowance ran out: sort the rest next run, don't fail the news
+                out_of_ai = True
+                say(f"  AI allowance used up - {len(stories) - i} stories wait for the next run to be sorted")
+        if out_of_ai:
+            for s in batch:
+                s["untagged"] = True
         got = {}
         for line in text.splitlines():
             parts = [p.strip() for p in line.strip().lstrip("-* ").split("|")]  # a trailing "-" is a sentiment
@@ -684,7 +694,8 @@ def build(conf=None, log_failed=True):
     if fresh:
         tag(fresh, bulk)
         for s in fresh:
-            cache["tags"][s["key"]] = {k: s[k] for k in ("category", "companies", "importance", "sentiment")}
+            if not s.pop("untagged", False):  # unsorted ones are tried again next run
+                cache["tags"][s["key"]] = {k: s[k] for k in ("category", "companies", "importance", "sentiment")}
     own_sector(stories, cache)  # a story about one company sits in that company's sector
     save_cache(cache, now_utc)
     relevant = [s for s in stories if s["category"] != "Not market-relevant"]

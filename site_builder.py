@@ -146,6 +146,16 @@ def build(quiet=False):
         elif x and x.get("status") == "no-text":
             d["scan"] = True
     (data / "presentations.js").write_text(_js("DESK_PRES", None, pres), encoding="utf-8")
+    try:  # top 10 developments: one small file per day, and the list of days
+        import highlights as HL
+        H = HL.load()
+        (data / "hl").mkdir(exist_ok=True)
+        for day, items in H["days"].items():
+            (data / "hl" / f"{day}.js").write_text(_js("DESK_HL", day, items), encoding="utf-8")
+        (data / "hlindex.js").write_text(_js("DESK_HLIDX", None, {"days": sorted(H["days"]), "at": H.get("at", ""),
+                                                                  "model": H.get("model", "")}), encoding="utf-8")
+    except Exception as e:
+        print(f"  (top developments not built: {e})")
     import backstory as BS
     (data / "bs").mkdir(exist_ok=True)
     have = {}

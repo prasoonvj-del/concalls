@@ -1160,6 +1160,17 @@ def overview(sector, lib, pool, industry=None):
     old = lib["overviews"].get(key, {})
     if old.get("companies") == names and old.get("compared") == stamp and "lite" not in (old.get("model") or "lite"):
         return False  # already up to date
+    # results season: a sector changes on every run. A full-model overview is redone only every few days, or
+    # when the sector has grown a lot - the full model's small daily allowance goes to the summaries first
+    if old and "lite" not in (old.get("model") or "lite"):
+        today = dt.date.today().isoformat()
+        if not old.get("at"):
+            old["at"] = today  # written before dates were kept: count from now
+            save_lib(lib)
+        n_old = len(old.get("companies") or [])
+        grown = len(names) >= max(n_old + 6, n_old * 1.25)
+        if not grown and (dt.date.fromisoformat(today) - dt.date.fromisoformat(old["at"])).days < 4:
+            return None  # due, but later
     say(f"\nWriting the {label} overview for {q} from {len(calls)} companies ...")
     texts = [(c["company"], (here(c["summary"])).read_text(encoding="utf-8").split("\n---\n")[0]) for c in calls]
     try:  # what we were watching: last overview's watch list + government decisions for the sector
@@ -1178,6 +1189,8 @@ def overview(sector, lib, pool, industry=None):
 
     try:
         out, ai_used = pool.run(job)
+    except QuotaOver:
+        raise  # no model left today: the caller stops asking
     except AIError as e:
         say(f"    overview failed: {e}")
         return False
@@ -1186,7 +1199,8 @@ def overview(sector, lib, pool, industry=None):
     path = folder / (f"_INDUSTRY OVERVIEW - {safe_name(industry)} - {q}.md" if industry else f"_SECTOR OVERVIEW - {q}.md")
     path.write_text(out + f"\n\n*Based on: {', '.join(names)}*\n", encoding="utf-8")
     lib["overviews"][key] = {"sector": sector, "industry": industry or "", "quarter": q, "companies": names,
-                             "compared": stamp, "file": path.relative_to(BASE).as_posix(), "model": ai_used.model}
+                             "compared": stamp, "file": path.relative_to(BASE).as_posix(), "model": ai_used.model,
+                             "at": dt.date.today().isoformat()}
     save_lib(lib)
     say(f"    saved: {path.relative_to(BASE)}")
     return True

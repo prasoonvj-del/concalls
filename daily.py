@@ -161,7 +161,7 @@ def upgrade_summaries(lib, qpool, deadline):
     if not todo:
         return set()
     say(f"\nFull-quality rewrite of quick drafts: {len(todo)} waiting (watchlist, large companies, newest first) ...")
-    touched, done = set(), 0
+    touched, done, busy = set(), 0, 0
     for c in todo:
         if time.time() > deadline:
             break
@@ -170,9 +170,18 @@ def upgrade_summaries(lib, qpool, deadline):
         say(f"  [{done + 1}] {c['company']} ({c.get('quarter', '')}, draft by {old[1] or '?'})")
         try:
             C.summarise_one(c, lib, qpool, prev if prev and prev.get("summary") else None)
-        except C.AIError as e:
+        except C.QuotaOver as e:
             say(f"  stopping: no full-quality model left today ({str(e)[:80]}) - the rest continue tomorrow")
             break
+        except C.AIError as e:
+            # Google's servers busy (503s) is not the end of the day's allowance: wait and try again
+            busy += 1
+            if busy > 3 or time.time() + 120 > deadline:
+                say(f"  stopping for this run: models busy ({str(e)[:80]}) - the rest continue next run")
+                break
+            say(f"  models busy ({str(e)[:60]}) - waiting 90s and trying again")
+            time.sleep(90)
+            continue
         if old[0] and old[0] != c.get("summary"):
             try:
                 (C.BASE / old[0]).unlink()
@@ -272,15 +281,30 @@ def step_concalls(conf):
     # overviews written by a Lite model earlier: a few each run get a full-quality rewrite
     lite_ov = sorted({o["sector"] for o in lib.get("overviews", {}).values()
                       if not o.get("industry") and "lite" in (o.get("model") or "lite")} - touched)[:3]
-    for sector in sorted(touched) + lite_ov:
+    # sectors whose overview is due: carried over between runs, so a sector skipped for time isn't forgotten
+    due = sorted(set(lib.get("ov_pending", [])) | touched) + lite_ov
+    hard = RUN_START + 56 * 60  # the website and the timeline still need their minutes
+    left = list(due)
+    for sector in due:
+        if time.time() > hard:
+            say(f"    overviews: out of time - {len(left)} wait for the next run")
+            break
         try:
-            C.overview(sector, lib, qpool)
+            if C.overview(sector, lib, qpool) is not None:  # None = due, but redone in a few days
+                left.remove(sector)
+        except C.QuotaOver as e:
+            say(f"    overviews wait for a full-quality model (none left today): {str(e)[:80]}")
+            break
         except C.AIError as e:
             say(f"    overview waits for a full-quality model: {str(e)[:80]}")
+            left.remove(sector)
+            left.append(sector)
+    lib["ov_pending"] = [x for x in dict.fromkeys(left) if x not in lite_ov]
+    C.save_lib(lib)
     try:
         import industries
         touched_ind = {industries.industry_of(lib, c) for c in lib["calls"].values() if C.sector_of(lib, c) in touched}
-        if time.time() < deadline:
+        if time.time() < min(deadline, hard - 4 * 60):
             industries.overviews(lib, qpool, touched_ind, limit=8)
     except Exception as e:
         say(f"  industry overviews skipped: {str(e)[:120]}")
@@ -427,6 +451,13 @@ def main():
             fn()
         except Exception:  # keep going - the site still gets built
             say(f"\n!! The {name} step failed:\n{traceback.format_exc()}")
+        if name == "news":
+            try:  # top 10 developments: once a day, one full-model request, before the rewrites use the allowance
+                import highlights
+                if _t.time() < RUN_START + 40 * 60:
+                    highlights.step()
+            except Exception:
+                say(f"\n!! Top developments failed:\n{traceback.format_exc()}")
     if conf["news"] or conf["concalls"]:
         try:  # requests from the website that a busy queue may have pushed out of their own run
             concall_requests()

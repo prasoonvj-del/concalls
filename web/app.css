@@ -282,3 +282,14 @@ details.why{min-width:170px}details.why summary{cursor:pointer;list-style:none;w
 .why2{font-size:12.5px;line-height:1.45;min-width:260px}
 .pol{margin:4px 0 10px;gap:18px}.pol h3{font-size:14.5px;margin:2px 0 6px}.pol .list li{padding:6px 0;font-size:13.5px}
 .foot{max-width:1200px;margin:10px auto 70px;padding:0 20px;font-size:12px;color:var(--text-2);text-align:center}
+
+.hlgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:0 22px}
+.hli{padding:12px 0;border-top:1px solid var(--line,rgba(127,127,127,.15))}
+.hlh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:16px}
+.hln{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13px}
+.hld{font-size:13px;font-weight:600}.hld.pos{color:var(--pos)}.hld.neg{color:var(--neg)}.hld.neu{color:var(--muted)}
+.hlt{font-weight:600;margin:4px 0}
+.hlth{margin:4px 0 6px;padding-left:18px;font-size:14px}.hlth li{margin:2px 0}
+.hli .lbl{font-size:11.5px;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.bizc ul{margin-top:4px}
+@media (max-width:760px){.hlgrid{grid-template-columns:1fr}}

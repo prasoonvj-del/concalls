@@ -747,6 +747,29 @@
       <button ${next ? `data-go="#today/${next}"` : "disabled"}>Later →</button></div>`;
   }
 
+  // top 10 developments: the list for this brief's day (or the latest one before it)
+  async function hlFor(date) {
+    if (!window.DESK_HLIDX) { try { await loadScript("data/hlindex.js" + CCV); } catch (e) { return null; } }
+    const days = (window.DESK_HLIDX || {}).days || [];
+    const day = [...days].reverse().find((d) => d <= (date || "9999")) || days[days.length - 1];
+    if (!day) return null;
+    window.DESK_HL = window.DESK_HL || {};
+    if (!window.DESK_HL[day]) { try { await loadScript("data/hl/" + day + ".js" + CCV); } catch (e) { return null; } }
+    return window.DESK_HL[day] ? { day, items: window.DESK_HL[day] } : null;
+  }
+  function hlCard(hl) {
+    const dir = { up: ["▲ building", "pos"], down: ["▼ risk building", "neg"], watch: ["● watch", "neu"] };
+    const coLink = (n) => `<a href="#companies/${encodeURIComponent(n)}">${esc(n)}</a>`;
+    return `<div class="card hlc"><h2>Top 10 developments <span class="m">threads where news, turning points, orders, results and concalls line up · ${esc(hl.day)}</span></h2>
+      <div class="hlgrid">${hl.items.map((it, i) => { const d = dir[it.dir] || dir.watch; const ind = it.key.startsWith("IND|");
+        return `<div class="hli"><div class="hlh"><span class="hln">${i + 1}</span><b>${ind ? esc(it.name) : coLink(it.name)}</b>
+          <span class="hld ${d[1]}">${d[0]}</span>${it.days > 1 ? `<span class="chip">${it.days} days on the list</span>` : `<span class="chip">new</span>`}</div>
+          <div class="hlt">${esc(it.head)}</div>
+          ${it.cos && it.cos.length ? `<div class="m">${it.cos.map(coLink).join(" · ")}</div>` : ""}
+          <ul class="hlth">${(it.thread || []).map((t) => { const m = t.match(/^(\d{4}-\d{2}-\d{2}):\s*(.*)$/); return `<li>${m ? `<span class="m">${esc(m[1].slice(5))}</span> ${esc(m[2])}` : esc(t)}</li>`; }).join("")}</ul>
+          ${it.cooking ? `<div><span class="lbl">COOKING</span> ${esc(it.cooking)}</div>` : ""}
+          <div class="m">${it.confirm ? `<span class="lbl">CONFIRM</span> ${esc(it.confirm)}` : ""}${it.risk ? ` &nbsp;<span class="lbl">RISK</span> ${esc(it.risk)}` : ""}</div></div>`; }).join("")}</div></div>`;
+  }
   async function pageToday(date) {
     if (!IDX.briefs.length) { view.innerHTML = empty("No news brief yet - it appears here after the first morning run."); return; }
     date = date || latest();
@@ -761,11 +784,13 @@
       s.title.toLowerCase().includes(w.toLowerCase()) || s.companies.some((c) => sameCo(c, w) || c.toLowerCase().includes(w.toLowerCase())))) : [];
     const byId = Object.fromEntries(b.stories.map((s) => [s.id, s]));
     const top = (b.top || []).filter((t) => byId[t.id]);
+    const hl = await hlFor(date);
     view.innerHTML = `
       <h1>Morning brief</h1>
       <div class="sub">${esc(b.label)} · last ${b.hours}h · ${fmt(st.articles)} articles from ${plural(st.sources, "source")} → ${plural(st.relevant, "market story")} · built ${esc(b.built.slice(11, 16))}</div>
       ${dateNav(date)}
       ${b.big ? `<div class="card md bigcard"><h2>The big picture${b.bigFrom ? ` <span class="m">from the ${esc(b.bigFrom)} brief - today's is written once the AI is free</span>` : ""}</h2><div id="bigp">${b.big}</div></div>` : ""}
+      ${hl ? hlCard(hl) : ""}
       ${top.length ? `<div class="card"><h2>Top stories, explained <span class="m">${top.length} that matter most today</span></h2><div class="xgrid" id="topx">${top.map((t) => {
         const s = byId[t.id];
         return `<div class="xs"><div class="t" data-story="${s.id}">${esc(s.title)}</div>
@@ -1162,7 +1187,9 @@
         ${decks[0].one ? `<p><b>${esc(decks[0].one)}</b></p>` : ""}${decks[0].html || (decks[0].scan ? `<div class="m">The slides are images, so there's no text to summarise.</div>` : `<div class="m">Summary not written yet - it'll appear after a coming update.</div>`)}
         <p><a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">Open the deck (PDF)</a></p>
         ${decks.length > 1 ? `<div class="m">Earlier decks: ${decks.slice(1).map((d) => `<a href="${esc(d.pdf)}" target="_blank" rel="noopener">${esc(d.when.slice(0, 10))}</a>${d.one ? ` - ${esc(d.one.slice(0, 120))}` : ""}`).join(" · ")}</div>` : ""}</div>` : "";
-    const storyCard = story ? `<div class="card md"><h2>The story so far <span class="m">last 2 years · share price & what moved it</span></h2>
+    const bizCard = story && story.biz ? `<div class="card md bizc"><h2>The business <span class="m">what it does, where it stands, its edge · researched on the web ${esc(story.at)}</span></h2>${story.biz}</div>`
+      : story && bsCode ? `<div class="card"><h2>The business</h2><div class="m">The business profile comes with the next refresh of "the story so far" for this company${isOwner() ? ` - <a href="${requestLink(bsCode, story.company)}" target="_blank" rel="noopener">write it now</a>` : ""}.</div></div>` : "";
+    const storyCard = story ? `<div class="card md"><h2>The story so far <span class="m">last 2 years · what changed in the business, and how the stock was re-valued</span></h2>
         ${story.one ? `<p><b>${esc(story.one)}</b></p>` : ""}<div id="bspx"></div>
         ${story.moves && story.moves.length ? `<div class="m" style="margin:2px 0 8px">Shaded: biggest 4-week moves - ${story.moves.map((m) => `<span class="${m.pct >= 0 ? "up" : "dn"}">${esc(m.from.slice(2, 7))} ${m.pct > 0 ? "+" : ""}${Math.round(m.pct)}%</span>`).join(" · ")}</div>` : ""}
         ${story.html}<div class="m">Researched on the web ${esc(story.at)}${story.sources ? " · sources: " + esc(story.sources) : ""} · price moves from real share-price data. Check before acting ·
@@ -1190,8 +1217,8 @@
         ${items.length >= 4 ? `<div id="cod"></div>` : ""}
         ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>`;
     body.innerHTML = call || decks.length
-      ? `<div class="cogrid"><div>${concallCard}${deckCard}${tlCard}</div><div>${sideCards}</div></div>`
-      : `<div class="grid g2" style="align-items:start"><div>${askCard}${tlCard}</div><div>${sideCards}</div></div>`;
+      ? `<div class="cogrid"><div>${bizCard}${concallCard}${deckCard}${tlCard}</div><div>${sideCards}</div></div>`
+      : `<div class="grid g2" style="align-items:start"><div>${bizCard}${askCard}${tlCard}</div><div>${sideCards}</div></div>`;
     clampBlock($("#tlb"), 520, "timeline");
     if ($("#conote")) $("#conote").onclick = () => openNote({ company: key });
     bindNoteActions(body);

@@ -169,7 +169,12 @@ def overviews(lib, pool, touched=None, limit=8):
     for ind in order:
         if made >= limit:
             break
-        if C.overview(PARENT[ind], lib, pool, industry=ind):
+        try:
+            ok = C.overview(PARENT[ind], lib, pool, industry=ind)
+        except C.QuotaOver:
+            C.say("    industry overviews wait for a full-quality model (none left today)")
+            break
+        if ok:
             made += 1
             time.sleep(pool.pause)
     return made

@@ -27,12 +27,11 @@ say = C.say
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 STORE = C.DATA / "backstories.json"
 REFRESH_DAYS = 45
-ALLOWANCE = {"full": (4, 10), "news": (1, 5), "request": (5, 10)}  # (companies, minutes) per update
+ALLOWANCE = {"full": (6, 12), "news": (2, 6), "request": (5, 10)}  # (companies, minutes) per update
 
-PROMPT = """Research the Indian listed company {company} (BSE {code}{sym}, sector: {sector}) using web search, then
-explain the last two years of its share price to an investor who wants to learn WHICH KIND OF NEWS RE-RATES OR
-DE-RATES THIS STOCK. Search for its results, management commentary, capacity / order / legal / regulatory news,
-pivots and analyst views from {start} to today.
+PROMPT = """Research the Indian listed company {company} (BSE {code}{sym}, sector: {sector}) using web search: its annual
+reports and investor presentations, results, management commentary, capacity / order / product / legal /
+regulatory news, competition and analyst views from {start} to today. Write two parts.
 
 The REAL weekly share price (use these numbers for price moves, not numbers from the web):
 {price}
@@ -43,18 +42,38 @@ Our notes from its recent earnings calls:
 Our own dated record of the company (orders, pivots, results, broker calls) - use it, and check the web for more:
 {record}
 
-Write Markdown, 250-350 words, plain and specific (dates, Rs, %). Bullet points only - never tables. No citation
-markers. No filler, no "cause unclear" lines - if you can't explain a move, leave it out. The direction of every
-price move must match the real price data (don't call a fall "stabilising").
+Markdown, plain and specific (dates, Rs, %, tonnes, market share). Bullet points only - never tables. No citation
+markers, no filler, no hedging lines. Only facts you found; leave a point out rather than guess.
 
-**In one line:** <the stock's story in one sentence: re-rated / de-rated / round trip, from Rs X to Rs Y, because ...>
+PART 1 - the business, like an investment-committee note (180-240 words):
+### The business
+- **What it does:** products or services, main segments with their share of revenue, key customers / end markets, export share
+- **Scale:** latest annual revenue, capacity, plants or network (whatever describes its size)
+- **Industry and position:** how the industry works, its rank or market share, the main listed competitors
+- **Competitive edge:** what is hard to copy - cost position, integration, approvals, technology, brands, contracts, distribution
+- **Key risks:** 2-3, specific to this company (e.g. a raw material, one customer, Chinese competition, regulation)
+- **What to track:** 2-3 business numbers that drive its value
+
+PART 2 - the story so far (250-350 words). Tell how the BUSINESS changed over the last two years and why the market
+re-valued it. Lead with causes, not prices: new capacity coming on stream, approvals, contract wins or losses,
+competition (cheap imports, dumping, new entrants), commodity / raw-material cycles, demand shifts, regulation,
+management and governance, capital allocation. For each, explain the mechanism - what it did to volumes, prices,
+margins or the long-term outlook. The share price is only the evidence: give the stock's move as a short closing
+clause in brackets, and its direction must match the real price data. A phase that is only a price move is not a
+phase - if a move has no business cause you can find, leave it out.
+The style wanted (a made-up company): "**Mar 2024 - Dec 2024: new plant makes it a global supplier** - the 5,000
+tpa plant started, making it one of three non-Chinese makers; exports doubled and margins rose to 22% (stock
++60%)." then "**Jan 2025 - Jun 2025: China dumps the same product** - Chinese exporters cut prices ~30%; it had to
+match them and margins fell to 9% (stock gave up the gains)."
+
+**In one line:** <the business story in one sentence: what changed in the business, and how the market re-valued it>
 ### How the story unfolded
-(3-5 phases in time order. Each: **<Mon YYYY - Mon YYYY>: <short phase title>** - what changed in the business or
-the news, and what the stock did in that phase, using the real price data above)
+(3-5 phases in time order, in the style above: **<Mon YYYY - Mon YYYY>: <what changed in the business>** - cause,
+mechanism, effect on the numbers (stock move))
 ### What re-rated it
-(2-4 bullets: the triggers the market rewarded)
+(2-4 bullets: the business developments the market rewarded, and why they mattered)
 ### What de-rated it
-(1-3 bullets: what the market punished. Skip the section if nothing.)
+(1-3 bullets: what the market punished, and why. Skip the section if nothing.)
 ### News that moves this stock
 (2-3 bullets: the kind of announcement to watch for next, e.g. "large defence orders", "USFDA clearances")
 
@@ -400,6 +419,8 @@ def step(mode="full"):
             return True
         if not s1 or s1.get("v", 1) < 4:  # v4 = written with web search
             return True
+        if s1.get("v", 4) < 5 and s1.get("status") == "ok":  # v5 = business profile + business-led story
+            return True
         if s1.get("status") == "no-price":
             return (today - dt.date.fromisoformat(s1["at"])).days > 20
         return (today - dt.date.fromisoformat(s1["at"])).days > REFRESH_DAYS or c["date"] > s1.get("call_date", "")
@@ -465,13 +486,20 @@ def step(mode="full"):
         if m:
             src = src or m.group(1).strip()
             text = text[:m.start()].rstrip()
+        biz = ""  # part 1: the business profile, shown at the top of the company page
+        m = re.search(r"(?ims)^#+\s*The business\s*$(.*?)(?=^#+\s|^\s*\**\s*in one line|\Z)", text)
+        if m:
+            biz = m.group(1).strip()
+            text = (text[:m.start()] + text[m.end():]).strip()
+        text = re.sub(r"(?im)^\s*\**\s*PART\s*[12][^\n]*$", "", text).strip()
         one = ""
         m = re.search(r"(?im)^\s*\**\s*(?:in one line|one[\s\-‑]line story)\s*:?\s*\**\s*:?\s*(.+)$", text)
         if m:
             one = re.sub(r"\*\*", "", m.group(1)).strip()
             text = text.replace(m.group(0), "")
         store[code] = {"status": "ok", "at": today.isoformat(), "call_date": c["date"], "company": c["company"], "sym": sym,
-                       "one": one, "html": C.md(text), "pts": pts, "moves": moves, "sources": src[:300], "v": 4,
+                       "one": one, "html": C.md(text), "biz": C.md(biz) if biz else "", "pts": pts, "moves": moves,
+                       "sources": src[:300], "v": 5,
                        "model": used}
         made += 1
         STORE.write_text(json.dumps(store, ensure_ascii=False), encoding="utf-8")
