@@ -67,6 +67,51 @@ def concall_data():
     return {"calls": calls, "overviews": overviews}
 
 
+def why_file(tl, stories):
+    """Per company: sector, the story in one line, the latest concall (tone, management rating, vs market, said vs did),
+    the last dated events (turning points, orders, results, broker calls, govt decisions) and today's top-10 rank."""
+    lib = C.load_lib()
+    today = dt.date.today()
+    cut = (today - dt.timedelta(days=120)).isoformat()
+    latest = {c["code"]: c for c in C.latest_call_each(list(lib["calls"].values())) if c.get("code")}
+    inds = lib.get("industries") or {}
+    top = {}
+    try:
+        import highlights as HL
+        H = HL.load()
+        day = max(H["days"]) if H["days"] else None
+        for rank, it in enumerate(H["days"].get(day, []) if day else [], 1):
+            keys = [it["key"]] if not it["key"].startswith("IND|") else []
+            for k in keys:
+                top[k] = {"r": rank, "h": it.get("head", ""), "d": it.get("dir", ""), "day": day}
+    except Exception:
+        H = None
+    out = {}
+    for code in set(latest) | {k for k in tl.get("companies", {}) if not k.startswith("n:")}:
+        c = latest.get(code)
+        ev = [[e["d"], e["k"], e["t"][:200]] for e in tl.get("companies", {}).get(code, [])
+              if e["d"] >= cut and e["k"] in ("pivot", "order", "result", "broker", "policy", "deck")][:8]
+        st = stories.get(code) or {}
+        row = {"n": re.sub(r"[\s\-$]+$", "", tl.get("names", {}).get(code) or (c["company"] if c else code)),
+               "s": (C.sector_of(lib, c) if c else "") or "", "i": inds.get(code, "")}
+        if st.get("status") == "ok" and st.get("one"):
+            row["story"] = st["one"]
+        if c:
+            tone = c.get("tone") or ""
+            ex, dl, g = (c.get("expect") or {}).get("v"), (c.get("delivery") or {}).get("v"), (c.get("metrics") or {}).get("guidance")
+            score = ({"Positive": 3, "Mixed": 2, "Cautious": 1, "Negative": 0}.get(tone, 1.5) + {"addressed": 2, "partly": 1, "gap": 0}.get(ex, 1)
+                     + {"delivered": 2, "partly": 1, "missed": 0}.get(dl, 1) + {"raised": 1, "cut": -1, "initiated": 0.5}.get(g, 0))
+            row["call"] = {"q": c.get("quarter", ""), "d": c["date"], "tone": tone, "rate": round(score, 1),
+                           "vs": ex or "", "did": dl or "", "guid": g or "", "draft": "lite" in (c.get("model") or "lite")}
+        if ev:
+            row["ev"] = ev
+        if code in top:
+            row["top"] = top[code]
+        if len(row) > 3:  # something beyond the name and sector
+            out[code] = row
+    return {"at": dt.datetime.now().isoformat(timespec="minutes"), "n": len(out), "cos": out}
+
+
 def build(quiet=False):
     """(Re)builds public/. Safe to run any time."""
     if PUBLIC.exists():
@@ -176,6 +221,11 @@ def build(quiet=False):
         (data / "tl" / f"{fk}.js").write_text(_js("DESK_TL", fk, lst), encoding="utf-8")
         tlidx[fk] = {"name": tl.get("names", {}).get(k, ""), "code": k if not k.startswith("n:") else "", "n": len(lst)}
     (data / "tlindex.js").write_text(_js("DESK_TLIDX", None, tlidx), encoding="utf-8")
+    try:  # for TradeCharts: "why is it moving" in one plain JSON file, keyed by BSE code
+        (data / "why.json").write_text(json.dumps(why_file(tl, BS.load()), ensure_ascii=False, separators=(",", ":")),
+                                       encoding="utf-8")
+    except Exception as e:
+        print(f"  (why.json not built: {e})")
     # search index (every timeline entry, compact) and the themes companies are moving into
     search, themes = [], {}
     for k, lst in tl.get("companies", {}).items():
