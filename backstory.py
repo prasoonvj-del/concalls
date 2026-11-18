@@ -398,6 +398,9 @@ def step(mode="full"):
     store = load()
     for k in [k for k, v in store.items() if v.get("status") == "no-price" and v.get("v", 0) < 3]:
         del store[k]
+    for v in store.values():  # a new-style entry saved before answers were checked, and incomplete: redo it
+        if v.get("v") == 5 and (not v.get("biz") or "unfolded" not in v.get("html", "").lower()):
+            v["v"] = 4
     n_max, minutes = ALLOWANCE.get(mode, (5, 8))
     latest = {}
     for c in lib["calls"].values():
