@@ -755,20 +755,37 @@
     if (!day) return null;
     window.DESK_HL = window.DESK_HL || {};
     if (!window.DESK_HL[day]) { try { await loadScript("data/hl/" + day + ".js" + CCV); } catch (e) { return null; } }
-    return window.DESK_HL[day] ? { day, items: window.DESK_HL[day] } : null;
+    return window.DESK_HL[day] ? { day, items: window.DESK_HL[day], cal: (window.DESK_HLCAL || {})[day] || [] } : null;
+  }
+  // what's coming: results due (with the peers' read), what companies said is due, decisions awaited
+  function hlCal(cal) {
+    if (!cal.length) return "";
+    const coLink = (n) => `<a href="#companies/${encodeURIComponent(n)}">${esc(n)}</a>`;
+    const fmt = (d) => d ? new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "";
+    const col = (title, sub, rows) => rows.length ? `<div><h3>${title} <span class="m">${sub}</span></h3><ul class="hlcal">${rows.join("")}</ul></div>` : "";
+    const res = cal.filter((x) => x.k === "results").map((x) => `<li><span class="m">${fmt(x.d)}</span> ${coLink(x.name)} <span class="m">· ${esc(x.t)}</span></li>`);
+    const due = cal.filter((x) => x.k === "due").map((x) => `<li><span class="m">by ${fmt(x.d)}</span> ${coLink(x.name)}${x.hot ? ' <span class="chip">on the radar</span>' : ""} <span class="m">· ${esc(x.t)}</span></li>`);
+    const dec = cal.filter((x) => x.k === "decision").map((x) => `<li><b>${esc(x.name)}</b> <span class="m">· ${esc(x.t)}</span>${x.cos && x.cos.length ? ` <span class="m">(${x.cos.map(esc).join(", ")})</span>` : ""}</li>`);
+    return `<div class="hlcalw"><h2>Coming up <span class="m">the next triggers - get ahead of them</span></h2><div class="hlcalg">
+      ${col("Results due", "and what industry peers already said this season", res)}
+      ${col("Due, by the companies' own word", "plants, approvals, launches, deals", due)}
+      ${col("Government decisions awaited", "pending in the last 3 weeks", dec)}</div></div>`;
   }
   function hlCard(hl) {
-    const dir = { up: ["▲ building", "pos"], down: ["▼ risk building", "neg"], watch: ["● watch", "neu"] };
+    const dir = { up: ["▲ upside", "pos"], down: ["▼ risk", "neg"], watch: ["● watch", "neu"] };
     const coLink = (n) => `<a href="#companies/${encodeURIComponent(n)}">${esc(n)}</a>`;
     return `<div class="card hlc"><h2>Top 10 developments <span class="m">threads where news, turning points, orders, results and concalls line up · ${esc(hl.day)}</span></h2>
       <div class="hlgrid">${hl.items.map((it, i) => { const d = dir[it.dir] || dir.watch; const ind = it.key.startsWith("IND|");
         return `<div class="hli"><div class="hlh"><span class="hln">${i + 1}</span><b>${ind ? esc(it.name) : coLink(it.name)}</b>
           <span class="hld ${d[1]}">${d[0]}</span>${it.days > 1 ? `<span class="chip">${it.days} days on the list</span>` : `<span class="chip">new</span>`}</div>
           <div class="hlt">${esc(it.head)}</div>
+          ${it.stage || it.move != null ? `<div class="hlst">${it.stage ? `<span class="hlsg ${/^early/i.test(it.stage) ? "e" : /^late/i.test(it.stage) ? "l" : "b"}">${esc(it.stage.split(/\s+[-–]\s+/)[0])}</span> ${esc(it.stage.split(/\s+[-–]\s+/).slice(1).join(" - "))}` : ""}
+            ${it.move != null ? `<span class="chip ${Math.abs(it.move) >= 12 ? "mvd" : "nmv"}">${it.move >= 12 ? `already moved ${it.move > 0 ? "+" : ""}${Math.round(it.move)}%` : it.move <= -12 ? `down ${Math.round(it.move)}%` : `price not moved yet (${it.move > 0 ? "+" : ""}${Math.round(it.move)}%)`} vs Nifty, 1 month</span>` : ""}</div>` : ""}
           ${it.cos && it.cos.length ? `<div class="m">${it.cos.map(coLink).join(" · ")}</div>` : ""}
           <ul class="hlth">${(it.thread || []).map((t) => { const m = t.match(/^(\d{4}-\d{2}-\d{2}):\s*(.*)$/); return `<li>${m ? `<span class="m">${esc(m[1].slice(5))}</span> ${esc(m[2])}` : esc(t)}</li>`; }).join("")}</ul>
           ${it.cooking ? `<div><span class="lbl">COOKING</span> ${esc(it.cooking)}</div>` : ""}
-          <div class="m">${it.confirm ? `<span class="lbl">CONFIRM</span> ${esc(it.confirm)}` : ""}${it.risk ? ` &nbsp;<span class="lbl">RISK</span> ${esc(it.risk)}` : ""}</div></div>`; }).join("")}</div></div>`;
+          <div class="m">${it.confirm ? `<span class="lbl">NEXT TRIGGER</span> ${esc(it.confirm)}` : ""}${it.risk ? ` &nbsp;<span class="lbl">RISK</span> ${esc(it.risk)}` : ""}</div></div>`; }).join("")}</div>
+      ${hlCal(hl.cal || [])}</div>`;
   }
   async function pageToday(date) {
     if (!IDX.briefs.length) { view.innerHTML = empty("No news brief yet - it appears here after the first morning run."); return; }

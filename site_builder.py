@@ -197,7 +197,8 @@ def build(quiet=False):
         H = HL.load()
         (data / "hl").mkdir(exist_ok=True)
         for day, items in H["days"].items():
-            (data / "hl" / f"{day}.js").write_text(_js("DESK_HL", day, items), encoding="utf-8")
+            (data / "hl" / f"{day}.js").write_text(_js("DESK_HL", day, items) + "\n" + _js("DESK_HLCAL", day, (H.get("cal") or {}).get(day, [])),
+                                                   encoding="utf-8")
         (data / "hlindex.js").write_text(_js("DESK_HLIDX", None, {"days": sorted(H["days"]), "at": H.get("at", ""),
                                                                   "model": H.get("model", "")}), encoding="utf-8")
     except Exception as e:
