@@ -451,7 +451,7 @@ def parse(text, cands, ahead=()):
 def step(lib=None, force=False):
     d = load()
     day = today_ist()
-    if d["days"].get(day) and not force and all("stage" in i for i in d["days"][day]):
+    if d["days"].get(day) and not force and all("stage" in i for i in d["days"][day]) and (d.get("short") or {}).get(day):
         return  # (a list from before the forward-looking version is redone once)
     lib = lib or C.load_lib()
     cands = candidates(lib, limit=60)
@@ -465,6 +465,11 @@ def step(lib=None, force=False):
     except Exception as e:
         say(f"  (look-ahead skipped: {e})")
         ahead, cal = [], []
+    # the scored shortlist (before the AI picks ten) - published for TradeCharts' "fresh early signals" scans
+    d.setdefault("short", {})[day] = [{"key": x["key"], "s": x["score"], "k": x["early"], "since": x["since"],
+                                       "move": x.get("move")} for x in cands]
+    d["short"] = {k: v for k, v in d["short"].items() if k >= (dt.date.fromisoformat(day) - dt.timedelta(days=7)).isoformat()}
+    FILE.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
     if len(cands) < 10:
         say("  top developments: not enough connected evidence yet")
         return

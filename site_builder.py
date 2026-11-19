@@ -84,9 +84,11 @@ def why_file(tl, stories):
         for rank, it in enumerate(H["days"].get(day, []) if day else [], 1):
             keys = [it["key"]] if not it["key"].startswith("IND|") else []
             for k in keys:
-                top[k] = {"r": rank, "h": it.get("head", ""), "d": it.get("dir", ""), "day": day}
+                top[k] = {"r": rank, "h": it.get("head", ""), "d": it.get("dir", ""), "day": day, "st": it.get("stage", "")}
+        sday = max(H.get("short") or {}) if H.get("short") else None
+        short = {x["key"]: x for x in (H["short"][sday] if sday else [])}
     except Exception:
-        H = None
+        H, short = None, {}
     out = {}
     for code in set(latest) | {k for k in tl.get("companies", {}) if not k.startswith("n:")}:
         c = latest.get(code)
@@ -108,6 +110,9 @@ def why_file(tl, stories):
             row["ev"] = ev
         if code in top:
             row["top"] = top[code]
+        if code in short:  # on Market Desk's early-signal shortlist today
+            x = short[code]
+            row["early"] = {"s": x["s"], "k": x["k"], "since": x["since"], "move": x.get("move")}
         if len(row) > 3:  # something beyond the name and sector
             out[code] = row
     return {"at": dt.datetime.now().isoformat(timespec="minutes"), "n": len(out), "cos": out}
