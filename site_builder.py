@@ -63,6 +63,7 @@ def concall_data():
         f = C.here(o["file"])
         if f.exists():
             overviews.append({"sector": o["sector"], "ind": o.get("industry", ""), "quarter": o["quarter"], "companies": o["companies"],
+                              "draft": "lite" in (o.get("model") or "lite"),
                               "html": C.md(f.read_text(encoding="utf-8"))})
     return {"calls": calls, "overviews": overviews}
 

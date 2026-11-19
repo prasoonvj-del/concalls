@@ -178,3 +178,30 @@ def overviews(lib, pool, touched=None, limit=8):
             made += 1
             time.sleep(pool.pause)
     return made
+
+
+def draft_overviews(lib, pool, limit=6, deadline=None):
+    """Industries with no overview yet (3+ companies): a quick draft on the Lite model, biggest first. The full model
+    rewrites drafts later (overview() redoes any Lite-made overview when it is next called)."""
+    from collections import defaultdict
+    by = defaultdict(set)
+    for c in lib["calls"].values():
+        ind = industry_of(lib, c)
+        if ind and c.get("summary"):
+            by[ind].add(c["code"])
+    have = {o.get("industry") for o in (lib.get("overviews") or {}).values() if o.get("industry")}
+    todo = sorted((k for k in by if k not in have and len(by[k]) >= 3), key=lambda k: -len(by[k]))
+    if not todo:
+        return 0
+    C.say(f"  industry overviews: {len(todo)} industries have none yet - quick drafts for the biggest {min(limit, len(todo))}")
+    made = 0
+    for ind in todo[:limit]:
+        if deadline and time.time() > deadline:
+            break
+        try:
+            if C.overview(PARENT[ind], lib, pool, industry=ind):
+                made += 1
+                time.sleep(pool.pause)
+        except C.QuotaOver:
+            break
+    return made

@@ -966,7 +966,7 @@
             ${sec.one ? `<p><b>${sec.one}</b></p>` : ""}<div id="sw">${sec.html || `<p class="m">Too few stories today for a write-up - see the list below.</p>`}</div></div>
           ${secIc.length ? `<div class="card"><h2>Broker research <span class="m">${esc(sec.cat)} · initiations and research notes, last 90 days</span></h2>${secIc.slice(0, 6).map((r) => icNote(r, true)).join("")}</div>` : ""}
           ${ov || calls.length || res.length ? `<div class="card"><h2>What managements said <span class="m">concalls${res.length ? " & results" : ""} in this sector</span></h2>
-            ${ov ? `<div class="md"><div class="m">Sector overview · ${esc(ov.quarter)} · ${ov.companies.length} companies</div>${await ovHtml(ov)}</div>` : ""}
+            ${ov ? `<div class="md"><div class="m">Sector overview · ${esc(ov.quarter)} · ${ov.companies.length} companies${ov.draft ? ' · quick draft, full version coming' : ''}</div>${await ovHtml(ov)}</div>` : ""}
             ${calls.length ? `<div class="chips">${calls.slice(0, 30).map((c) => `<span class="chip link" data-go="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}${c.tone ? ` <span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}</span>`).join("")}${calls.length > 30 ? `<a class="chip link" href="#concalls/${encodeURIComponent(sec.cat)}">all ${calls.length} →</a>` : ""}</div>` : ""}
             ${res.length ? `<div class="m" style="margin-top:8px">Results this season: ${res.slice(0, 12).map((r) => `<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a> <span class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</span>`).join(" · ")}${res.length > 12 ? ` · <a href="#trackers/results">all →</a>` : ""}</div>` : ""}</div>` : ""}
           <div class="card"><h2>Stories</h2><div id="sl"></div></div>
@@ -1299,7 +1299,7 @@
       const qk = (q) => { const m = /Q(\d) FY(\d+)/.exec(q || ""); return m ? Number(m[2]) * 10 + Number(m[1]) : 0; };
       const pool = cc.calls.filter((c) => (!st.s || c.sector === st.s) && c.tone);
       const qs = [...new Set(pool.map((c) => c.quarter))].filter((q) => pool.filter((c) => c.quarter === q).length >= 3).sort((a, b) => qk(a) - qk(b));
-      $("#kov").innerHTML = (ov ? `<div class="card md"><h2>${esc(st.i || st.s)} - what managements are saying <span class="m">${esc(ov.quarter)} · ${ov.companies.length} companies</span></h2>${marketLine(st.s)}<div id="kovb">${await ovHtml(ov)}</div></div>` : "");
+      $("#kov").innerHTML = (ov ? `<div class="card md"><h2>${esc(st.i || st.s)} - what managements are saying <span class="m">${esc(ov.quarter)} · ${ov.companies.length} companies${ov.draft ? ' · quick draft, full version coming' : ''}</span></h2>${marketLine(st.s)}<div id="kovb">${await ovHtml(ov)}</div></div>` : "");
       // tone over time, in one line: each quarter's mix, share positive and the change
       const share = (q, f) => { const xs = pool.filter((c) => c.quarter === q); return (100 * xs.filter(f).length) / xs.length; };
       const qs4 = qs.slice(-4);

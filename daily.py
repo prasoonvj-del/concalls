@@ -306,6 +306,8 @@ def step_concalls(conf):
         touched_ind = {industries.industry_of(lib, c) for c in lib["calls"].values() if C.sector_of(lib, c) in touched}
         if time.time() < min(deadline, hard - 4 * 60):
             industries.overviews(lib, qpool, touched_ind, limit=8)
+        if time.time() < min(deadline, hard - 6 * 60):  # coverage: drafts where there is nothing yet
+            industries.draft_overviews(lib, C.Pool(bulk=True), limit=6, deadline=min(deadline, hard - 3 * 60))
     except Exception as e:
         say(f"  industry overviews skipped: {str(e)[:120]}")
     late = time.time() > RUN_START + 58 * 60  # leave the last minutes for the timeline and the website
