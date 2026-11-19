@@ -242,6 +242,7 @@ def add_moves(cands, store):
         x["move"] = rel
         x["score"] = round(x["score"] * (0.65 if rel >= 20 else 0.8 if rel >= 12 else 1.15 if abs(rel) <= 6 else 1.0), 1)
     cands.sort(key=lambda x: -x["score"])
+    say(f"  price check: {sum(1 for x in cands if 'move' in x)} of {len(cands)} candidates (Nifty 1 month: {nifty})")
     return cands
 
 
