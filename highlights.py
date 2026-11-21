@@ -507,6 +507,11 @@ def step(lib=None, force=False):
                 break
         it["days"] = n
     d["days"][day] = items
+    if prev_day:  # the list's rhythm: what left it since the last list
+        now_keys = {C.norm(i["name"]) for i in items} | {i["key"] for i in items}
+        d.setdefault("dropped", {})[day] = [p["name"] for p in d["days"][prev_day]
+                                            if p["key"] not in now_keys and C.norm(p["name"]) not in now_keys]
+        d["dropped"] = {k: v for k, v in d["dropped"].items() if k >= (dt.date.fromisoformat(day) - dt.timedelta(days=KEEP_DAYS)).isoformat()}
     d.setdefault("cal", {})[day] = cal
     d["cal"] = {k: v for k, v in d["cal"].items() if k >= (dt.date.fromisoformat(day) - dt.timedelta(days=KEEP_DAYS)).isoformat()}
     d["at"] = dt.datetime.now(IST).isoformat(timespec="minutes")

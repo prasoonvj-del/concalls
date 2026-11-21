@@ -66,3 +66,21 @@ Google: Markets | site:ndtvprofit.com initiates coverage OR "initiating coverage
 Google: Markets | site:etnownews.com initiates coverage
 Google: Markets | site:cnbctv18.com initiates coverage
 Google: Markets | site:moneycontrol.com initiates coverage
+
+# Global -> India: metals, mining, China's industrial actions, monthly industry data.
+# Stories from these only reach the Today page when the sorting finds a clear effect on Indian stocks.
+Google: Metals | LME copper OR aluminium OR zinc OR nickel inventories OR stocks
+Google: Metals | China steel output OR "steel production" cuts OR curbs
+Google: Metals | China aluminium OR copper OR zinc smelter cuts OR shutdown OR restart
+Google: Metals | China power rationing factories OR "production curbs" OR "output curbs"
+Google: Metals | China export controls rare earth OR gallium OR germanium OR antimony OR graphite
+Google: Metals | iron ore price China port stocks OR "steel margins"
+Google: Metals | coking coal OR "met coal" price Australia China
+Google: Metals | Cochilco copper OR "copper deficit" OR "copper surplus"
+Google: Metals | worldsteel "crude steel production"
+Google: Metals | Mysteel OR "Shanghai Metals Market" OR SMM steel aluminium copper
+Google: Metals | Fastmarkets OR Kallanish OR SteelOrbis steel prices Asia
+Google: Metals | anti-dumping duty India China steel OR aluminium OR chemicals
+Google: Global | China industrial output OR "factory activity" OR Caixin PMI
+Google: Global | OPEC output OR "IEA oil market report" OR "oil demand forecast"
+Google: Global | China stimulus property steel demand OR infrastructure

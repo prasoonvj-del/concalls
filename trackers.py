@@ -509,6 +509,7 @@ SERIES = [
     ("ZW=F", "Wheat", "Agri", "US¢/bu", "FMCG & Food: flour-based food makers"),
     ("KC=F", "Coffee", "Agri", "US¢/lb", "FMCG & Food: coffee plantation & beverage companies"),
     ("HRC=F", "Steel (US hot-rolled coil)", "Metals", "$/t", "Metals & Mining (steel makers); Automobiles, Capital Goods, Consumer Durables use steel"),
+    ("TIO=F", "Iron ore", "Metals", "$/t", "Mining (NMDC, Lloyds Metals) gain; steelmakers without captive mines (JSW Steel) pay more"),
     ("HG=F", "Copper", "Metals", "$/lb", "Metals & Mining (Hindustan Copper, Vedanta); Electrical & Electronics, cables, wires"),
     ("ALI=F", "Aluminium", "Metals", "$/t", "Metals & Mining (Hindalco, Nalco, Vedanta); Auto Components, packaging"),
     ("GC=F", "Gold", "Metals", "$/oz", "Jewellery retailers, gold-loan NBFCs (Muthoot, Manappuram)"),
@@ -861,6 +862,11 @@ def step(pool=None):
             fn()
         except Exception as e:
             say(f"  {name} skipped: {str(e)[:150]}")
+    try:  # global -> India commodity board: LME prices & stocks, flags with the Indian stocks they touch (no AI)
+        import commods
+        commods.step()
+    except Exception as e:
+        say(f"  commodity board skipped: {str(e)[:150]}")
     try:
         weekly_review(pool)
     except Exception as e:

@@ -386,7 +386,7 @@ def group(articles):
 # ============================================================================ AI steps
 
 TAG_PROMPT = """Tag each news story for an Indian stock-market investor.
-For every story reply with ONE line, exactly:  <id>|<category>|<companies>|<importance>|<sentiment>
+For every story reply with ONE line, exactly:  <id>|<category>|<companies>|<importance>|<sentiment>|<india>
 - category: exactly one of:
 {cats}
 - companies: listed companies the story is mainly about, by common name (e.g. Tata Motors, HUL, Infosys),
@@ -394,6 +394,10 @@ For every story reply with ONE line, exactly:  <id>|<category>|<companies>|<impo
 - importance 1-5 for an Indian equity investor: 5 = market-moving (policy rates, big results surprises,
   major regulation, large M&A); 3 = useful sector/company news; 1 = minor or routine.
 - sentiment for the companies/sector involved: + (positive), - (negative) or = (neutral/mixed).
+- india: ONLY for a story about something happening OUTSIDE India (China, US, commodities, global markets, other
+  countries' policies): the Indian listed companies or sectors it affects and which way, max 12 words, e.g.
+  "Hindalco+, Nalco+; aluminium users-" or "steelmakers- (cheap Chinese imports)". "-" if the story is about India
+  or there is no clear, direct effect on Indian stocks - most general world news has none.
 Use "Not market-relevant" for gadget reviews, sports, lifestyle and anything an equity investor wouldn't care about.
 A story about one company (results, dividend, buyback, split, order, plant, management change) goes in THAT
 company's own industry - e.g. a chemicals maker's dividend is Chemicals. "Capital Markets & Wealth" is only for
@@ -476,6 +480,8 @@ def tag(stories, pool):
             s["importance"] = int(imp.group(0)) if imp else 2
             sent = (p[4] if p else "").strip()[:1]
             s["sentiment"] = sent if sent in "+-=" and sent else "="
+            ind = (p[5] if p else "").strip().strip('"')
+            s["india"] = "" if ind in ("", "-", "none", "None", "n/a", "N/A") or len(ind) < 4 else ind[:120]
 
 
 def own_sector(stories, cache=None):
@@ -695,7 +701,7 @@ def build(conf=None, log_failed=True):
         tag(fresh, bulk)
         for s in fresh:
             if not s.pop("untagged", False):  # unsorted ones are tried again next run
-                cache["tags"][s["key"]] = {k: s[k] for k in ("category", "companies", "importance", "sentiment")}
+                cache["tags"][s["key"]] = {k: s.get(k, "") for k in ("category", "companies", "importance", "sentiment", "india")}
     own_sector(stories, cache)  # a story about one company sits in that company's sector
     save_cache(cache, now_utc)
     relevant = [s for s in stories if s["category"] != "Not market-relevant"]
@@ -812,7 +818,8 @@ def build(conf=None, log_failed=True):
         "stories": [{"id": s["id"], "title": s["title"], "desc": s["desc"],
                      "when": s["when"].astimezone(IST).isoformat(timespec="minutes"),
                      "cat": s["category"], "companies": s["companies"], "imp": s["importance"],
-                     "sent": s["sentiment"], "outlets": s["outlets"], "sources": s["sources"]}
+                     "sent": s["sentiment"], "outlets": s["outlets"], "sources": s["sources"],
+                     **({"india": s["india"]} if s.get("india") else {})}
                     for s in relevant],
         "failed": failed if log_failed else [],
         "tabs": [],

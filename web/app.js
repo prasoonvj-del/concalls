@@ -747,6 +747,38 @@
       <button ${next ? `data-go="#today/${next}"` : "disabled"}>Later →</button></div>`;
   }
 
+  // global -> India: commodity moves that matter (data, flagged by rules) + world stories with a clear Indian read
+  async function globalData() {
+    if (!window.DESK_GLOBAL) { try { await loadScript("data/global.js" + CCV); } catch (e) { return null; } }
+    return window.DESK_GLOBAL || null;
+  }
+  // LME base metals: price and warehouse stocks - falling stocks with rising prices = a tightening market
+  function lmeCard(g) {
+    const rows = (g && g.board) || [];
+    if (!rows.length) return "";
+    const pc = (v) => v == null ? '<span class="m">-</span>' : `<span class="${v > 0 ? "up" : v < 0 ? "down" : ""}">${v > 0 ? "+" : ""}${v.toFixed(1)}%</span>`;
+    const read = (r) => { if (r.stk_mo == null || r.mo == null) return ""; const t = r.stk_mo < -10 && r.mo > 0 ? "tightening" : r.stk_mo > 10 && r.mo < 0 ? "loosening" : ""; return t ? `<b class="${t === "tightening" ? "up" : "down"}">${t}</b>` : ""; };
+    return `<div class="card lme"><h2>LME base metals <span class="m">official cash price and LME warehouse stocks · ${esc((rows[0] || {}).d || "")} · stocks falling while prices rise = a tightening market</span></h2>
+      <div class="tw"><table class="tt"><thead><tr><th>Metal</th><th>$/t</th><th>1 week</th><th>1 month</th><th>LME stocks (t)</th><th>stocks 1 wk</th><th>stocks 1 mo</th><th></th><th>In India: price up helps / costs</th></tr></thead><tbody>
+      ${rows.map((r) => `<tr><td><b>${esc(r.name)}</b></td><td>${Math.round(r.px).toLocaleString("en-IN")}</td><td>${pc(r.wk)}</td><td>${pc(r.mo)}</td>
+        <td>${r.stk != null ? Math.round(r.stk).toLocaleString("en-IN") : "-"}</td><td>${pc(r.stk_wk)}</td><td>${pc(r.stk_mo)}</td><td>${read(r)}</td>
+        <td class="m">${r.gain ? `<span class="up">↑ ${esc(r.gain)}</span>` : ""}${r.gain && r.hurt ? "<br>" : ""}${r.hurt ? `<span class="down">↓ ${esc(r.hurt)}</span>` : ""}</td></tr>`).join("")}
+      </tbody></table></div>${rows.some((r) => r.days < 25) ? `<div class="m">History builds up daily - weekly and monthly changes fill in as days are collected.</div>` : ""}</div>`;
+  }
+  function globalCard(g, b, byId) {
+    const flags = ((g && g.flags) || []).slice(0, 5);
+    const stories = (b.stories || []).filter((s) => s.india && (s.imp || 0) >= 3)
+      .sort((x, y) => (y.imp || 0) - (x.imp || 0) || (y.outlets || 0) - (x.outlets || 0)).slice(0, 6);
+    if (!flags.length && !stories.length) return "";
+    const src = (s) => { const l = (s.sources || [])[0]; const u = l ? fixLink(l.link) : ""; return u ? ` <a class="m" href="${esc(u)}" target="_blank" rel="noopener">${esc(l.name || "source")}</a>` : ""; };
+    return `<div class="card glc"><h2>Global → India <span class="m">only what moves Indian stocks: commodity moves that cross a threshold, and world news with a clear Indian read</span></h2>
+      <div class="glg">
+      ${flags.length ? `<div><h3>Commodities <span class="m">prices${flags.some((f) => /LME stocks/.test(f.move)) ? " & LME warehouse stocks" : ""}</span></h3><ul class="gll">${flags.map((f) =>
+        `<li><b>${esc(f.name)}</b> <span class="${f.tone === "+" ? "up" : "down"}">${esc(f.move)}</span><div class="m">→ ${esc(f.read)}</div></li>`).join("")}</ul></div>` : ""}
+      ${stories.length ? `<div><h3>World news <span class="m">and who it touches in India</span></h3><ul class="gll">${stories.map((s) =>
+        `<li>${esc(s.title)}${src(s)}<div class="m">→ ${esc(s.india)}</div></li>`).join("")}</ul></div>` : ""}
+      </div></div>`;
+  }
   // top 10 developments: the list for this brief's day (or the latest one before it)
   async function hlFor(date) {
     if (!window.DESK_HLIDX) { try { await loadScript("data/hlindex.js" + CCV); } catch (e) { return null; } }
@@ -755,7 +787,7 @@
     if (!day) return null;
     window.DESK_HL = window.DESK_HL || {};
     if (!window.DESK_HL[day]) { try { await loadScript("data/hl/" + day + ".js" + CCV); } catch (e) { return null; } }
-    return window.DESK_HL[day] ? { day, items: window.DESK_HL[day], cal: (window.DESK_HLCAL || {})[day] || [] } : null;
+    return window.DESK_HL[day] ? { day, items: window.DESK_HL[day], cal: (window.DESK_HLCAL || {})[day] || [], dropped: (window.DESK_HLDROP || {})[day] || [] } : null;
   }
   // what's coming: results due (with the peers' read), what companies said is due, decisions awaited
   function hlCal(cal) {
@@ -785,6 +817,7 @@
           <ul class="hlth">${(it.thread || []).map((t) => { const m = t.match(/^(\d{4}-\d{2}-\d{2}):\s*(.*)$/); return `<li>${m ? `<span class="m">${esc(m[1].slice(5))}</span> ${esc(m[2])}` : esc(t)}</li>`; }).join("")}</ul>
           ${it.cooking ? `<div><span class="lbl">COOKING</span> ${esc(it.cooking)}</div>` : ""}
           <div class="m">${it.confirm ? `<span class="lbl">NEXT TRIGGER</span> ${esc(it.confirm)}` : ""}${it.risk ? ` &nbsp;<span class="lbl">RISK</span> ${esc(it.risk)}` : ""}</div></div>`; }).join("")}</div>
+      ${hl.dropped && hl.dropped.length ? `<div class="m" style="margin-top:8px">Dropped since the last list: ${hl.dropped.map(esc).join(" · ")}</div>` : ""}
       ${hlCal(hl.cal || [])}</div>`;
   }
   async function pageToday(date) {
@@ -802,11 +835,13 @@
     const byId = Object.fromEntries(b.stories.map((s) => [s.id, s]));
     const top = (b.top || []).filter((t) => byId[t.id]);
     const hl = await hlFor(date);
+    const gl = await globalData();
     view.innerHTML = `
       <h1>Morning brief</h1>
       <div class="sub">${esc(b.label)} · last ${b.hours}h · ${fmt(st.articles)} articles from ${plural(st.sources, "source")} → ${plural(st.relevant, "market story")} · built ${esc(b.built.slice(11, 16))}</div>
       ${dateNav(date)}
       ${b.big ? `<div class="card md bigcard"><h2>The big picture${b.bigFrom ? ` <span class="m">from the ${esc(b.bigFrom)} brief - today's is written once the AI is free</span>` : ""}</h2><div id="bigp">${b.big}</div></div>` : ""}
+      ${globalCard(gl, b, byId)}
       ${hl ? hlCard(hl) : ""}
       ${top.length ? `<div class="card"><h2>Top stories, explained <span class="m">${top.length} that matter most today</span></h2><div class="xgrid" id="topx">${top.map((t) => {
         const s = byId[t.id];
@@ -1794,9 +1829,11 @@
     const today = new Date().toISOString().slice(0, 10);
     const groups = [...new Set(M.map((x) => x.group))];
 
+    const gl = await globalData();
     view.innerHTML = `<h1>Markets</h1>
       <div class="sub">Indices, commodities, the rupee and yields${D.markets && D.markets.updated ? " · prices as of " + esc(D.markets.updated.replace("T", " ")) : ""} · tap any tile to add it to the comparison</div>
       <div id="revw"></div>
+      ${lmeCard(gl)}
       <div class="filters seg" id="per">${Object.keys(PER).map((k) => `<button class="${k === per ? "on" : ""}" data-p="${k}">${k}</button>`).join("")}</div>
       ${M.length ? `<div class="card"><h2>Compare <span class="m">rebased to 100 at the start of the period</span></h2><div id="mleg"></div><div id="mc"></div></div>
       <div class="card"><h2>Indian sector indices <span class="m">change over ${per} · tap to see that sector's peers</span></h2><div id="ms"></div></div>

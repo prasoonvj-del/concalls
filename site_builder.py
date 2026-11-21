@@ -202,7 +202,8 @@ def build(quiet=False):
         H = HL.load()
         (data / "hl").mkdir(exist_ok=True)
         for day, items in H["days"].items():
-            (data / "hl" / f"{day}.js").write_text(_js("DESK_HL", day, items) + "\n" + _js("DESK_HLCAL", day, (H.get("cal") or {}).get(day, [])),
+            (data / "hl" / f"{day}.js").write_text(_js("DESK_HL", day, items) + "\n" + _js("DESK_HLCAL", day, (H.get("cal") or {}).get(day, []))
+                                                   + "\n" + _js("DESK_HLDROP", day, (H.get("dropped") or {}).get(day, [])),
                                                    encoding="utf-8")
         (data / "hlindex.js").write_text(_js("DESK_HLIDX", None, {"days": sorted(H["days"]), "at": H.get("at", ""),
                                                                   "model": H.get("model", "")}), encoding="utf-8")
@@ -252,6 +253,13 @@ def build(quiet=False):
     arch = json.loads(arch_path.read_text(encoding="utf-8")) if arch_path.exists() else []
     (data / "newsarchive.js").write_text(_js("DESK_NEWSARCH", None, arch), encoding="utf-8")
     (data / "trackers.js").write_text(_js("DESK_TRACK", None, track), encoding="utf-8")
+    try:  # global -> India: the commodity board and its flags (small file, for the Today page)
+        import commods
+        G = commods.load()
+        (data / "global.js").write_text(_js("DESK_GLOBAL", None, {"flags": G.get("flags", []), "board": G.get("board", []),
+                                                                   "at": G.get("at", "")}), encoding="utf-8")
+    except Exception as e:
+        C.say(f"  (commodity board not built: {e})")
     try:  # initiating coverage notes, last 12 months
         import ic
         cut = (dt.date.today() - dt.timedelta(days=365)).isoformat()
@@ -263,7 +271,7 @@ def build(quiet=False):
         (data / "readacross.js").write_text(_js("DESK_RA", None, track["ra"]), encoding="utf-8")
         (data / "trackers.js").write_text(_js("DESK_TRACK", None, track), encoding="utf-8")
     except Exception as e:
-        say(f"  (initiating coverage notes not added: {e})")
+        C.say(f"  (initiating coverage notes not added: {e})")
     tabs = []
     if files:
         tabs = [t["name"] for t in json.loads(files[-1].read_text(encoding="utf-8")).get("tabs", []) if t.get("stories")]

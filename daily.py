@@ -161,12 +161,15 @@ def upgrade_summaries(lib, qpool, deadline):
         hot = {x["key"] for v in (H.get("short") or {}).values() for x in v}
     except Exception:
         hot = set()
-    prio = lambda c: (not any(w in c["company"].lower() for w in watch), c.get("code") not in hot, not readacross.is_leader(c["company"]),
-                      -int(c["date"].replace("-", "")))
+    # Lite summaries are the standard; the full model only rewrites what is read most: the watchlist and Market
+    # Desk's early-signal shortlist (the Top 10 is picked from it)
+    mine = lambda c: any(w in c["company"].lower() for w in watch)
+    todo = [c for c in todo if mine(c) or c.get("code") in hot]
+    prio = lambda c: (not mine(c), c.get("code") not in hot, -int(c["date"].replace("-", "")))
     todo.sort(key=prio)
     if not todo:
         return set()
-    say(f"\nFull-quality rewrite of quick drafts: {len(todo)} waiting (watchlist, large companies, newest first) ...")
+    say(f"\nFull-quality rewrite of quick drafts: {len(todo)} waiting (watchlist, then the Top 10 shortlist) ...")
     touched, done, busy = set(), 0, 0
     for c in todo:
         if time.time() > deadline:
