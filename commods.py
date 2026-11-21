@@ -86,13 +86,14 @@ def parse_westmetall(html):
     a = txt.find("Official LME-Prices")
     b = txt.find("LME Stocks")
     e = txt.find("EUR/USD", b if b > 0 else 0)
+    cell = r"[^|]*\|(?:[^0-9|]*\|){0,4}\s*([0-9][0-9.,]*)"  # the metal's name, a few empty / label cells, its number
     for metal in METALS:
         if a >= 0:
-            m = re.search(rf"\|\s*{metal}\s*\|\s*([0-9.,]+)\s*\|", txt[a:b if b > a else None])
+            m = re.search(rf"\|\s*{metal}\b{cell}", txt[a:b if b > a else None])
             if m:
                 px[metal] = _num(m.group(1))
         if b >= 0:
-            m = re.search(rf"\|\s*{metal}\s*\|\s*([0-9.,]+)\s*\|", txt[b:e if e > b else None])
+            m = re.search(rf"\|\s*{metal}\b{cell}", txt[b:e if e > b else None])
             if m:
                 stk[metal] = _num(m.group(1))
     return d_px, px, d_stk, stk
@@ -104,7 +105,7 @@ SYM = {"Copper": "Cu", "Aluminium": "Al", "Zinc": "Zn", "Nickel": "Ni", "Lead": 
 def backfill(d, sess):
     """Once: the last months of prices and stocks from Westmetall's per-metal history tables, so the 1-month
     changes work from day one."""
-    if d.get("backfilled", 0) >= 2:
+    if d.get("backfilled", 0) >= 3:
         return
     got = 0
     for metal, sym in SYM.items():
@@ -115,7 +116,9 @@ def backfill(d, sess):
                 if r.status_code != 200:
                     continue
                 txt = re.sub(r"<[^>]+>", "|", r.text)
-                rows = re.findall(r"\|\s*([0-9]{1,2}\. [A-Za-z]+ 20\d\d)\s*\|+\s*([0-9][0-9.,]*)\s*\|", txt)
+                rows = re.findall(r"([0-9]{1,2}\. [A-Za-z]+ 20\d\d)\s*\|(?:[^0-9|]*\|){0,3}\s*([0-9][0-9.,]*)", txt)
+                if not rows and metal == "Copper" and key == "px":
+                    (C.DATA / "commods_debug_table.txt").write_text(r.text[:6000], encoding="utf-8")
                 pts = {}
                 for day, val in rows:
                     dd, v = _date(day), _num(val)
@@ -128,7 +131,7 @@ def backfill(d, sess):
                     got += 1
             except Exception:
                 continue
-    d["backfilled"] = d.get("backfilled", 0) + 1 if not got else 2
+    d["backfilled"] = d.get("backfilled", 0) + 1 if not got else 3
     say(f"  LME history: {got} of 12 tables read")
 
 
@@ -144,6 +147,9 @@ def fetch_lme(d):
             say(f"  LME prices: HTTP {r.status_code}")
             return 0
         d_px, px, d_stk, stk = parse_westmetall(r.text)
+        if not px:  # keep a piece of the page to see how it is laid out
+            i = r.text.find("Copper")
+            (C.DATA / "commods_debug.txt").write_text(r.text[max(0, i - 3000):i + 4000], encoding="utf-8")
         backfill(d, sess)
     except Exception as e:
         say(f"  LME prices: {str(e)[:100]}")
