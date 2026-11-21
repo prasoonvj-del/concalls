@@ -15,10 +15,12 @@
   if (theme !== "auto") document.documentElement.dataset.theme = theme;
 
   /* ------------------------------------------------------------ data */
-  function loadScript(src) {
+  // a file that never arrives (a stalled connection, a VPN) must not leave the page on "Loading..." for ever
+  function loadScript(src, ms = 25000) {
     return new Promise((res, rej) => {
       const s = document.createElement("script");
-      s.src = src; s.onload = res; s.onerror = () => rej(new Error("Couldn't load " + src));
+      const t = setTimeout(() => { s.remove(); rej(new Error("Timed out loading " + src)); }, ms);
+      s.src = src; s.onload = () => { clearTimeout(t); res(); }; s.onerror = () => { clearTimeout(t); rej(new Error("Couldn't load " + src)); };
       document.head.appendChild(s);
     });
   }
@@ -749,7 +751,7 @@
 
   // global -> India: commodity moves that matter (data, flagged by rules) + world stories with a clear Indian read
   async function globalData() {
-    if (!window.DESK_GLOBAL) { try { await loadScript("data/global.js" + CCV); } catch (e) { return null; } }
+    if (!window.DESK_GLOBAL) { try { await loadScript("data/global.js" + CCV, 8000); } catch (e) { return null; } }
     return window.DESK_GLOBAL || null;
   }
   // LME base metals: price and warehouse stocks - falling stocks with rising prices = a tightening market
@@ -781,12 +783,12 @@
   }
   // top 10 developments: the list for this brief's day (or the latest one before it)
   async function hlFor(date) {
-    if (!window.DESK_HLIDX) { try { await loadScript("data/hlindex.js" + CCV); } catch (e) { return null; } }
+    if (!window.DESK_HLIDX) { try { await loadScript("data/hlindex.js" + CCV, 8000); } catch (e) { return null; } }
     const days = (window.DESK_HLIDX || {}).days || [];
     const day = [...days].reverse().find((d) => d <= (date || "9999")) || days[days.length - 1];
     if (!day) return null;
     window.DESK_HL = window.DESK_HL || {};
-    if (!window.DESK_HL[day]) { try { await loadScript("data/hl/" + day + ".js" + CCV); } catch (e) { return null; } }
+    if (!window.DESK_HL[day]) { try { await loadScript("data/hl/" + day + ".js" + CCV, 8000); } catch (e) { return null; } }
     return window.DESK_HL[day] ? { day, items: window.DESK_HL[day], cal: (window.DESK_HLCAL || {})[day] || [], dropped: (window.DESK_HLDROP || {})[day] || [] } : null;
   }
   // what's coming: results due (with the peers' read), what companies said is due, decisions awaited
@@ -2179,7 +2181,8 @@
       else if (tab === "mydesk") { location.replace("#" + store.get("mydesk", "watchlist")); return; }
       else await pageToday(null);
     } catch (e) {
-      view.innerHTML = empty("Something went wrong loading this page: " + esc(e.message));
+      view.innerHTML = empty("Something went wrong loading this page: " + esc(e.message)
+        + ` <button class="btn" onclick="location.href=location.pathname+'?r='+Date.now()+location.hash">Reload fresh</button>`);
     }
     if (!arg) scrollTo(0, 0);
   }
