@@ -131,7 +131,12 @@ def candidates(lib, limit=40):
             if cnt[k] > {"pivot": 3, "order": 2, "deck": 1, "broker": 2}.get(k, 2):
                 continue
             if k in ("pivot", "order", "policy"):
-                early(k, e["d"], {"pivot": 3, "order": 2.5, "policy": 2.5}[k])
+                w = {"pivot": 3, "order": 2.5, "policy": 2.5}[k]
+                if k == "pivot":  # what kind of turning point: new capacity or a new market leads; a debt repayment doesn't
+                    th = e["t"].split(":", 1)[0].lower()
+                    w = (3 if re.search(r"capacity|approval|product|launch|order|contract|m&a|acqui|demand|export|market|technology", th)
+                         else 1.2 if re.search(r"fund|debt|ipo|qip|raise|legal|management|board|dividend|buyback|rating", th) else 2)
+                early(k, e["d"], w)
             elif k == "broker":
                 if re.search(r"(?i)initiat|upgrade", e["t"]):
                     early("initiation", e["d"], 1.5)
@@ -431,8 +436,11 @@ def parse(text, cands, ahead=()):
 
         th = re.search(r"(?ims)^\s*\**Thread\**\s*:\s*\**\s*\n(.*?)(?=^\s*\**(?:Cooking|Confirm|Risk|Companies)\**\s*:)", rest)
         thread = [re.sub(r"^\s*[-*•]\s*", "", ln).strip() for ln in (th.group(1).splitlines() if th else []) if ln.strip()]
-        comps = [c.strip() for c in field("Companies").split(",") if c.strip() and c.strip() not in ("-", "none")]
+        comps = [c.strip() for c in field("Companies").split(",")
+                 if c.strip() and c.strip().lower().strip(".") not in ("-", "none", "n/a", "na", "nil", "—")]
         x = by.get(C.norm(name))
+        if x and all(C.norm(c) == C.norm(name) or C.norm(c) == C.norm(x["name"]) for c in comps):
+            comps = []  # the company named itself: a company item, not an industry one
         if not x:  # an industry item, or a slightly different spelling
             x = next((v for k, v in by.items() if k and (k in C.norm(name) or C.norm(name) in k)), None)
         if not x and not comps:

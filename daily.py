@@ -155,7 +155,13 @@ def upgrade_summaries(lib, qpool, deadline):
     watch = watchlist()
     latest = {c["code"]: c for c in C.latest_call_each(list(lib["calls"].values()))}
     todo = [c for c in latest.values() if is_draft(c) and not c.get("skip")]
-    prio = lambda c: (not any(w in c["company"].lower() for w in watch), not readacross.is_leader(c["company"]),
+    try:  # Market Desk's own early-signal shortlist: the summaries most likely to be opened next
+        import highlights
+        H = highlights.load()
+        hot = {x["key"] for v in (H.get("short") or {}).values() for x in v}
+    except Exception:
+        hot = set()
+    prio = lambda c: (not any(w in c["company"].lower() for w in watch), c.get("code") not in hot, not readacross.is_leader(c["company"]),
                       -int(c["date"].replace("-", "")))
     todo.sort(key=prio)
     if not todo:
@@ -176,7 +182,7 @@ def upgrade_summaries(lib, qpool, deadline):
         except C.AIError as e:
             # Google's servers busy (503s) is not the end of the day's allowance: wait and try again
             busy += 1
-            if busy > 3 or time.time() + 120 > deadline:
+            if busy > 1 or time.time() + 120 > deadline:  # one wait; a second "overloaded" means try next run
                 say(f"  stopping for this run: models busy ({str(e)[:80]}) - the rest continue next run")
                 break
             say(f"  models busy ({str(e)[:60]}) - waiting 90s and trying again")
