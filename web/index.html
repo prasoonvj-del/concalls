@@ -8,6 +8,8 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <link rel="stylesheet" href="app.css">
+<script>/* the look is set before the page paints, so there is no flash of the other one */
+try{var L=JSON.parse(localStorage.getItem("look")||'"modern"');document.documentElement.dataset.look=L}catch(e){document.documentElement.dataset.look="modern"}</script>
 </head>
 <body>
 <header class="top">
@@ -24,6 +26,7 @@
     <a href="#archive" data-tab="archive">Archive</a>
     <a href="#settings" data-tab="settings" title="Watchlist &amp; settings" aria-label="Settings">⚙</a>
   </nav>
+  <button class="lookbtn" id="lookbtn" type="button" title="Switch between the Modern and Classic look"></button>
 </header>
 <main id="view" aria-live="polite"><div class="loading">Loading…</div></main>
 <footer class="foot">Personal research notes, built automatically from public BSE filings and news using AI. Summaries can contain mistakes - check the source before relying on anything. Not investment advice.</footer>

@@ -13,6 +13,14 @@
   };
   const theme = store.get("theme", "auto");
   if (theme !== "auto") document.documentElement.dataset.theme = theme;
+  // look: Modern (rounded, soft, animated) or Classic - one tap in the header, also in Settings
+  const setLook = (l) => {
+    document.documentElement.dataset.look = l; store.set("look", l);
+    const b = document.getElementById("lookbtn"); if (b) b.textContent = l === "modern" ? "✦ Modern" : "◻ Classic";
+  };
+  setLook(store.get("look", "modern"));
+  const lookBtn = document.getElementById("lookbtn");
+  if (lookBtn) lookBtn.onclick = () => setLook(document.documentElement.dataset.look === "modern" ? "classic" : "modern");
 
   /* ------------------------------------------------------------ data */
   // a file that never arrives (a stalled connection, a VPN) must not leave the page on "Loading..." for ever
@@ -2126,7 +2134,8 @@
       <div class="card"><h2>Watchlist</h2><p class="help">Easiest: tap <b>☆ Watch</b> on any company page, or use <a href="#watchlist">★ My desk → Watchlist</a>. Companies here are pulled to the top of every brief. Separate with commas; part of a name is enough.</p>
         <input type="text" id="wl" style="width:100%" placeholder="e.g. Trident, Apollo Hospitals, KPR Mill" value="${esc(watchlist().join(", "))}">
         <div style="margin-top:10px"><button class="primary" id="wls">Save</button> <span class="m" id="wlm"></span></div></div>
-      <div class="card"><h2>Appearance</h2><select id="th"><option value="auto">Match my device</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+      <div class="card"><h2>Appearance</h2><select id="th"><option value="auto">Match my device</option><option value="light">Light</option><option value="dark">Dark</option></select>
+        <select id="lk" style="margin-left:8px"><option value="modern">Modern look</option><option value="classic">Classic look</option></select></div>
       <div class="card"><h2>Today page: show in full</h2><p class="help">Ticked sections always open in full; unticked ones show the first part with "Show all". Tapping "Show all" or "Show less" on the page changes this too.</p>
         ${[["explained", "Top stories, explained"]]
           .map(([k, l]) => `<label style="display:block;margin:6px 0"><input type="checkbox" data-open="${k}" ${store.get("open-" + k, false) ? "checked" : ""}> ${l}</label>`).join("")}</div>
@@ -2145,6 +2154,8 @@
     $("#swd").value = store.get("swipe", "right-next");
     $("#swd").onchange = (e) => store.set("swipe", e.target.value);
     $("#th").value = store.get("theme", "auto");
+    $("#lk").value = store.get("look", "modern");
+    $("#lk").onchange = (e) => setLook(e.target.value);
     $("#th").onchange = (e) => {
       store.set("theme", e.target.value);
       if (e.target.value === "auto") delete document.documentElement.dataset.theme;

@@ -304,3 +304,99 @@ details.why{min-width:170px}details.why summary{cursor:pointer;list-style:none;w
 .glg h3{font-size:14.5px;margin:4px 0}.gll{margin:0;padding-left:16px;font-size:14px}.gll li{margin:5px 0}
 .gll .up{color:var(--pos);font-weight:600}.gll .down{color:var(--neg);font-weight:600}
 .lme .up{color:var(--pos)}.lme .down{color:var(--neg)}.lme td{white-space:nowrap}.lme td.m{white-space:normal;min-width:260px;font-size:13px}
+
+/* ======================================================================== MODERN LOOK (Settings → Look)
+   Everything below applies only with <html data-look="modern">; Classic is the look above, untouched. */
+:root[data-look="modern"]{
+  --bg:#f3f4f6;--surface:#ffffff;--surface-2:#f4f5f7;--line:#e6e8ec;--line-2:#eef0f3;
+  --text:#14161a;--text-2:#4a4f57;--muted:#7a808a;
+  --accent:#0e7c70;--accent-soft:#e4f3f0;--head:rgba(16,22,24,.86);
+  --r-card:20px;--r-ctl:12px;--r-pill:999px;
+  --shadow-1:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.06);
+  --shadow-2:0 2px 4px rgba(16,24,40,.04),0 12px 28px -8px rgba(16,24,40,.12);
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+@media (prefers-color-scheme:dark){
+  :root[data-look="modern"]:where(:not([data-theme="light"])){
+    --bg:#0c0e11;--surface:#15181d;--surface-2:#1c2026;--line:#262b32;--line-2:#20242a;
+    --text:#eef0f3;--text-2:#b9bec6;--muted:#8b919a;--accent:#4fd1b9;--accent-soft:#12302b;--head:rgba(10,13,16,.82);
+    --shadow-1:0 1px 2px rgba(0,0,0,.4);--shadow-2:0 1px 2px rgba(0,0,0,.35),0 14px 30px -10px rgba(0,0,0,.6);
+  }
+}
+:root[data-look="modern"][data-theme="dark"]{
+  --bg:#0c0e11;--surface:#15181d;--surface-2:#1c2026;--line:#262b32;--line-2:#20242a;
+  --text:#eef0f3;--text-2:#b9bec6;--muted:#8b919a;--accent:#4fd1b9;--accent-soft:#12302b;--head:rgba(10,13,16,.82);
+  --shadow-1:0 1px 2px rgba(0,0,0,.4);--shadow-2:0 1px 2px rgba(0,0,0,.35),0 14px 30px -10px rgba(0,0,0,.6);
+}
+[data-look="modern"] body{font:15px/1.62 "Inter","SF Pro Text",-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-feature-settings:"cv11","ss01","tnum" 0;letter-spacing:-.003em}
+[data-look="modern"] html{scroll-behavior:smooth}
+/* header: frosted glass, pill tabs */
+[data-look="modern"] .top{background:var(--head);-webkit-backdrop-filter:saturate(160%) blur(16px);backdrop-filter:saturate(160%) blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.06);min-height:58px}
+[data-look="modern"] .brand{font-size:17px;letter-spacing:-.01em}
+[data-look="modern"] nav{gap:4px;padding:8px 0}
+[data-look="modern"] nav a{padding:8px 14px;border-radius:var(--r-pill);border-bottom:0;color:#c3cfcd;
+  transition:background .25s var(--ease),color .25s var(--ease),transform .2s var(--ease)}
+[data-look="modern"] nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+[data-look="modern"] nav a.on{background:rgba(95,208,182,.18);color:#fff;box-shadow:inset 0 0 0 1px rgba(95,208,182,.35)}
+[data-look="modern"] nav a:active{transform:scale(.96)}
+/* headings */
+[data-look="modern"] h1{font-size:30px;letter-spacing:-.025em;font-weight:750}
+[data-look="modern"] .card h2,[data-look="modern"] h2{letter-spacing:-.015em;font-weight:680}
+[data-look="modern"] .sub{color:var(--muted)}
+/* cards: rounded, soft shadow instead of hard borders, gentle lift */
+[data-look="modern"] .card{border-radius:var(--r-card);border:1px solid var(--line-2);background:var(--surface);box-shadow:var(--shadow-1);
+  transition:box-shadow .3s var(--ease),transform .3s var(--ease),border-color .3s var(--ease)}
+@media (hover:hover){[data-look="modern"] .card:hover{box-shadow:var(--shadow-2);border-color:var(--line)}}
+[data-look="modern"] .tile,[data-look="modern"] .tile.mt{border-radius:16px;border:1px solid var(--line-2);box-shadow:var(--shadow-1);
+  transition:transform .25s var(--ease),box-shadow .25s var(--ease),background .25s var(--ease)}
+@media (hover:hover){[data-look="modern"] .tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-2)}}
+[data-look="modern"] .tile:active{transform:scale(.985)}
+/* chips, badges, tones: pills */
+[data-look="modern"] .chip,[data-look="modern"] .badge,[data-look="modern"] .tone,[data-look="modern"] .sent,[data-look="modern"] .thchip{border-radius:var(--r-pill)}
+[data-look="modern"] .chip{transition:background .2s var(--ease),transform .2s var(--ease)}
+/* controls */
+[data-look="modern"] input[type=search],[data-look="modern"] select,[data-look="modern"] input[type=text],[data-look="modern"] textarea{
+  border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-1);
+  transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
+[data-look="modern"] input:focus,[data-look="modern"] select:focus,[data-look="modern"] textarea:focus{outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent)}
+[data-look="modern"] button,[data-look="modern"] .btn{border-radius:var(--r-pill);transition:transform .15s var(--ease),background .2s var(--ease),box-shadow .2s var(--ease)}
+[data-look="modern"] button:active,[data-look="modern"] .btn:active{transform:scale(.96)}
+[data-look="modern"] .seg button{border-radius:var(--r-pill)}
+[data-look="modern"] .seg button.on{box-shadow:var(--shadow-1)}
+/* lists, side navigation, tables */
+[data-look="modern"] .secnav a{border-radius:12px;transition:background .2s var(--ease),color .2s var(--ease)}
+[data-look="modern"] .secstep,[data-look="modern"] .secarr a{border-radius:var(--r-pill);box-shadow:var(--shadow-1)}
+[data-look="modern"] details.sum{border-radius:14px;transition:background .2s var(--ease)}
+[data-look="modern"] .tt,[data-look="modern"] table.peer,[data-look="modern"] .md table{border-collapse:separate;border-spacing:0}
+[data-look="modern"] .tt th,[data-look="modern"] table.peer th{position:sticky;top:0;background:var(--surface);font-weight:600;color:var(--muted);
+  font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+[data-look="modern"] .tt tr,[data-look="modern"] table.peer tr{transition:background .15s var(--ease)}
+[data-look="modern"] .tt tbody tr:hover td{background:var(--surface-2)}
+[data-look="modern"] .pop-card,[data-look="modern"] .tip{border-radius:16px;box-shadow:var(--shadow-2);border:1px solid var(--line)}
+[data-look="modern"] .pop-card{animation:md-pop .28s var(--ease)}
+[data-look="modern"] .hli,[data-look="modern"] .hlcalw{border-top-color:var(--line-2)}
+[data-look="modern"] .hln{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent)}
+/* motion: pages and cards rise in, staggered; nothing moves for people who prefer less motion */
+@keyframes md-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes md-pop{from{opacity:0;transform:scale(.97) translateY(4px)}to{opacity:1;transform:none}}
+[data-look="modern"] #view>*{animation:md-rise .45s var(--ease) both}
+[data-look="modern"] #view>*:nth-child(2){animation-delay:.04s}[data-look="modern"] #view>*:nth-child(3){animation-delay:.08s}
+[data-look="modern"] #view>*:nth-child(4){animation-delay:.12s}[data-look="modern"] #view>*:nth-child(5){animation-delay:.16s}
+[data-look="modern"] #view>*:nth-child(n+6){animation-delay:.2s}
+[data-look="modern"] .grid>.card,[data-look="modern"] .side .card{animation:md-rise .5s var(--ease) both}
+[data-look="modern"] ::selection{background:color-mix(in srgb,var(--accent) 22%,transparent)}
+[data-look="modern"] ::-webkit-scrollbar{width:10px;height:10px}
+[data-look="modern"] ::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--muted) 35%,transparent);border-radius:10px;border:3px solid transparent;background-clip:padding-box}
+@media (prefers-reduced-motion:reduce){[data-look="modern"] *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+/* the quick switch in the header */
+.lookbtn{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.18);color:#d8e4e2;border-radius:999px;padding:5px 12px;
+  font-size:12.5px;cursor:pointer;white-space:nowrap}
+.lookbtn:hover{background:rgba(255,255,255,.08)}
+/* header stays on one line: the tabs scroll sideways if they don't fit */
+.top{flex-wrap:nowrap}
+.top nav{flex:1 1 auto;min-width:0}
+.lookbtn{flex:0 0 auto;margin-left:0}
+@media (max-width:760px){.top{flex-wrap:wrap}.top nav{order:3;flex-basis:100%}.lookbtn{margin-left:auto}}
