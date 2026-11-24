@@ -500,10 +500,24 @@ def own_sector(stories, cache=None):
         if not s.get("companies") or s["category"] not in C.SECTORS + ["Markets & Flows", "IPOs, Deals & Funding"]:
             continue
         secs = {R.sector(c) for c in s["companies"]} - {""}
+        # the headline's subject: "Tata Chemicals jumps as Tata Sons ..." is a Tata Chemicals story
+        title = (s.get("title") or "").lower()
+        first = min(s["companies"], key=lambda c: (title.find(c.lower()) if c.lower() in title else 999))
+        listy = re.search(r"\b(\d+|top|other)\b[\w\s-]{0,25}\b(stocks?|shares|picks|calls|ideas)\b|stocks? to (watch|buy)|"
+                          r"brokerage calls|\bto\s+[A-Z]?\w+\s*:|52-week|gainers|losers|buzzing", title, re.I)
+        if not listy and title.find(first.lower()) in range(0, 25) and R.sector(first) and len(s["companies"]) <= 3:
+            secs = {R.sector(first)}
+        # a "stocks to watch" list across sectors isn't news for any one sector's page
+        if len(secs) >= 2 and (len(s["companies"]) >= 3 or listy) and s["category"] in C.SECTORS and s["category"] not in secs:
+            s["category"] = "Markets & Flows"
+            moved += 1
+            continue
         if len(secs) != 1:
             continue
         sec = secs.pop()
-        if sec in CATEGORIES and sec != s["category"] and \
+        if listy and len(s["companies"]) > 1:
+            continue  # a list with one known sector: the AI's reading of the list's theme stands
+        if sec in CATEGORIES and sec != s["category"] and sec != "Services & Others" and \
                 (s["category"] in C.SECTORS or len(s["companies"]) == 1):
             s["category"] = sec
             moved += 1

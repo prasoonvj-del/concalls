@@ -140,6 +140,7 @@ class Resolver:
             for d in json.loads(C.PRES_FILE.read_text(encoding="utf-8")):
                 self.canon.setdefault(n(d["company"]), (re.sub(r"\s+(Ltd\.?|Limited)$", "", d["company"]).strip(), d["code"]))
         self.sectors = dict(lib["sectors"])
+        self.sym = {}
         try:
             import directory
             for code, v in directory.load().items():
@@ -147,6 +148,8 @@ class Resolver:
                     self.canon.setdefault(n(v["n"]), (re.sub(r"\s+(Ltd\.?|Limited)$", "", v["n"]).strip(), code))
                     if v.get("s") and not self.sectors.get(code):
                         self.sectors[code] = v["s"]
+                    if v.get("id"):  # the stock symbol: KPIL, POWERGRID, LTTS, CDSL, MCX ...
+                        self.sym.setdefault(n(v["id"]), (re.sub(r"\s+(Ltd\.?|Limited)$", "", v["n"]).strip(), code))
         except Exception:
             pass
         self.cache = cache if cache is not None else {}
@@ -166,6 +169,12 @@ class Resolver:
             codes = {h[1] for h in hits}
             if len(codes) == 1:
                 out = hits[0]
+        if not out and x in self.sym and len(x) >= 2:
+            out = self.sym[x]
+        if not out and len(x) >= 6:  # a short form of exactly one listed name: "Max Healthcare", "Texmaco Rail"
+            hits = {v[1]: v for k, v in self.canon.items() if v[1] and k.startswith(x)}
+            if len(hits) == 1:
+                out = next(iter(hits.values()))
         if not out:
             alias = ALIASES.get(n(name))
             out = (alias or re.sub(r"\s+(Ltd\.?|Limited)$", "", name).strip(), "")

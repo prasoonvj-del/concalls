@@ -166,7 +166,22 @@ def load_lib():
     lib.setdefault("calls", {})
     lib.setdefault("sectors", {})
     lib.setdefault("overviews", {})
+    apply_sector_fixes(lib)
     return lib
+
+
+def apply_sector_fixes(lib):
+    """sector_fixes.txt: hand corrections, applied every time the library loads."""
+    f = BASE / "sector_fixes.txt"
+    if not f.exists():
+        return
+    for ln in f.read_text(encoding="utf-8").splitlines():
+        p = [x.strip() for x in ln.split("|")]
+        if ln.strip().startswith("#") or len(p) < 2 or not p[0] or p[1] not in SECTORS:
+            continue
+        lib["sectors"][p[0]] = p[1]
+        if len(p) > 2 and p[2]:
+            lib.setdefault("industries", {})[p[0]] = p[2]
 
 
 def save_lib(lib):

@@ -73,6 +73,33 @@ def concall_data():
     return {"calls": calls, "overviews": overviews}
 
 
+_R = None
+
+
+def canon(items, name="company", code="code", sec="sector"):
+    """One sector per company everywhere: an item naming a listed company gets that company's code and its own
+    sector (concall library first, then the BSE directory) - never the sector an AI guessed for the item."""
+    global _R
+    if _R is None:
+        import names
+        _R = names.Resolver()
+    fixed = 0
+    for it in items or []:
+        if not isinstance(it, dict) or not it.get(name):
+            continue
+        c = str(it.get(code) or "") or _R.resolve(it[name])[1]
+        if not c:
+            continue
+        it[code] = c
+        s = _R.sectors.get(c)
+        if s and sec in it and it[sec] != s:
+            it[sec] = s
+            fixed += 1
+        elif s and sec not in it:
+            it[sec] = s
+    return fixed
+
+
 def why_file(tl, stories):
     """Per company: sector, the story in one line, the latest concall (tone, management rating, vs market, said vs did),
     the last dated events (turning points, orders, results, broker calls, govt decisions) and today's top-10 rank."""
@@ -136,7 +163,7 @@ def build(quiet=False):
     for f in files[-90:]:
         b = json.loads(f.read_text(encoding="utf-8"))
         for st in b["stories"] + [x for t in b.get("tabs", []) for x in t.get("stories", [])]:
-            st["sources"] = st.get("sources", [])[:6]  # the count stays in "outlets"; keeps the page light
+            st["sources"] = st.get("sources", [])[:3]  # the count stays in "outlets"; keeps the page light
         # Google News links: store just the article token (the site rebuilds the address) - about a third of the file
         for st in b["stories"] + [x for t in b.get("tabs", []) for x in t.get("stories", [])]:
             for src in st["sources"]:
@@ -146,6 +173,12 @@ def build(quiet=False):
         # Tech / Auto / Sports go in their own file, loaded only when one of those tabs is opened
         tabs = b.pop("tabs", [])
         b["tabnames"] = [t["name"] for t in tabs]
+        # outlet links are only needed when a story is opened: their own small file, fetched then
+        links = {}
+        for st in b["stories"]:
+            links[st["id"]] = [src.get("link", "") for src in st["sources"]]
+            st["sources"] = [{"name": src.get("name", "")} for src in st["sources"]]
+        (data / f"links-{b['date']}.js").write_text(_js("DESK_LINKS", b["date"], links), encoding="utf-8")
         (data / f"brief-{b['date']}.js").write_text(_js("DESK_BRIEFS", b["date"], b), encoding="utf-8")
         (data / f"tabs-{b['date']}.js").write_text(_js("DESK_TABS", b["date"], tabs), encoding="utf-8")
         b["tabs"] = tabs
@@ -205,7 +238,11 @@ def build(quiet=False):
         k = "ov_" + re.sub(r"[^a-z0-9]+", "_", (o["sector"] + "_" + o.get("ind", "") + "_" + o["quarter"]).lower()).strip("_")
         o["k"] = k
         (data / "cc" / f"{k}.js").write_text(_js("DESK_OVH", k, {"c": o["sector"] + o.get("ind", ""), "h": o.pop("html")}), encoding="utf-8")
-    (data / "cctext.js").write_text(_js("DESK_CCTEXT", None, text), encoding="utf-8")
+    for c in cc["calls"]:  # empty fields and blank metrics only cost the phone time to read
+        c["metrics"] = {k: v for k, v in (c.get("metrics") or {}).items() if v is not None}
+        for k in ("unchecked", "checks", "bse", "ex", "dl", "ft", "prev_tone", "ind"):
+            if not c.get(k):
+                c.pop(k, None)
     (data / "concalls.js").write_text(_js("DESK_CONCALLS", None, cc), encoding="utf-8")
     pres = json.loads(C.PRES_FILE.read_text(encoding="utf-8")) if C.PRES_FILE.exists() else []
     import decks as DK
@@ -216,12 +253,24 @@ def build(quiet=False):
             d["one"], d["html"] = x.get("one", ""), x.get("html", "")
         elif x and x.get("status") == "no-text":
             d["scan"] = True
+    # each deck's summary in a file of its own (opened with the deck); its text joins the search text
+    (data / "deck").mkdir(exist_ok=True)
+    for d in pres:
+        h = d.pop("html", "")
+        if h:
+            k = re.sub(r"[^A-Za-z0-9_-]", "", d["id"])[:80]
+            d["k"] = k
+            (data / "deck" / f"{k}.js").write_text(_js("DESK_DECKH", k, {"c": d["company"], "h": h}), encoding="utf-8")
+            text["d:" + k] = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", (d.get("one") or "") + " " + h)).replace("&amp;", "&").strip()
+    (data / "cctext.js").write_text(_js("DESK_CCTEXT", None, text), encoding="utf-8")
+    nfix = canon(pres)
     (data / "presentations.js").write_text(_js("DESK_PRES", None, pres), encoding="utf-8")
     try:  # top 10 developments: one small file per day, and the list of days
         import highlights as HL
         H = HL.load()
         (data / "hl").mkdir(exist_ok=True)
         for day, items in H["days"].items():
+            canon(items, name="name")
             (data / "hl" / f"{day}.js").write_text(_js("DESK_HL", day, items) + "\n" + _js("DESK_HLCAL", day, (H.get("cal") or {}).get(day, []))
                                                    + "\n" + _js("DESK_HLDROP", day, (H.get("dropped") or {}).get(day, [])),
                                                    encoding="utf-8")
@@ -269,6 +318,20 @@ def build(quiet=False):
     import trackers as TK
     track = {"trackers": TK.load(TK.TRACK_FILE, {}), "markets": TK.load(TK.MARKET_FILE, {"series": []}),
              "weekly": TK.load(TK.WEEKLY_FILE, {"reviews": []})}
+    for k in ("results", "orders", "calls", "pivots", "calendar"):
+        nfix += canon(track["trackers"].get(k))
+    C.say(f"  sectors made consistent: {nfix} items re-tagged to their company's own sector")
+    # lighter file: Google News links as their article token only (the page rebuilds them), no repeated pivot headline
+    for k in ("results", "orders", "calls", "pivots", "events", "policy"):
+        for it in track["trackers"].get(k) or []:
+            m = re.match(r"https://news\.google\.com/rss/articles/([^?]+)(\?oc=5)?$", it.get("link") or "")
+            if m:
+                it["link"] = "g:" + m.group(1)
+            elif (it.get("link") or "").startswith("https://www.bseindia.com/xml-data/corpfiling/AttachLive/"):
+                it["link"] = it["link"].rsplit("/", 1)[1]  # the page rebuilds BSE filing links from the file name
+            if k == "pivots" and it.get("what"):
+                it.pop("title", None)
+            it.pop("uid", None)
     arch_path = C.DATA / "news_archive.json"
     arch = json.loads(arch_path.read_text(encoding="utf-8")) if arch_path.exists() else []
     (data / "newsarchive.js").write_text(_js("DESK_NEWSARCH", None, arch), encoding="utf-8")
@@ -297,11 +360,12 @@ def build(quiet=False):
         import ic
         cut = (dt.date.today() - dt.timedelta(days=365)).isoformat()
         track["ic"] = [r for r in ic.load().get("items", []) if r["date"] >= cut]
+        canon(track["ic"])
         import readacross
         cut2 = (dt.date.today() - dt.timedelta(days=200)).isoformat()
         track["ra"] = [r for r in readacross.load().get("items", []) if r["date"] >= cut2 and r.get("matches")]
         # small file of its own: the Concalls and Sectors pages need it without the whole trackers file
-        (data / "readacross.js").write_text(_js("DESK_RA", None, track["ra"]), encoding="utf-8")
+        (data / "readacross.js").write_text(_js("DESK_RA", None, track.pop("ra")), encoding="utf-8")
         (data / "trackers.js").write_text(_js("DESK_TRACK", None, track), encoding="utf-8")
     except Exception as e:
         C.say(f"  (initiating coverage notes not added: {e})")

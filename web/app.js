@@ -214,6 +214,11 @@
   async function getConcalls() {
     if (!window.DESK_CONCALLS) {
       try { await loadScript("data/concalls.js"); } catch (e) { window.DESK_CONCALLS = { calls: [], overviews: [] }; }
+      // empty fields aren't shipped (smaller file): put the defaults back
+      (window.DESK_CONCALLS.calls || []).forEach((c) => {
+        c.metrics = c.metrics || {}; c.checks = c.checks || []; c.unchecked = c.unchecked || []; c.bse = c.bse || [];
+        c.ex = c.ex || {}; c.dl = c.dl || {}; c.ft = c.ft || {}; c.prev_tone = c.prev_tone || ""; c.ind = c.ind || "";
+      });
     }
     if (!window.DESK_RA) { try { await loadScript("data/readacross.js"); } catch (e) { window.DESK_RA = []; } }
     return window.DESK_CONCALLS;
@@ -224,6 +229,22 @@
     }
     return window.DESK_PRES;
   }
+  // a deck's summary lives in its own small file, fetched when the deck is on screen (or its row is opened)
+  const deckBody = (d) => d.k ? `<div data-deckh="${esc(d.k)}" data-co="${esc(d.company)}"><div class="m">Loading the summary…</div></div>`
+    : d.scan ? `<div class="m">The slides are images, so there's no text to summarise.</div>` : `<div class="m">Summary not written yet - it'll appear after a coming update.</div>`;
+  async function fillDeck(el) {
+    if (el.dataset.done) return;
+    el.dataset.done = 1;
+    const k = el.dataset.deckh;
+    window.DESK_DECKH = window.DESK_DECKH || {};
+    if (!window.DESK_DECKH[k]) { try { await loadScript("data/deck/" + k + ".js" + CCV, 12000); } catch (e) { el.innerHTML = `<div class="m">Couldn't load the summary - open the PDF.</div>`; return; } }
+    const x = window.DESK_DECKH[k];
+    el.innerHTML = x && x.c === el.dataset.co ? x.h : `<div class="m">Couldn't load the summary - open the PDF.</div>`;
+  }
+  function fillDecks(root) {
+    (root || document).querySelectorAll("[data-deckh]:not([data-done])").forEach((el) => { const dt = el.closest("details"); if (!dt || dt.open) fillDeck(el); });
+  }
+  document.addEventListener("toggle", (e) => { if (e.target.open) e.target.querySelectorAll("[data-deckh]:not([data-done])").forEach(fillDeck); }, true);
   const dates = () => IDX.briefs.map((b) => b.date);
   const latest = () => (IDX.briefs.length ? IDX.briefs[IDX.briefs.length - 1].date : null);
   let current = null;
@@ -601,7 +622,13 @@
   async function getTrack() {
     if (!window.DESK_TRACK) {
       try { await loadScript("data/trackers.js"); } catch (e) { window.DESK_TRACK = { trackers: {}, markets: { series: [] }, weekly: { reviews: [] } }; }
+      const T = window.DESK_TRACK.trackers || {};  // links are shipped as their Google News token
+      ["results", "orders", "calls", "pivots", "events", "policy"].forEach((k) => (T[k] || []).forEach((r) => {
+        if (r.link && r.link.startsWith("g:")) r.link = "https://news.google.com/rss/articles/" + r.link.slice(2) + "?oc=5";
+        else if (r.link && /^[\w-]+\.pdf$/i.test(r.link)) r.link = "https://www.bseindia.com/xml-data/corpfiling/AttachLive/" + r.link;
+      }));
     }
+    if (!window.DESK_RA) { try { await loadScript("data/readacross.js"); } catch (e) { window.DESK_RA = []; } }
     return window.DESK_TRACK;
   }
 
@@ -733,6 +760,13 @@
     const s = all.find((x) => x.id === Number(id));
     if (!s) return;
     const ex = (b.top || []).find((t) => t.id === s.id);
+    if (s.sources.some((x) => !x.link)) {  // links come in a small file of their own
+      window.DESK_LINKS = window.DESK_LINKS || {};
+      if (!window.DESK_LINKS[b.date]) { try { await loadScript("data/links-" + b.date + ".js" + CCV, 10000); } catch (e) { /* names still show */ } }
+      const L = (window.DESK_LINKS[b.date] || {})[s.id] || [];
+      s.sources.forEach((x, i) => { if (!x.link && L[i]) x.link = L[i]; });
+      expandLinks([s]);
+    }
     popCard.innerHTML = `<button class="x" aria-label="Close">×</button>
       <h3>${esc(s.title)}</h3>
       <div style="margin:6px 0 10px">${s.imp ? sentChip(s.sent) + " &nbsp; " + impDots(s.imp) + " &nbsp; " : ""}<span class="m">${when(s.when)}</span></div>
@@ -745,7 +779,7 @@
         ${ex.why ? `<div class="row"><b>Why it matters:</b> ${esc(ex.why)}</div>` : ""}
         ${ex.watch ? `<div class="row"><b>What to watch:</b> ${esc(ex.watch)}</div>` : ""}</div>` : ""}
       <div class="m">Covered by ${plural(s.outlets, "outlet")}:</div>
-      <ul>${s.sources.map((x) => `<li><a href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.name)}</a></li>`).join("")}</ul>`;
+      <ul>${s.sources.map((x) => `<li>${x.link ? `<a href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.name)}</a>` : esc(x.name)}</li>`).join("")}</ul>`;
     pop.hidden = false;
   }
   pop.addEventListener("click", (e) => {
@@ -901,7 +935,8 @@
   async function pageToday(date) {
     if (!IDX.briefs.length) { view.innerHTML = empty("No news brief yet - it appears here after the first morning run."); return; }
     date = date || latest();
-    const b = await getBrief(date);
+    // everything the page needs, fetched together rather than one after another
+    const [b, hl, gl, rds] = await Promise.all([getBrief(date), hlFor(date), globalData(), readsData()]);
     current = date; currentBrief = b;
     const st = b.stats;
     const pos = b.sections.reduce((a, s) => a + s.pos, 0), neg = b.sections.reduce((a, s) => a + s.neg, 0);
@@ -912,10 +947,8 @@
       s.title.toLowerCase().includes(w.toLowerCase()) || s.companies.some((c) => sameCo(c, w) || c.toLowerCase().includes(w.toLowerCase())))) : [];
     const byId = Object.fromEntries(b.stories.map((s) => [s.id, s]));
     const top = (b.top || []).filter((t) => byId[t.id]);
-    const hl = await hlFor(date);
-    const gl = await globalData();
     const wk = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
-    const deep = (await readsData()).filter((v) => v.d >= wk && v.r >= 4).sort((a, b) => b.r - a.r || (a.d < b.d ? 1 : -1)).slice(0, 6);
+    const deep = rds.filter((v) => v.d >= wk && v.r >= 4).sort((a, b) => b.r - a.r || (a.d < b.d ? 1 : -1)).slice(0, 6);
     view.innerHTML = `
       <h1>Morning brief</h1>
       <div class="sub">${esc(b.label)} · last ${b.hours}h · ${fmt(st.articles)} articles from ${plural(st.sources, "source")} → ${plural(st.relevant, "market story")} · built ${esc(b.built.slice(11, 16))}</div>
@@ -1071,9 +1104,8 @@
 
   async function pageSectors(cat) {
     if (!IDX.briefs.length) { view.innerHTML = empty("No news brief yet."); return; }
-    const b = currentBrief || (await getBrief(current || latest()));
+    const [b] = await Promise.all([currentBrief || getBrief(current || latest()), loadCtx(), readsData()]);
     currentBrief = b; current = b.date;
-    await loadCtx();
     const sec = b.sections.find((s) => s.cat === cat) || b.sections[0];
     if (!sec) { view.innerHTML = empty("No sectors in this brief."); return; }
     const byId = Object.fromEntries(b.stories.map((s) => [s.id, s]));
@@ -1159,10 +1191,10 @@
   };
 
   async function pageCompanies(name) {
-    const cc = await getConcalls();
-    await loadCtx();
+    const [cc] = await Promise.all([getConcalls(), loadCtx(), readsData(),
+      window.DESK_CONEWS ? null : loadScript("data/conews.js").catch(() => { window.DESK_CONEWS = {}; })]);
+    window.DESK_CONEWS = window.DESK_CONEWS || {};
     const P = window.DESK_PRES || [], TK = (window.DESK_TRACK || {}).trackers || {};
-    if (!window.DESK_CONEWS) { try { await loadScript("data/conews.js"); } catch (e) { window.DESK_CONEWS = {}; } }
     const briefs = IDX.briefs.slice(-7).map((x) => ({ date: x.date }));
     const mentions = {}, mIdx = coIndex([], null);
     const mKey = (c) => { let k = mIdx.first(c); if (k === undefined) { k = c; mIdx.add(c, c); mentions[c] = mentions[c] || []; } return k; };
@@ -1273,7 +1305,7 @@
     if (call && Object.keys(call.metrics || {}).length) figs = keyFigures(call);
     else if (res) figs = `<div class="tiles" style="margin:6px 0">${[["Revenue", res.revenue, "Rs cr"], ["Revenue growth", res.rev_yoy, "% YoY"], ["Net profit", res.profit, "Rs cr"], ["Profit growth", res.pat_yoy, "% YoY"]]
       .filter((x) => x[1] != null).map((x) => `<div class="tile"><div class="v" style="font-size:19px">${fmtM(x[1])}</div><div class="k">${x[0]} · ${x[2]}</div></div>`).join("")}</div>`;
-    const deckSum = decks.find((d) => d.one || d.html);
+    const deckSum = decks.find((d) => d.one || d.k);
     view.innerHTML = `<div class="cohead"><h1>${esc(key)} <button class="star" id="costar" title="Add to / remove from your watchlist">${isWatch(key) ? "★ On watchlist" : "☆ Watch"}</button></h1>
         <div class="sub"><a href="#companies">All companies</a>${sector ? ` · <a href="#sectors/${encodeURIComponent(sector)}">${esc(sector)}</a>` : ""}${call && call.ind ? ` › <a href="#concalls/${encodeURIComponent(sector)}">${esc(call.ind)}</a>` : ""}${call ? ` · <a href="#peers/${encodeURIComponent(call.sector)}">peers</a> · <a href="${esc(call.pdf)}" target="_blank" rel="noopener">transcript</a>` : ""}${decks[0] ? ` · <a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">latest deck</a>` : ""}${(call || decks[0] || dirE) ? ` · <a href="${screenerLink(call ? call.code : decks[0] ? decks[0].code : dirE[0])}" target="_blank" rel="noopener">Screener</a>` : ""}</div>
         ${chips ? `<div class="chips">${chips}</div>` : ""}${figs}</div>
@@ -1287,7 +1319,7 @@
         <div class="src">${sentChip(g.x.s.sent)} · ${impDots(g.x.s.imp)} · ${when(g.x.s.when)}${g.more.length ? ` · <details class="sim"><summary>+${g.more.length} similar</summary>${g.more.map((m) => `<div class="t" data-story-date="${m.date}" data-sid="${m.s.id}">${esc(m.s.title)}</div>`).join("")}</details>` : ""}</div></li>`;
     const deckBlock = (d, open) => `<details class="sum" ${open ? "open" : ""}><summary><span class="n">${esc((d.title || "Investor presentation").slice(0, 110))}</span><span class="m">${when(d.when)}</span>
         <span class="r2">${d.one ? `<span class="badge">summary</span>` : d.scan ? `<span class="badge w" title="Image-only slides - no text for the AI to read">images only</span>` : ""}</span></summary>
-        <div class="b md">${d.one ? `<p><b>${esc(d.one)}</b></p>` : ""}${d.html || (d.scan ? `<div class="m">The slides are images, so there's no text to summarise.</div>` : `<div class="m">Summary not written yet - it'll appear after a coming update.</div>`)}
+        <div class="b md">${d.one ? `<p><b>${esc(d.one)}</b></p>` : ""}${deckBody(d)}
         <p><a href="${esc(d.pdf)}" target="_blank" rel="noopener">Open the deck (PDF)</a></p></div></details>`;
     const trackerList = () => `${tk[3].length ? `<div class="pvg" style="margin-bottom:6px">${tk[3].map((r) => pivotLine(r, false)).join("")}</div>` : ""}<ul class="list">
         ${tk[0].map((r) => `<li><div class="t">Results ${esc(r.quarter)}: revenue ${r.revenue == null ? "–" : "Rs " + fmtM(r.revenue) + " cr"} (<span class="${pctCls(r.rev_yoy)}">${pct(r.rev_yoy)}</span>), net profit ${r.profit == null ? "–" : "Rs " + fmtM(r.profit) + " cr"} (<span class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</span>)${r.read ? " · " + esc(r.read) : ""}</div><div class="src">${esc(r.date)} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div></li>`).join("")}
@@ -1319,7 +1351,7 @@
         ${bseWarn(call)}
         ${callHtml}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p></div>` : "";
     const deckCard = decks.length ? `<div class="card md"><h2>Investor deck <span class="m">${when(decks[0].when)}</span></h2>
-        ${decks[0].one ? `<p><b>${esc(decks[0].one)}</b></p>` : ""}${decks[0].html || (decks[0].scan ? `<div class="m">The slides are images, so there's no text to summarise.</div>` : `<div class="m">Summary not written yet - it'll appear after a coming update.</div>`)}
+        ${decks[0].one ? `<p><b>${esc(decks[0].one)}</b></p>` : ""}${deckBody(decks[0])}
         <p><a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">Open the deck (PDF)</a></p>
         ${decks.length > 1 ? `<div class="m">Earlier decks: ${decks.slice(1).map((d) => `<a href="${esc(d.pdf)}" target="_blank" rel="noopener">${esc(d.when.slice(0, 10))}</a>${d.one ? ` - ${esc(d.one.slice(0, 120))}` : ""}`).join(" · ")}</div>` : ""}</div>` : "";
     const shiftLine = await (async () => {
@@ -1939,15 +1971,19 @@
       if (q.length < 2) { $("#sres").innerHTML = `<div class="m">Type a word or phrase - a technology, product, customer, place or company.</div>`; return; }
       $("#sres").innerHTML = `<div class="m">Searching…</div>`;
       const terms = expandQ(q), hit = (t) => { const l = (t || "").toLowerCase(); return terms.find((w) => l.includes(w)); };
-      const [S, cc, TX] = await Promise.all([getSearch(), getConcalls(), ccText()]);
-      if (!window.DESK_CONEWS) { try { await loadScript("data/conews.js"); } catch (e) { window.DESK_CONEWS = {}; } }
+      // the full text of every concall and deck is a big file: answer from everything else first, then add it
+      const full = !!window.DESK_CCTEXT;
+      const [S, cc] = await Promise.all([getSearch(), getConcalls(), window.DESK_CONEWS ? null : loadScript("data/conews.js").catch(() => { window.DESK_CONEWS = {}; })]);
+      window.DESK_CONEWS = window.DESK_CONEWS || {};
+      const TX = full ? window.DESK_CCTEXT : {};
+      if (!full) ccText().then(() => { if ($("#sq") && $("#sq").value.trim() === q) run(); }).catch(() => {});
       const P = window.DESK_PRES || (await getPres());
       const byCo = {};
       const add = (co, h) => { const k = Object.keys(byCo).find((x) => sameCo(x, co)) || co; (byCo[k] = byCo[k] || []).push(h); };
       // concall summaries (latest per company first)
-      cc.calls.forEach((c) => { const t = TX[c.k] || ""; const w = hit(t) || hit(c.company); if (w) add(c.company, { k: "Concall " + c.quarter, d: c.date, s: snippet(t, w), l: "#companies/" + encodeURIComponent(c.company), w }); });
+      cc.calls.forEach((c) => { const t = TX[c.k] || c.one || ""; const w = hit(t) || hit(c.company); if (w) add(c.company, { k: "Concall " + c.quarter, d: c.date, s: snippet(t, w), l: "#companies/" + encodeURIComponent(c.company), w }); });
       // deck summaries
-      P.forEach((d) => { const t = ((d.one || "") + " " + (d.html || "").replace(/<[^>]+>/g, " ")).replace(/&amp;/g, "&").replace(/\s+/g, " "); const w = hit(t); if (w) add(d.company, { k: "Deck", d: d.when.slice(0, 10), s: snippet(t, w), l: d.pdf, w }); });
+      P.forEach((d) => { const t = d.k && TX["d:" + d.k] ? TX["d:" + d.k] : (d.one || ""); const w = hit(t); if (w) add(d.company, { k: "Deck", d: d.when.slice(0, 10), s: snippet(t, w), l: d.pdf, w }); });
       // timeline: pivots, results, orders, broker calls, stories - kept for good
       S.tl.forEach(([co, k, d, t, l]) => { if (k === "concall" || k === "deck") return; const w = hit(t); if (w) add(co, { k: { pivot: "Pivot", result: "Results", order: "Order", broker: "Broker", story: "Price story" }[k] || k, d, s: t, l: fixLink(l), w }); });
       // recent news headlines
@@ -1957,7 +1993,7 @@
         return { co, hs: hs.sort((a, b) => (a.d < b.d ? 1 : -1)), kinds: new Set(hs.map((h) => h.k.split(" ")[0])).size, last: hs.reduce((m, h) => (h.d > m ? h.d : m), "") };
       }).sort((a, b) => b.kinds - a.kinds || (a.last < b.last ? 1 : -1));
       const th = Object.keys(S.themes || {}).filter((t) => terms.some((w) => t.toLowerCase().includes(w) || themeOf(t).toLowerCase().includes(w)));
-      $("#sres").innerHTML = `<div class="sub">${plural(cos.length, "company")} mention <b>${esc(terms.join(" / "))}</b>${th.length ? ` · theme: ${th.map((t) => `<a href="#trackers/themes" data-theme="${esc(themeOf(t))}">${esc(themeOf(t))}</a>`).join(", ")}` : ""}</div>
+      $("#sres").innerHTML = `<div class="sub">${plural(cos.length, "company")} mention <b>${esc(terms.join(" / "))}</b>${full ? "" : ` · <span class="m">adding matches from full concall and deck text…</span>`}${th.length ? ` · theme: ${th.map((t) => `<a href="#trackers/themes" data-theme="${esc(themeOf(t))}">${esc(themeOf(t))}</a>`).join(", ")}` : ""}</div>
         ${cos.length > 1 ? `<div class="card"><h2>Who's in it <span class="m">tap a name to jump</span></h2><div class="chips">${cos.slice(0, 60).map((c, i) => `<a class="chip link" href="#" data-jump="${i}">${esc(c.co)} <span class="m">${c.hs.length}</span></a>`).join("")}</div></div>` : ""}
         ${cos.slice(0, 80).map((c, i) => `<div class="card" id="sr${i}"><h2><a href="#companies/${encodeURIComponent(c.co)}">${esc(c.co)}</a> <span class="m">${plural(c.hs.length, "mention")}</span></h2>
           ${c.hs.slice(0, 8).map((h) => `<div class="sh"><span class="kc" style="background:var(${h.k === "Pivot" ? "--s5" : h.k.startsWith("Concall") ? "--s1" : h.k === "Deck" ? "--s3" : "--neu"})">${esc(h.k)}</span>
@@ -2366,7 +2402,10 @@
       view.innerHTML = empty("Something went wrong loading this page: " + esc(e.message)
         + ` <button class="btn" onclick="location.href=location.pathname+'?r='+Date.now()+location.hash">Reload fresh</button>`);
     }
+    fillDecks(view);
     if (!arg) scrollTo(0, 0);
+    // after the first page is on screen, fetch the shared company data quietly so the next page opens at once
+    if (!route.warm) { route.warm = 1; const warm = () => { loadCtx(); readsData(); if (!window.DESK_CONEWS) loadScript("data/conews.js").catch(() => {}); }; if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 2500 }); else setTimeout(warm, 1200); }
   }
   // extra tabs (e.g. Tech, Auto) from the latest edition, placed before Archive
   const arch = document.querySelector('#tabs a[data-tab="archive"]');
