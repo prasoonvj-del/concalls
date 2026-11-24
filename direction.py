@@ -119,6 +119,11 @@ def context(lib, sector, industry, calls):
         out += "\nTURNING POINTS OF THESE COMPANIES (last 12 months, newest first, with where each was reported):\n" + "\n".join(rows)
     if gov2:
         out += "\n\nGOVERNMENT DECISIONS FOR THIS INDUSTRY (decided and pending):\n" + "\n".join(gov2[:15])
+    try:
+        import analysis
+        out += analysis.for_industry(sector, industry)
+    except Exception:
+        pass
     return out
 
 

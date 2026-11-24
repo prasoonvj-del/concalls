@@ -471,6 +471,11 @@ def main():
         except Exception:  # keep going - the site still gets built
             say(f"\n!! The {name} step failed:\n{traceback.format_exc()}")
         if name == "news":
+            try:  # analysis & deep dives: newsletters, analysts, sector outlooks - sorted by the cheap model
+                import analysis
+                analysis.step(deadline=min(_t.time() + 300, RUN_START + 45 * 60))
+            except Exception:
+                say(f"\n!! Analysis & deep dives failed:\n{traceback.format_exc()}")
             try:  # top 10 developments: once a day, one full-model request, before the rewrites use the allowance
                 import highlights
                 if _t.time() < RUN_START + 40 * 60:

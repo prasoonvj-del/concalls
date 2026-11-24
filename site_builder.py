@@ -288,6 +288,11 @@ def build(quiet=False):
                                                                    "at": G.get("at", "")}), encoding="utf-8")
     except Exception as e:
         C.say(f"  (commodity board not built: {e})")
+    try:  # analysis & deep dives (titles, links and the model's own takeaways - never the article text)
+        import analysis
+        (data / "reads.js").write_text(_js("DESK_READS", None, analysis.site_data()), encoding="utf-8")
+    except Exception as e:
+        C.say(f"  (analysis not built: {e})")
     try:  # initiating coverage notes, last 12 months
         import ic
         cut = (dt.date.today() - dt.timedelta(days=365)).isoformat()

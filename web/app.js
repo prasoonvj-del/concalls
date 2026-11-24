@@ -780,6 +780,52 @@
   }
 
   // global -> India: commodity moves that matter (data, flagged by rules) + world stories with a clear Indian read
+  // analysis & deep dives: newsletters, analysts, sector outlooks (title, link, the model's own takeaway)
+  async function readsData() {
+    if (!window.DESK_READS) { try { await loadScript("data/reads.js" + CCV, 8000); } catch (e) { return []; } }
+    return window.DESK_READS || [];
+  }
+  const KIND = { company: "Company", comparison: "Comparison", sector: "Sector", policy: "Policy", macro: "Macro", global: "Global", technical: "Technical", other: "Other" };
+  function readRow(v, opts = {}) {
+    return `<div class="rdx"><a class="rt" href="${esc(v.l)}" target="_blank" rel="noopener">${esc(v.t)}</a>
+      <div class="rm"><span class="rk ${esc(v.k || "other")}">${esc(KIND[v.k] || "Other")}</span> ${esc(v.s)} · ${esc(v.d)}${v.r >= 5 ? ' · <span title="Deep, specific analysis">★ deep</span>' : ""}</div>
+      ${v.x ? `<div class="rx">${esc(v.x)}</div>` : ""}
+      ${!opts.noCos && (v.c || []).length ? `<div class="chips">${v.c.map((c) => `<span class="chip link" data-go="#companies/${encodeURIComponent(c)}">${esc(c)}</span>`).join("")}</div>` : ""}</div>`;
+  }
+  function readsCard(list, title, sub, more) {
+    if (!list.length) return "";
+    return `<div class="card"><h2>${title} <span class="m">${sub}</span></h2>${list.map((v) => readRow(v)).join("")}${more ? `<div class="m"><a href="${more}">more analysis →</a></div>` : ""}</div>`;
+  }
+  async function pageReads(arg) {
+    const all = await readsData();
+    const f = Object.assign({ k: "", sec: "", g: "", q: "", min: 3 }, store.get("readsF", {}));
+    if (arg) f.sec = arg;
+    const groups = [...new Set(all.map((v) => v.g))].sort();
+    const secs = [...new Set(all.flatMap((v) => v.sec || []))].sort();
+    const draw = () => {
+      store.set("readsF", Object.assign({}, f, { sec: arg ? "" : f.sec }));
+      const q = f.q.toLowerCase();
+      const list = all.filter((v) => (!f.k || v.k === f.k) && (!f.sec || (v.sec || []).includes(f.sec)) && (!f.g || v.g === f.g) && (v.r || 0) >= f.min
+        && (!q || (v.t + " " + (v.x || "") + " " + (v.c || []).join(" ") + " " + v.s).toLowerCase().includes(q)));
+      $("#rlist").innerHTML = list.length ? list.slice(0, 150).map((v) => readRow(v)).join("") : empty("Nothing matches these filters.");
+      $("#rcount").textContent = `${list.length} pieces`;
+    };
+    view.innerHTML = `<h1>Analysis & deep dives</h1>
+      <div class="sub">Newsletters, independent analysts, deep-dive sections and sector outlooks - kept for 4 months, sorted by what they're about. The takeaways are written by Market Desk; open the link to read the piece. <span id="rcount" class="m"></span></div>
+      <div class="card"><div class="chips" id="rk">${["", ...Object.keys(KIND)].map((k) => `<span class="chip link${f.k === k ? " on" : ""}" data-k="${k}">${k ? KIND[k] : "All"}</span>`).join("")}</div>
+        <div class="filters" style="margin-top:8px">
+          <select id="rsec"><option value="">All sectors</option>${secs.map((x) => `<option${x === f.sec ? " selected" : ""}>${esc(x)}</option>`).join("")}</select>
+          <select id="rg"><option value="">All sources</option>${groups.map((x) => `<option${x === f.g ? " selected" : ""}>${esc(x)}</option>`).join("")}</select>
+          <select id="rmin"><option value="3"${f.min == 3 ? " selected" : ""}>Worth reading</option><option value="4"${f.min == 4 ? " selected" : ""}>Substantive only</option><option value="5"${f.min == 5 ? " selected" : ""}>Deep dives only</option></select>
+          <input id="rq" type="search" class="fq" placeholder="Search titles, takeaways, companies" value="${esc(f.q)}"></div></div>
+      <div class="card" id="rlist"></div>`;
+    $("#rk").onclick = (e) => { const c = e.target.closest("[data-k]"); if (!c) return; f.k = c.dataset.k; $("#rk").querySelectorAll(".chip").forEach((x) => x.classList.toggle("on", x === c)); draw(); };
+    $("#rsec").onchange = (e) => { f.sec = e.target.value; draw(); };
+    $("#rg").onchange = (e) => { f.g = e.target.value; draw(); };
+    $("#rmin").onchange = (e) => { f.min = +e.target.value; draw(); };
+    $("#rq").oninput = (e) => { f.q = e.target.value; draw(); };
+    draw();
+  }
   async function globalData() {
     if (!window.DESK_GLOBAL) { try { await loadScript("data/global.js" + CCV, 8000); } catch (e) { return null; } }
     return window.DESK_GLOBAL || null;
@@ -868,6 +914,8 @@
     const top = (b.top || []).filter((t) => byId[t.id]);
     const hl = await hlFor(date);
     const gl = await globalData();
+    const wk = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+    const deep = (await readsData()).filter((v) => v.d >= wk && v.r >= 4).sort((a, b) => b.r - a.r || (a.d < b.d ? 1 : -1)).slice(0, 6);
     view.innerHTML = `
       <h1>Morning brief</h1>
       <div class="sub">${esc(b.label)} · last ${b.hours}h · ${fmt(st.articles)} articles from ${plural(st.sources, "source")} → ${plural(st.relevant, "market story")} · built ${esc(b.built.slice(11, 16))}</div>
@@ -875,6 +923,7 @@
       ${b.big ? `<div class="card md bigcard"><h2>The big picture${b.bigFrom ? ` <span class="m">from the ${esc(b.bigFrom)} brief - today's is written once the AI is free</span>` : ""}</h2><div id="bigp">${b.big}</div></div>` : ""}
       ${globalCard(gl, b, byId)}
       ${hl ? hlCard(hl) : ""}
+      ${readsCard(deep, "Deep dives this week", "analysts and newsletters worth your time", "#reads")}
       ${top.length ? `<div class="card"><h2>Top stories, explained <span class="m">${top.length} that matter most today</span></h2><div class="xgrid" id="topx">${top.map((t) => {
         const s = byId[t.id];
         return `<div class="xs"><div class="t" data-story="${s.id}">${esc(s.title)}</div>
@@ -1053,6 +1102,7 @@
             ${ov ? `<div class="md"><div class="m">Sector overview · ${esc(ov.quarter)} · ${ov.companies.length} companies${ov.draft ? ' · quick draft, full version coming' : ''}</div>${await ovHtml(ov)}</div>` : ""}
             ${calls.length ? `<div class="chips">${calls.slice(0, 30).map((c) => `<span class="chip link" data-go="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}${c.tone ? ` <span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}</span>`).join("")}${calls.length > 30 ? `<a class="chip link" href="#concalls/${encodeURIComponent(sec.cat)}">all ${calls.length} →</a>` : ""}</div>` : ""}
             ${res.length ? `<div class="m" style="margin-top:8px">Results this season: ${res.slice(0, 12).map((r) => `<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a> <span class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</span>`).join(" · ")}${res.length > 12 ? ` · <a href="#trackers/results">all →</a>` : ""}</div>` : ""}</div>` : ""}
+          ${readsCard((await readsData()).filter((v) => (v.sec || []).includes(sec.cat) && v.r >= 3).slice(0, 5), "Worth reading", esc(sec.cat) + " · analysis, last 4 months", "#reads/" + encodeURIComponent(sec.cat))}
           <div class="card"><h2>Stories</h2><div id="sl"></div></div>
           <div class="secsteps">${stepLink(prev, -1)}${stepLink(next, 1)}</div>
         </div></div>`;
@@ -1308,7 +1358,12 @@
     const exCard = call && call.ex && call.ex.v ? `<div class="card"><h2>Management vs market <span class="m">${esc(call.quarter)} call · from the analyst Q&A${call.dl && call.dl.v ? " and last quarter's guidance" : ""}</span></h2>
       <div style="margin:4px 0">${exChip(call)} <span class="m">Market wanted:</span> <b>${esc(call.ex.focus || "")}</b></div><div>${esc(call.ex.line || "")}</div>
       ${call.dl && call.dl.v ? `<div style="margin-top:8px">${dlChip(call)} <span class="m">Said vs did:</span> ${esc(call.dl.line || "")}</div>` : ""}</div>` : "";
-    const sideCards = `${notesCard}${exCard}${storyCard}${raCard}${icCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
+    const rdAll = await readsData();
+    const myCode = call ? String(call.code) : "";
+    const myName = (call ? call.company : decodeURIComponent(name || "")).toLowerCase();
+    const myReads = rdAll.filter((v) => (myCode && (v.cc || []).map(String).includes(myCode)) || (v.c || []).some((c) => c.toLowerCase() === myName)).slice(0, 6);
+    const readCard = readsCard(myReads, "Worth reading", "analysis that names this company", "");
+    const sideCards = `${readCard}${notesCard}${exCard}${storyCard}${raCard}${icCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
       <div class="card"><h2>In the news <span class="m">${plural(items.length, "story")} · ${pz}▲ ${nz}▼</span></h2>
         ${items.length >= 4 ? `<div id="cod"></div>` : ""}
         ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>`;
@@ -2300,6 +2355,7 @@
       else if (tab === "trackers") await pageTrackers(arg || null);
       else if (tab === "tab") await pageTab(arg);
       else if (tab === "archive") await pageArchive();
+      else if (tab === "reads") await pageReads(arg || null);
       else if (tab === "notes") pageNotes();
       else if (tab === "search") await pageSearch(arg ? decodeURIComponent(arg) : "");
       else if (tab === "settings") pageSettings();

@@ -1,0 +1,57 @@
+# Analysis & deep dives - read by analysis.py (kept 4 months; the news brief leaves these out).
+# One per line:  Group | Name | feed address        (or "search: words" for a Google News search, last 7 days)
+# Lines starting with # are ignored. Add any Substack as  Substack | Name | https://<name>.substack.com/feed
+
+# ---- from your FeedFlow list
+Substack | Zen Nivesh | https://zennivesh.substack.com/feed
+Substack | Alpha Ideas | https://alphaideas.in/feed/
+Substack | Filter Coffee | https://filtercoffee.substack.com/feed
+Substack | Market Bites | https://marketbites.substack.com/feed
+Substack | HV Investing | https://hvinvesting.substack.com/feed
+Substack | Indiafintech | https://indiafintech.substack.com/feed
+Substack | Indian BFSI Space | https://digitaltrust.substack.com/feed
+Substack | SOIC | https://soic.substack.com/feed
+Substack | Nine One Capital | https://91capital.substack.com/feed
+Substack | Niti Shastra | https://nitishastra.substack.com/feed
+Substack | Quest for Value | https://kiraninvestsandlearns.wordpress.com/feed/
+Substack | Tanay's Newsletter | https://www.tanayj.com/feed
+Substack | WealthWise | https://wealthwisedca.substack.com/feed
+Substack | Mint Newsletters | https://mintnl.substack.com/feed
+Zerodha | The Daily Brief | https://thedailybrief.zerodha.com/feed
+Zerodha | The World, Simplified | https://thedailybrief.zerodha.com/feed?sectionId=159093
+Zerodha | The Chatter | https://thechatter.zerodha.com/feed
+Zerodha | Subtext | https://subtextbyzerodha.substack.com/feed
+Zerodha | In The Money | https://inthemoneybyzerodha.substack.com/feed
+Zerodha | Mind Over Markets | https://zerodhavarsity.substack.com/feed
+Zerodha | Aftermarket Report | https://aftermarketreport.zerodha.com/feed
+BusinessLine | BL Big Story | https://www.thehindubusinessline.com/portfolio/big-story/feeder/default.rss
+BusinessLine | BL Deep Dive | https://www.thehindubusinessline.com/data-stories/deep-dive/feeder/default.rss
+BusinessLine | BL Data Stories | https://www.thehindubusinessline.com/data-stories/feeder/default.rss
+BusinessLine | BL Stock Fundamentals | https://www.thehindubusinessline.com/portfolio/stock-fundamental-analysis-india/feeder/default.rss
+BusinessLine | BL News Analysis | https://www.thehindubusinessline.com/portfolio/news-analysis/feeder/default.rss
+Research | Indian Economy & Business Analysis | https://www.indiaeconomyandbusiness.com/feed/
+Research | The Economic Transcript | https://tetofficial.com/feed/
+Research | All Things Supply Chain | https://www.allthingssupplychain.com/feed/
+Research | Frontline Economy | https://frontline.thehindu.com/economy/feeder/default.rss
+Research | Business India corporate reports | search: site:businessindia.co/magazine/corporate-report
+Research | Initiating coverage | search: "initiating coverage" India stock OR brokerage
+Technical | Rohit Srivastava | https://rohitsrivastava21.substack.com/feed
+Technical | Noorish Tech | https://www.nooreshtech.co.in/feed
+History | History Meets Finance | https://historymeetsfinance.substack.com/feed
+History | Investing in Financial History | https://finhistory.substack.com/feed
+
+# ---- new: independent analysts and explainers
+Independent | Finshots | https://finshots.in/rss/
+Independent | Capitalmind | https://www.capitalmind.in/feed/
+Independent | Safal Niveshak | https://www.safalniveshak.com/feed/
+Independent | Marcellus | https://marcellus.in/feed/
+Independent | ValuePickr (top this week) | https://forum.valuepickr.com/top.rss?period=weekly
+Independent | Business Standard Opinion | https://www.business-standard.com/rss/opinion-105.rss
+
+# ---- new: comparisons, sector outlooks and policy reads (headlines; the link opens the article)
+Comparisons | FE company comparisons | search: site:financialexpress.com/market vs OR versus margins OR "market share" OR "how"
+Comparisons | Mint explainers & long stories | search: site:livemint.com "Mint Explainer" OR "long story" OR "deep dive"
+Comparisons | ET sector analysis | search: site:economictimes.indiatimes.com "how" sector companies margins OR "market share" analysis
+Rating agencies | ICRA / CRISIL / CareEdge / Ind-Ra sector outlook | search: ICRA OR "CRISIL Ratings" OR CareEdge OR "India Ratings" outlook OR expects sector India
+Brokerages | Brokerage sector reports | search: sector report Jefferies OR Kotak OR Nuvama OR "Motilal Oswal" OR "JM Financial" OR Nomura India
+Policy | Policy impact on sectors | search: India policy OR scheme OR PLI OR duty impact sector companies analysis

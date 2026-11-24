@@ -424,3 +424,9 @@ table.cpeer th[data-k]{cursor:pointer}
 .sq i{display:block;width:16px;border-radius:4px 4px 1px 1px;background:var(--accent);opacity:.8}
 .sq em,.sq small{font-style:normal;font-size:10px;color:var(--muted);line-height:1.2}
 .shiftc .chip.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.rdx{padding:10px 0;border-top:1px solid var(--line-2)}.rdx:first-of-type{border-top:0}
+.rdx .rt{font-weight:600;color:var(--text);text-decoration:none;line-height:1.35}.rdx .rt:hover{color:var(--accent);text-decoration:underline}
+.rdx .rm{font-size:12px;color:var(--muted);margin:3px 0}.rdx .rx{font-size:14px;line-height:1.45;margin:4px 0}
+.rk{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:5px;background:var(--surface-2);color:var(--muted)}
+.rk.comparison,.rk.sector{background:var(--accent-soft);color:var(--accent)}.rk.company{background:rgba(30,123,70,.13);color:#1e7b46}.rk.policy{background:rgba(192,57,43,.1);color:#b03a2e}
+#rk .chip.on{background:var(--accent);color:#fff}

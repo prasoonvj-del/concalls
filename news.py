@@ -650,6 +650,12 @@ def build(conf=None, log_failed=True):
         return None
     tab_folders = {f for fs in conf["tabs"].values() for f in fs}
     feeds = read_opml(opml, conf["skip"] + list(tab_folders))
+    try:  # newsletters and deep dives have their own lane (analysis.py), kept for months instead of a day
+        import analysis
+        deep = analysis.urls()
+        feeds = [f for f in feeds if f["url"] not in deep]
+    except Exception:
+        pass
     if conf["google"]:
         feeds += google_feeds()
     say(f"\nMorning brief: reading {len(feeds)} feeds (skipping folders: {', '.join(conf['skip']) or 'none'})")
