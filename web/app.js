@@ -1461,7 +1461,13 @@
     latestPer(cc.calls).forEach((c) => { const o = bySec[c.sector] = bySec[c.sector] || { n: 0 }; o.n++; const k = TONES.includes(c.tone) ? c.tone : "Mixed"; o[k] = (o[k] || 0) + 1; });
     const secs = Object.keys(bySec).sort((a, b) => a.localeCompare(b));
     const score = (o) => ((o.Positive || 0) * 3 + (o.Mixed || 0) * 2 + (o.Cautious || 0)) / o.n;
-    view.innerHTML = `<h1>Concalls</h1><div class="sub">${plural(cc.calls.length, "summary")} · ${plural(cc.overviews.length, "sector overview")}${nDeck ? ` · <a href="#presentations">${plural(nDeck, "investor deck")} filed recently →</a>` : ""}</div>
+    if (!window.DESK_SEASON) { try { await loadScript("data/season.js" + CCV, 6000); } catch (e) { window.DESK_SEASON = {}; } }
+    const SE = window.DESK_SEASON || {};
+    const seasonCard = (SE.prog || []).length ? `<div class="card prog"><b>${SE.mode === "build" ? "Build season" : "Results season"}:</b>
+      <span class="m">${SE.mode === "build" ? `since ${esc(SE.since || "")} - few calls are being filed, so the free AI allowance is completing the site before the next results season`
+        : `${SE.n7 || 0} concalls filed this week - the allowance keeps up with new calls; completing the rest resumes when filings slow`}</span>
+      <div class="seasonp">${SE.prog.map(([k, d, t]) => `<div><span>${esc(k)}</span><span class="progbar"><i style="width:${t ? Math.round((100 * d) / t) : 0}%"></i></span><span class="m">${fmt(d)} / ${fmt(t)}</span></div>`).join("")}</div></div>` : "";
+    view.innerHTML = `${seasonCard}<h1>Concalls</h1><div class="sub">${plural(cc.calls.length, "summary")} · ${plural(cc.overviews.length, "sector overview")}${nDeck ? ` · <a href="#presentations">${plural(nDeck, "investor deck")} filed recently →</a>` : ""}</div>
       <div class="card"><h2>Management tone by sector <span class="m">tap a sector · number = companies · bar = tone of each one's latest call</span></h2>
         <div id="ktl" class="ktl"></div>
         ${legend(TONES.map((k) => [k, cssv(TC[k])]))}

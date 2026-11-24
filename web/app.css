@@ -444,3 +444,5 @@ table.cpeer th[data-k]{cursor:pointer}
 .rk{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:5px;background:var(--surface-2);color:var(--muted)}
 .rk.comparison,.rk.sector{background:var(--accent-soft);color:var(--accent)}.rk.company{background:rgba(30,123,70,.13);color:#1e7b46}.rk.policy{background:rgba(192,57,43,.1);color:#b03a2e}
 #rk .chip.on{background:var(--accent);color:#fff}
+.seasonp{display:grid;gap:4px;width:100%;margin-top:4px}.seasonp>div{display:grid;grid-template-columns:minmax(0,300px) 160px auto;gap:10px;align-items:center;font-size:13px}
+@media (max-width:600px){.seasonp>div{grid-template-columns:1fr 90px;}.seasonp>div .m{grid-column:1/-1}}

@@ -351,6 +351,29 @@ def build(quiet=False):
                                                                    "at": G.get("at", "")}), encoding="utf-8")
     except Exception as e:
         C.say(f"  (commodity board not built: {e})")
+    try:  # build season progress (Concalls page): how complete the site is
+        import season
+        import direction
+        S = season.load()
+        L = C.load_lib()
+        calls = [c for c in L["calls"].values() if c.get("summary")]
+        latest = C.latest_per_company(calls)
+        quarters = {}
+        for c in calls:
+            quarters.setdefault(c["code"], set()).add(C.filing_quarter(c))
+        ovs = list(L.get("overviews", {}).values())
+        try:
+            import backstory
+            bm = json.loads(backstory.META.read_text(encoding="utf-8"))
+        except Exception:
+            bm = {}
+        S["prog"] = [["Concall summaries by a full model", sum(1 for c in latest if "lite" not in (c.get("model") or "lite")), len(latest)],
+                     ["Companies with last quarter to compare", sum(1 for c in latest if len(quarters.get(c["code"], ())) > 1), len(latest)],
+                     ["Overviews with 'where the industry is heading'", sum(1 for o in ovs if o.get("dir_v", 0) >= direction.DIR_V and "lite" not in (o.get("model") or "lite")), len(ovs)],
+                     ["Company stories written", bm.get("done", 0), bm.get("total", 0)]]
+        (data / "season.js").write_text(_js("DESK_SEASON", None, S), encoding="utf-8")
+    except Exception as e:
+        C.say(f"  (season progress not built: {e})")
     try:  # analysis & deep dives (titles, links and the model's own takeaways - never the article text)
         import analysis
         (data / "reads.js").write_text(_js("DESK_READS", None, analysis.site_data()), encoding="utf-8")

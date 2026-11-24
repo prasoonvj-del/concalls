@@ -11,6 +11,7 @@ Each step is independent: if one fails (e.g. BSE is down), the others still run 
 Settings: the [cloud] section of config.ini. API keys: GEMINI_API_KEY / GROQ_API_KEY (GitHub secrets).
 """
 import configparser
+import datetime as dt
 import os
 import time as _t
 RUN_START = _t.time()  # the workflow step is stopped at 75 minutes - everything here finishes well before
@@ -147,7 +148,94 @@ def is_draft(call):
     return bool(call.get("summary")) and (not m or "lite" in m)
 
 
-def upgrade_summaries(lib, qpool, deadline):
+def importance():
+    """code -> sort key: watchlist first, then the bigger companies (market cap), so the most-read pages improve first."""
+    try:
+        import fundamentals
+        F = fundamentals.load()
+    except Exception:
+        F = {}
+    return lambda c: -((F.get(str(c.get("code"))) or {}).get("mcap") or 0)
+
+
+def backfill_history(lib, deadline, limit=15):
+    """Build season: companies with only one concall on file get the previous quarter's (found on BSE, summarised
+    on the cheap model - it is the reference point), so their latest call can be rewritten with "what changed"
+    and "said vs did". Returns the library (reloaded: the BSE lookup saves its own copy)."""
+    watch = watchlist()
+    calls = [c for c in lib["calls"].values() if c.get("summary")]
+    have = {}
+    for c in calls:
+        have.setdefault(c["code"], set()).add(C.filing_quarter(c))
+    tried = lib.setdefault("hist_tried", {})
+    latest = C.latest_per_company(calls)
+    key = importance()
+    todo = [c for c in latest if len(have.get(c["code"], ())) == 1 and c["code"] not in tried and str(c["code"]).isdigit()]
+    todo.sort(key=lambda c: (not any(w in c["company"].lower() for w in watch), key(c)))
+    if not todo:
+        return lib
+    say(f"\nHistory: previous-quarter concalls for companies with only one on file ({len(todo)} waiting) ...")
+    pool, done = C.Pool(bulk=True), 0
+    for c in todo[:limit]:
+        if time.time() > deadline:
+            break
+        lib["hist_tried"][c["code"]] = dt.date.today().isoformat()
+        C.save_lib(lib)
+        try:
+            C.transcripts_for(c["code"], days=230)
+        except Exception as e:
+            say(f"  {c['company']}: BSE lookup failed ({str(e)[:60]})")
+        lib = C.load_lib()
+        pq = C.prev_quarter(C.filing_quarter(c))
+        prev = [x for x in lib["calls"].values() if x["code"] == c["code"] and C.filing_quarter(x) == pq and not x.get("summary")]
+        if not prev:
+            continue
+        p = max(prev, key=lambda x: x["date"])
+        say(f"  [{done + 1}] {c['company']}: {pq} concall")
+        try:
+            C.summarise_one(p, lib, pool, None)
+            done += 1
+            cur = lib["calls"].get(c["id"])
+            if cur:
+                cur["compared"] = False  # now it has something to compare with: rewritten next
+        except C.AIError as e:
+            say(f"    skipped ({str(e)[:80]})")
+        C.save_lib(lib)
+        time.sleep(pool.pause)
+    say(f"  history: {done} earlier-quarter summaries added")
+    return lib
+
+
+def build_step(stop):
+    """Build season, news-only runs: history, full-quality rewrites and overviews - the day's allowance is used,
+    not left idle between the two full runs."""
+    lib = backfill_history(C.load_lib(), min(stop, RUN_START + 18 * 60), limit=10)
+    qpool = C.Pool(quality=True)
+    touched = upgrade_summaries(lib, qpool, min(stop - 12 * 60, _t.time() + 20 * 60), build=True)
+    lib = C.load_lib()
+    import direction
+    due = sorted(touched) + sorted({o["sector"] for o in lib.get("overviews", {}).values() if not o.get("industry")
+                                    and ("lite" in (o.get("model") or "lite") or o.get("dir_v", 0) < direction.DIR_V)})
+    for sector in list(dict.fromkeys(due))[:6]:
+        if _t.time() > stop - 8 * 60:
+            break
+        try:
+            C.overview(sector, lib, qpool)
+        except C.QuotaOver:
+            return
+        except C.AIError as e:
+            say(f"    overview {sector}: {str(e)[:80]}")
+    try:
+        import industries
+        if _t.time() < stop - 5 * 60:
+            industries.overviews(lib, qpool, set(), limit=10)
+    except C.QuotaOver:
+        pass
+    except Exception as e:
+        say(f"  industry overviews skipped: {str(e)[:100]}")
+
+
+def upgrade_summaries(lib, qpool, deadline, build=False):
     """Quality over speed: rewrite quick drafts with a full Gemini model, most useful first - watchlist,
     then large companies, then the newest calls. Stops when today's full-quality allowance is used;
     tomorrow carries on. Returns the sectors whose overviews should be refreshed."""
@@ -164,12 +252,21 @@ def upgrade_summaries(lib, qpool, deadline):
     # Lite summaries are the standard; the full model only rewrites what is read most: the watchlist and Market
     # Desk's early-signal shortlist (the Top 10 is picked from it)
     mine = lambda c: any(w in c["company"].lower() for w in watch)
-    todo = [c for c in todo if mine(c) or c.get("code") in hot]
-    prio = lambda c: (not mine(c), c.get("code") not in hot, -int(c["date"].replace("-", "")))
+    if build:  # build season: every draft, and every call that now has a previous quarter to compare with
+        def stale(c):
+            prev = C.find_prev(lib, c)
+            return bool(prev and prev.get("summary") and not c.get("compared"))
+        todo = [c for c in latest.values() if not c.get("skip") and (is_draft(c) or stale(c))]
+        key = importance()
+        prio = lambda c: (not mine(c), c.get("code") not in hot, key(c))
+    else:
+        todo = [c for c in todo if mine(c) or c.get("code") in hot]
+        prio = lambda c: (not mine(c), c.get("code") not in hot, -int(c["date"].replace("-", "")))
     todo.sort(key=prio)
     if not todo:
         return set()
-    say(f"\nFull-quality rewrite of quick drafts: {len(todo)} waiting (watchlist, then the Top 10 shortlist) ...")
+    say(f"\nFull-quality rewrite of quick drafts: {len(todo)} waiting "
+        f"({'build season: all of them, biggest companies first' if build else 'watchlist, then the Top 10 shortlist'}) ...")
     touched, done, busy = set(), 0, 0
     for c in todo:
         if time.time() > deadline:
@@ -286,10 +383,14 @@ def step_concalls(conf):
                 break
         time.sleep(pool.pause)
     touched_ind = set()
-    touched |= upgrade_summaries(lib, qpool, deadline)
+    import season
+    build = season.build()
+    if build:  # build season: earlier quarters first, so the rewrites below can compare
+        lib = backfill_history(lib, min(deadline, RUN_START + 20 * 60), limit=20)
+    touched |= upgrade_summaries(lib, qpool, deadline, build=build)
     # overviews written by a Lite model earlier: a few each run get a full-quality rewrite
     lite_ov = sorted({o["sector"] for o in lib.get("overviews", {}).values()
-                      if not o.get("industry") and "lite" in (o.get("model") or "lite")} - touched)[:3]
+                      if not o.get("industry") and "lite" in (o.get("model") or "lite")} - touched)[:8 if build else 3]
     # and a couple without "where the industry is heading" yet (oldest written first)
     import direction
     latest_ov = {}
@@ -297,7 +398,7 @@ def step_concalls(conf):
         if not o.get("industry") and C.quarter_key(o["quarter"]) >= C.quarter_key(latest_ov.get(o["sector"], {}).get("quarter", "Q1 FY00")):
             latest_ov[o["sector"]] = o
     lite_ov += [s for s, o in sorted(latest_ov.items(), key=lambda x: x[1].get("at", ""))
-                if o.get("dir_v", 0) < direction.DIR_V and s not in touched and s not in lite_ov][:2]
+                if o.get("dir_v", 0) < direction.DIR_V and s not in touched and s not in lite_ov][:8 if build else 2]
     # sectors whose overview is due: carried over between runs, so a sector skipped for time isn't forgotten
     due = sorted(set(lib.get("ov_pending", [])) | touched) + lite_ov
     hard = RUN_START + 56 * 60  # the website and the timeline still need their minutes
@@ -322,7 +423,7 @@ def step_concalls(conf):
         import industries
         touched_ind = {industries.industry_of(lib, c) for c in lib["calls"].values() if C.sector_of(lib, c) in touched}
         if time.time() < min(deadline, hard - 4 * 60):
-            industries.overviews(lib, qpool, touched_ind, limit=8)
+            industries.overviews(lib, qpool, touched_ind, limit=20 if build else 8)
         if time.time() < min(deadline, hard - 6 * 60):  # coverage: drafts where there is nothing yet
             industries.draft_overviews(lib, C.Pool(bulk=True), limit=6, deadline=min(deadline, hard - 3 * 60))
     except Exception as e:
@@ -461,6 +562,11 @@ def main():
             backstory.step("request")
         except Exception:
             say(f"\n!! 'Story so far' failed:\n{traceback.format_exc()}")
+    try:
+        import season
+        season.check()
+    except Exception as e:
+        say(f"  season check skipped: {str(e)[:100]}")
     started = time.time()
     for name, enabled, fn in (("news", conf["news"], step_news),
                               ("concalls", conf["concalls"], lambda: step_concalls(conf))):
@@ -498,7 +604,9 @@ def main():
             import backstory
             if _t.time() > RUN_START + 60 * 60:
                 raise RuntimeError("out of time this run")
-            backstory.step("full" if conf["concalls"] else "news")
+            import season
+            backstory.step(("build-full" if conf["concalls"] else "build-news") if season.build()
+                           else ("full" if conf["concalls"] else "news"))
         except Exception:
             say(f"\n!! 'Story so far' failed:\n{traceback.format_exc()}")
         if not conf["concalls"]:
@@ -511,7 +619,10 @@ def main():
             except Exception as e:
                 say(f"  industry sorting skipped: {str(e)[:120]}")
             try:  # leftover full-quality requests go to rewriting drafts first
-                if _t.time() < RUN_START + 40 * 60:
+                import season
+                if season.build() and _t.time() < RUN_START + 30 * 60:
+                    build_step(stop)  # build season: history, rewrites and overviews in every run
+                elif _t.time() < RUN_START + 40 * 60:
                     upgrade_summaries(C.load_lib(), C.Pool(quality=True), _t.time() + 8 * 60)
             except Exception as e:
                 say(f"  full-quality rewrite skipped: {str(e)[:120]}")

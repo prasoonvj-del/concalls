@@ -481,6 +481,9 @@ class AI:
         return True
 
 
+BUILD = False  # build season (season.py): the allowance goes to completing the site, not to keeping up
+
+
 class Pool:
     dead = set()  # providers that asked for payment this run
     """Gemini, Mistral and Groq (whichever have keys). Normal work goes Gemini -> Mistral -> Groq;
@@ -494,6 +497,15 @@ class Pool:
             self.chain, self.down, self.pause = [self.primary], {}, self.primary.pause
             self.mistral = self.backup = self.sambanova = None
             self.primary.patient = True
+            if BUILD:  # build season: when Gemini's full models are used up, Mistral's large model carries on
+                try:
+                    m = AI("mistral")
+                    m.backups = [x for x in ("mistral-medium-latest",) if x != m.model]  # never the small one
+                    self.mistral = m
+                    self.chain = [self.primary, m]
+                    self.primary.patient, m.patient = False, True
+                except AIError:
+                    pass
             return
         if bulk:  # Google's free Flash allowance is only a few dozen requests a day: keep it for concall summaries,
             self.primary.lite_first = True  # the big picture and overviews; routine jobs start on Flash-Lite
@@ -1196,7 +1208,7 @@ def overview(sector, lib, pool, industry=None):
             save_lib(lib)
         n_old = len(old.get("companies") or [])
         grown = len(names) >= max(n_old + 6, n_old * 1.25)
-        if not grown and (dt.date.fromisoformat(today) - dt.date.fromisoformat(old["at"])).days < 4:
+        if not grown and not BUILD and (dt.date.fromisoformat(today) - dt.date.fromisoformat(old["at"])).days < 4:
             return None  # due, but later
     say(f"\nWriting the {label} overview for {q} from {len(calls)} companies ...")
     texts = [(c["company"], (here(c["summary"])).read_text(encoding="utf-8").split("\n---\n")[0]) for c in calls]

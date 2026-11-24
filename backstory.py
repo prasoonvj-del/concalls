@@ -28,7 +28,8 @@ IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 STORE = C.DATA / "backstories.json"
 FAILS = C.DATA / "backstory_fails.json"  # companies whose answer came back incomplete today
 REFRESH_DAYS = 45
-ALLOWANCE = {"full": (6, 12), "news": (2, 6), "request": (5, 10)}  # (companies, minutes) per update
+ALLOWANCE = {"full": (6, 12), "news": (2, 6), "request": (5, 10),  # (companies, minutes) per update
+             "build-full": (16, 18), "build-news": (8, 10)}  # build season (season.py): the rest, several times faster
 
 PROMPT = """Research the Indian listed company {company} (BSE {code}{sym}, sector: {sector}) using web search: its annual
 reports and investor presentations, results, management commentary, capacity / order / product / legal /
