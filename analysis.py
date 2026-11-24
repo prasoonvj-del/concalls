@@ -25,7 +25,7 @@ from concalls import say
 FILE = C.DATA / "analysis.json"
 FEEDS = C.here("analysis_feeds.txt")
 KEEP_DAYS = 120
-PER_RUN = 80  # new pieces sorted per run (8 cheap requests)
+PER_RUN = 150  # new pieces sorted per run (15 cheap requests; the backlog clears in a few runs)
 KINDS = ("company", "comparison", "sector", "policy", "macro", "global", "technical", "other")
 
 PROMPT = """You sort analysis articles for an Indian equity investor's research desk.
@@ -35,7 +35,8 @@ For each article below (id, source, title, opening text) answer ONE line, fields
   3 = some insight; 2 = thin / generic; 1 = promotional, personal-finance tips, listicles, unrelated to markets
 - kind: one of company, comparison (two or more companies against each other), sector, policy, macro, global,
   technical (charts), other
-- companies: Indian listed companies the article is mainly about, full names separated by ";" (max 5), or -
+- companies: Indian listed companies the article is mainly about, full names separated by ";" (max 5), or - .
+  Not the brokerage, rating agency or publisher that wrote or is quoted, unless the article is about that firm itself
 - sectors: from this list only, separated by ";" (max 3), or -
 {sectors}
 - takeaway: 1-2 sentences in your own words - the specific argument or finding with its key numbers. Never copy
