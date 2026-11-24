@@ -617,6 +617,15 @@
     return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
   }
   const pct = (v) => (v == null ? "–" : (v > 0 ? "+" : "") + (Math.round(v * 10) / 10) + "%");
+  // a results line from whatever figures the results headline gave: growth first, else the amounts
+  const resBrief = (r) => {
+    const bits = [];
+    if (r.rev_yoy != null) bits.push(`revenue <span class="${pctCls(r.rev_yoy)}">${pct(r.rev_yoy)}</span>`);
+    if (r.pat_yoy != null) bits.push(`profit <span class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</span>`);
+    if (!bits.length && r.revenue != null) bits.push(`revenue Rs ${fmtM(r.revenue)} cr`);
+    if (r.pat_yoy == null && r.profit != null) bits.push(r.profit < 0 ? `<span class="dn">loss Rs ${fmtM(-r.profit)} cr</span>` : `profit Rs ${fmtM(r.profit)} cr`);
+    return bits.length ? bits.join(", ") : `<span class="m">reported${r.quarter ? " " + esc(r.quarter) : ""} - no figures in the headline</span>`;
+  };
   const pctCls = (v) => (v == null ? "m" : v >= 0 ? "up" : "dn");
   const PAL = ["--s1", "--s2", "--s3", "--s4", "--s5"];
   async function getTrack() {
@@ -730,7 +739,7 @@
     if (!x) return "";
     const bits = [];
     if (x.call) bits.push(`<a href="#companies/${encodeURIComponent(x.call.company)}">concall ${esc(x.call.quarter)}</a>${x.call.tone ? ` <span class="tone ${esc(x.call.tone)}">${esc(x.call.tone)}</span>` : ""}`);
-    if (x.res) bits.push(`results: profit <span class="${pctCls(x.res.pat_yoy)}">${pct(x.res.pat_yoy)}</span>`);
+    if (x.res) bits.push(`results: ${resBrief(x.res)}`);
     if (x.brk) bits.push(`${esc(x.brk.broker)}: ${esc(x.brk.rating)}`);
     if (x.deck) bits.push(`<a href="${esc(x.deck.pdf)}" target="_blank" rel="noopener">deck</a>`);
     return `<div class="ctx"><b>${esc(name)}</b> · ${bits.join(" · ")}</div>`;
@@ -745,7 +754,7 @@
         ${c ? `<span class="m"> · ${esc(c.sector)}</span>` : ""}</div>
       ${c ? `<div>Last concall <b>${esc(c.quarter)}</b>${c.tone ? ` <span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : ""}${c.prev_tone && c.prev_tone !== c.tone ? ` <span class="m">(was ${esc(c.prev_tone)})</span>` : ""}
         ${ks.length ? `<div class="m">${ks.map((k) => `${esc(MET[k][0])} ${fmtM(m[k])}${MET[k][1].startsWith("%") || MET[k][1] === "%" ? "%" : " " + esc(MET[k][1])}`).join(" · ")}</div>` : ""}</div>` : ""}
-      ${x.res ? `<div>Results ${esc(x.res.quarter)}: revenue <span class="${pctCls(x.res.rev_yoy)}">${pct(x.res.rev_yoy)}</span>, profit <span class="${pctCls(x.res.pat_yoy)}">${pct(x.res.pat_yoy)}</span></div>` : ""}
+      ${x.res ? `<div>Results ${esc(x.res.quarter)}: ${resBrief(x.res)}</div>` : ""}
       ${x.brk ? `<div>${esc(x.brk.broker)}: ${esc(x.brk.rating)}${x.brk.target ? ", target Rs " + fmt(Math.round(x.brk.target)) : ""} <span class="m">${esc(x.brk.date.slice(5))}</span></div>` : ""}
       <div class="m">${c ? `<a href="#companies/${encodeURIComponent(x.name)}" data-go="#companies/${encodeURIComponent(x.name)}">concall summary</a>` : ""}${c && x.deck ? " · " : ""}${x.deck ? `<a href="${esc(x.deck.pdf)}" target="_blank" rel="noopener">investor deck</a>` : ""}</div></div>`;
   }
@@ -1240,8 +1249,8 @@
       const BM = BSI.meta || {};
       view.innerHTML = `<h1>Companies</h1><div class="sub">${plural(rows.length, "company")} - every company listed on BSE · news from the last ${plural(briefs.length, "brief")}, concall summaries, decks and results in one row each</div>
         ${BM.total ? `<div class="card prog"><b>The story so far:</b> ${BM.done || 0} of ${BM.total} concall companies written
-          <span class="pbar"><i style="width:${Math.round((100 * (BM.done || 0)) / BM.total)}%"></i></span>
-          <span class="m">up to ${BM.per_update || 6} more each update${BM.next && BM.next.length ? " · next: " + BM.next.slice(0, 6).map(esc).join(", ") + (BM.next.length > 6 ? "…" : "") : ""}</span></div>` : ""}
+          <span class="progbar"><i style="width:${Math.round((100 * (BM.done || 0)) / BM.total)}%"></i></span>
+          <span class="m">${BM.per_day ? `about ${BM.per_day} a day - the rest in ~${Math.ceil((BM.total - (BM.done || 0)) / BM.per_day)} days` : `up to ${BM.per_update || 6} more each update`}${BM.next && BM.next.length ? " · next: " + BM.next.slice(0, 6).map(esc).join(", ") + (BM.next.length > 6 ? "…" : "") : ""}</span></div>` : ""}
         <div class="filters"><input type="search" id="cq" placeholder="Search a company" value="${esc(st.q)}">
           <select id="cs"><option value="">All sectors</option>${secs.map((x) => `<option ${x === st.sec ? "selected" : ""}>${esc(x)}</option>`).join("")}</select>
           <select id="ch"><option value="">All listed companies</option><option value="data" ${st.has === "data" ? "selected" : ""}>With anything on file</option><option value="call" ${st.has === "call" ? "selected" : ""}>With a concall summary</option>
@@ -1266,7 +1275,7 @@
           <td>${r.m ? `${r.m} ${bar(r)}` : `<span class="m">–</span>`}</td>
           <td>${r.call ? `${esc(r.call.quarter)} ${r.call.tone ? `<span class="tone ${esc(r.call.tone)}">${esc(r.call.tone)}</span>` : ""}` : `<span class="m">–</span>`}</td>
           <td>${r.call && r.call.ex && r.call.ex.v ? `${scoreBadge(r.call)} ${exChip(r.call)}<div class="m exl">Market wanted: ${esc(r.call.ex.focus || "")}</div>` : `<span class="m">–</span>`}</td>
-          <td>${r.res ? `profit <span class="${pctCls(r.res.pat_yoy)}">${pct(r.res.pat_yoy)}</span>` : `<span class="m">–</span>`}</td>
+          <td>${r.res ? resBrief(r.res) : `<span class="m">–</span>`}</td>
           <td>${r.deck ? `<a href="${esc(r.deck.pdf)}" target="_blank" rel="noopener">PDF</a>${r.deck.one ? " ✦" : ""}` : `<span class="m">–</span>`}</td>
           <td>${r.story ? `<a href="#companies/${encodeURIComponent(r.n)}">✓ ${esc(new Date(r.story + "T00:00").toLocaleDateString("en-IN", { day: "2-digit", month: "short" }))}</a>` : `<span class="m">–</span>`}</td></tr>`).join("")
           + (list.length ? "" : `<tr><td colspan="7" class="m">No match.</td></tr>`)

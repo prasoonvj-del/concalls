@@ -533,6 +533,8 @@ META = C.DATA / "backstory_meta.json"
 
 def write_meta(store, latest, todo, n_max):
     ok = [k for k, v in store.items() if v.get("status") == "ok" and v.get("v", 0) >= 4]
-    META.write_text(json.dumps({"done": len(ok), "total": len(latest), "per_update": n_max,
+    week = (dt.date.today() - dt.timedelta(days=7)).isoformat()
+    per_day = round(sum(1 for k in ok if (store[k].get("at") or "")[:10] > week) / 7)
+    META.write_text(json.dumps({"done": len(ok), "total": len(latest), "per_update": n_max, "per_day": per_day,
                                 "next": [c["company"] for c in todo[:12]],
                                 "at": dt.datetime.now(IST).isoformat(timespec="minutes")}, ensure_ascii=False), encoding="utf-8")
