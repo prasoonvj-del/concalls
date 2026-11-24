@@ -1158,8 +1158,10 @@ def overview(sector, lib, pool, industry=None):
     # a summary rewritten by a full model (draft -> final) also counts as a change
     stamp = [[c.get("compared", False), "lite" in (c.get("model") or "lite")] for c in sorted(calls, key=lambda c: c["company"])]
     old = lib["overviews"].get(key, {})
-    if old.get("companies") == names and old.get("compared") == stamp and "lite" not in (old.get("model") or "lite"):
-        return False  # already up to date
+    import direction
+    if old.get("companies") == names and old.get("compared") == stamp and "lite" not in (old.get("model") or "lite") \
+            and old.get("dir_v", 0) >= direction.DIR_V:
+        return False  # already up to date (including "where the industry is heading")
     # results season: a sector changes on every run. A full-model overview is redone only every few days, or
     # when the sector has grown a lot - the full model's small daily allowance goes to the summaries first
     if old and "lite" not in (old.get("model") or "lite"):
@@ -1179,6 +1181,10 @@ def overview(sector, lib, pool, industry=None):
     except Exception as e:
         say(f"    (watch list skipped: {str(e)[:80]})")
         extra = ""
+    try:  # where the industry is heading: turning points + government decisions, sourced
+        extra += direction.prompt_add(lib, sector, industry, calls)
+    except Exception as e:
+        say(f"    (industry direction skipped: {str(e)[:80]})")
 
     def job(ai):
         per = None
@@ -1194,13 +1200,14 @@ def overview(sector, lib, pool, industry=None):
     except AIError as e:
         say(f"    overview failed: {e}")
         return False
+    shifts, out = direction.parse(out)
     folder = OUT_DIR / safe_name(sector)
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / (f"_INDUSTRY OVERVIEW - {safe_name(industry)} - {q}.md" if industry else f"_SECTOR OVERVIEW - {q}.md")
     path.write_text(out + f"\n\n*Based on: {', '.join(names)}*\n", encoding="utf-8")
     lib["overviews"][key] = {"sector": sector, "industry": industry or "", "quarter": q, "companies": names,
                              "compared": stamp, "file": path.relative_to(BASE).as_posix(), "model": ai_used.model,
-                             "at": dt.date.today().isoformat()}
+                             "at": dt.date.today().isoformat(), "shifts": shifts, "dir_v": direction.DIR_V}
     save_lib(lib)
     say(f"    saved: {path.relative_to(BASE)}")
     return True

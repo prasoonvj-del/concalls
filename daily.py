@@ -290,6 +290,14 @@ def step_concalls(conf):
     # overviews written by a Lite model earlier: a few each run get a full-quality rewrite
     lite_ov = sorted({o["sector"] for o in lib.get("overviews", {}).values()
                       if not o.get("industry") and "lite" in (o.get("model") or "lite")} - touched)[:3]
+    # and a couple without "where the industry is heading" yet (oldest written first)
+    import direction
+    latest_ov = {}
+    for o in lib.get("overviews", {}).values():
+        if not o.get("industry") and C.quarter_key(o["quarter"]) >= C.quarter_key(latest_ov.get(o["sector"], {}).get("quarter", "Q1 FY00")):
+            latest_ov[o["sector"]] = o
+    lite_ov += [s for s, o in sorted(latest_ov.items(), key=lambda x: x[1].get("at", ""))
+                if o.get("dir_v", 0) < direction.DIR_V and s not in touched and s not in lite_ov][:2]
     # sectors whose overview is due: carried over between runs, so a sector skipped for time isn't forgotten
     due = sorted(set(lib.get("ov_pending", [])) | touched) + lite_ov
     hard = RUN_START + 56 * 60  # the website and the timeline still need their minutes

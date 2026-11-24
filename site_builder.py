@@ -59,11 +59,16 @@ def concall_data():
                       "draft": "lite" in (c.get("model") or "lite").lower(),
                       "pdf": c.get("pdf_url", C.BSE_PDF[0] + c["pdf"]), "html": html})
     overviews = []
+    import direction
     for o in lib["overviews"].values():
         f = C.here(o["file"])
         if f.exists():
+            try:  # shifts named by the overview, and how many companies talked about each, quarter by quarter (code)
+                shifts = direction.momentum(lib, o["sector"], o.get("industry") or None, o.get("shifts") or [])
+            except Exception:
+                shifts = []
             overviews.append({"sector": o["sector"], "ind": o.get("industry", ""), "quarter": o["quarter"], "companies": o["companies"],
-                              "draft": "lite" in (o.get("model") or "lite"),
+                              "draft": "lite" in (o.get("model") or "lite"), "shifts": shifts,
                               "html": C.md(f.read_text(encoding="utf-8"))})
     return {"calls": calls, "overviews": overviews}
 
@@ -165,6 +170,21 @@ def build(quiet=False):
                 conews.setdefault(n, []).append(mini)
     (data / "conews.js").write_text(_js("DESK_CONEWS", None, conews), encoding="utf-8")
     cc = concall_data()
+    # which of its industry's shifts each company's own latest summary talks about (company page: "acting on it")
+    latest_sh = {}
+    for o in cc["overviews"]:
+        if o.get("shifts"):
+            key = (o["sector"], o.get("ind", ""))
+            if C.quarter_key(o["quarter"]) >= C.quarter_key(latest_sh.get(key, {}).get("quarter", "Q1 FY00")):
+                latest_sh[key] = o
+    for c in cc["calls"]:
+        o = latest_sh.get((c["sector"], c.get("ind", ""))) or latest_sh.get((c["sector"], ""))
+        if not o or "html" not in c:
+            continue
+        t = re.sub(r"<[^>]+>", " ", c["html"]).lower()
+        hit = [x["name"] for x in o["shifts"] if any(re.search(r"\b" + re.escape(w) + r"s?\b", t) for w in x["kw"])]
+        if hit:
+            c["sh"] = hit
     # summaries are split out: the index (small) loads everywhere, each summary only when it's opened
     (data / "cc").mkdir(exist_ok=True)
     text = {}

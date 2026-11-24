@@ -68,7 +68,29 @@
     if (window.DESK_OVH[o.k] == null) { try { await loadScript("data/cc/" + o.k + ".js" + CCV); } catch (e) { staleCheck(true); return ""; } }
     const x = window.DESK_OVH[o.k];
     if (!x || typeof x !== "object" || x.c !== o.sector + (o.ind || "")) { staleCheck(true); return ""; }
-    return raInto(rateTables(watchUp(x.h || ""), o.sector), o.sector, o.ind || "");
+    return raInto(rateTables(dirInto(watchUp(x.h || ""), o.shifts || []), o.sector), o.sector, o.ind || "");
+  }
+  // "Where the industry is heading": sources as small labels, and each shift's momentum - how many of the
+  // industry's companies talked about it, quarter by quarter (counted in code from their concall summaries)
+  function dirInto(html, shifts) {
+    const box = document.createElement("div"); box.innerHTML = html;
+    const h = [...box.querySelectorAll("h2,h3")].find((e) => /where the industry is heading/i.test(e.textContent));
+    if (!h) return html;
+    h.classList.add("dirh");
+    for (let n = h.nextElementSibling; n && !/^H[12]$/.test(n.tagName); n = n.nextElementSibling) {
+      n.innerHTML = n.innerHTML.replace(/\[([^\]<>]{3,140})\]/g, (m, t) => `<span class="srct${/^background$/i.test(t.trim()) ? " bg" : /^govt/i.test(t.trim()) ? " gv" : ""}">${t}</span>`);
+    }
+    if (shifts.length) {
+      const st = { early: "early", scaling: "scaling", mainstream: "mainstream" };
+      const strip = document.createElement("div"); strip.className = "shifts";
+      strip.innerHTML = `<div class="m">Momentum - how many of the industry's companies talked about each shift on their concalls, quarter by quarter:</div>` + shifts.map((x) =>
+        `<div class="shift"><b>${esc(x.name)}</b>${x.stage ? ` <span class="sst ${esc(x.stage)}">${esc(st[x.stage] || x.stage)}</span>` : ""}
+          <span class="sser">${(x.series || []).map(([q, n, t]) => `<span class="sq" title="${esc(q)}: ${n} of ${t} companies"><i style="height:${t ? Math.max(3, Math.round((30 * n) / t)) : 3}px"></i><em>${esc(q.replace(/^Q(\d) FY(\d\d)$/, "Q$1'$2"))}</em><small>${n}/${t}</small></span>`).join("")}</span>
+          <span class="m">signals: ${esc((x.kw || []).slice(0, 5).join(", "))}</span></div>`).join("");
+      let last = h; for (let n = h.nextElementSibling; n && !/^H[12]$/.test(n.tagName); n = n.nextElementSibling) last = n;
+      last.after(strip);
+    }
+    return box.innerHTML;
   }
   // "What to watch next quarter" sits just above the "Bullish vs cautious" table
   function watchUp(html) {
@@ -1249,6 +1271,17 @@
         ${decks[0].one ? `<p><b>${esc(decks[0].one)}</b></p>` : ""}${decks[0].html || (decks[0].scan ? `<div class="m">The slides are images, so there's no text to summarise.</div>` : `<div class="m">Summary not written yet - it'll appear after a coming update.</div>`)}
         <p><a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">Open the deck (PDF)</a></p>
         ${decks.length > 1 ? `<div class="m">Earlier decks: ${decks.slice(1).map((d) => `<a href="${esc(d.pdf)}" target="_blank" rel="noopener">${esc(d.when.slice(0, 10))}</a>${d.one ? ` - ${esc(d.one.slice(0, 120))}` : ""}`).join(" · ")}</div>` : ""}</div>` : "";
+    const shiftLine = await (async () => {
+      if (!call) return "";
+      const cc2 = await getConcalls();
+      const ovs = (cc2.overviews || []).filter((o) => o.sector === call.sector && (o.ind || "") === (call.ind || "") && (o.shifts || []).length);
+      const ov = ovs.sort((a, b) => (a.quarter < b.quarter ? 1 : -1))[0] || (cc2.overviews || []).filter((o) => o.sector === call.sector && !o.ind && (o.shifts || []).length)[0];
+      if (!ov) return "";
+      const mine = new Set(call.sh || []);
+      return `<div class="card shiftc"><b>Where ${esc(ov.ind || ov.sector)} is heading:</b> ${ov.shifts.map((x) => `<span class="chip${mine.has(x.name) ? " on" : ""}" title="${mine.has(x.name) ? "Its latest concall talks about this" : "Not mentioned on its latest concall"}">${mine.has(x.name) ? "✓ " : ""}${esc(x.name)}${x.stage ? ` <span class="m">${esc(x.stage)}</span>` : ""}</span>`).join(" ")}
+        <a href="#concalls/${encodeURIComponent(call.sector)}">the industry's direction →</a>
+        <div class="m">✓ = its own latest concall talks about it</div></div>`;
+    })();
     const bizCard = story && story.biz ? `<div class="card md bizc"><h2>The business <span class="m">what it does, where it stands, its edge · researched on the web ${esc(story.at)}</span></h2>${story.biz}</div>`
       : story && bsCode ? `<div class="card"><h2>The business</h2><div class="m">The business profile comes with the next refresh of "the story so far" for this company${isOwner() ? ` - <a href="${requestLink(bsCode, story.company)}" target="_blank" rel="noopener">write it now</a>` : ""}.</div></div>` : "";
     const storyCard = story ? `<div class="card md"><h2>The story so far <span class="m">last 2 years · what changed in the business, and how the stock was re-valued</span></h2>
@@ -1279,7 +1312,7 @@
         ${items.length >= 4 ? `<div id="cod"></div>` : ""}
         ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>`;
     body.innerHTML = call || decks.length
-      ? `${bizCard}${await peerCard(call)}<div class="cogrid"><div>${concallCard}${deckCard}${tlCard}</div><div>${sideCards}</div></div>`
+      ? `${bizCard}${shiftLine}${await peerCard(call)}<div class="cogrid"><div>${concallCard}${deckCard}${tlCard}</div><div>${sideCards}</div></div>`
       : `<div class="grid g2" style="align-items:start"><div>${bizCard}${askCard}${tlCard}</div><div>${sideCards}</div></div>`;
     clampBlock($("#tlb"), 520, "timeline");
     if ($("#conote")) $("#conote").onclick = () => openNote({ company: key });
