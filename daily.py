@@ -541,6 +541,11 @@ def main():
         watch.keep_policy()
     except Exception as e:
         say(f"  follow-through: {str(e)[:120]}")
+    try:  # summaries' figures vs units in the transcript and the company's BSE-filed quarter (no AI)
+        import checks
+        checks.step(C.load_lib(), budget_dl=25, deadline=time.time() + 240)
+    except Exception:
+        say(f"\n!! Figure checks failed:\n{traceback.format_exc()}")
     try:
         import timeline
         timeline.update()

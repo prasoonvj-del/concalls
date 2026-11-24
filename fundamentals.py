@@ -125,6 +125,11 @@ def annual(rep):
             out["ttm_rev"] = round(sum(qr), 1)
         if all(v is not None for v in qn):
             out["ttm_np"] = round(sum(qn), 1)
+    # the quarterly table itself (Rs cr), so concall summaries can be checked against the company's own filing
+    qc = [i for i, h in enumerate(qs) if not h.upper().startswith("FY")]
+    if qc and "Revenue" in Q:
+        col = lambda k: [(Q.get(k) or [None] * len(qs))[i] for i in qc]
+        out["qt"] = {"q": [qs[i] for i in qc], "rev": col("Revenue"), "np": col("Net Profit"), "opm": col("OPM %")}
     return {k: v for k, v in out.items() if v is not None}
 
 
@@ -156,7 +161,9 @@ def step(lib=None, limit=400, budget=330):
     cut = (today - dt.timedelta(days=FRESH_DAYS)).isoformat()
     codes = sorted({c["code"] for c in C.latest_call_each(list(lib["calls"].values())) if str(c.get("code", "")).isdigit()},
                    key=lambda k: (d.get(k) or {}).get("at", ""))
-    todo = [k for k in codes if (d.get(k) or {}).get("at", "") < cut or "fy" not in (d.get(k) or {})][:limit]
+    todo = [k for k in codes if (d.get(k) or {}).get("at", "") < cut or "fy" not in (d.get(k) or {})
+            or ("qt" not in (d.get(k) or {}) and (d.get(k) or {}).get("fy") != "-")][:limit]
+    shown = False
     if not todo:
         return 0
     stop, n, empty = time.time() + budget, 0, 0
@@ -166,6 +173,10 @@ def step(lib=None, limit=400, budget=330):
         res, rep = fetch_one(code)
         row = parse(*res)
         row.update(annual(rep))
+        if row.get("qt") and not shown:
+            say(f"  BSE quarterly columns look like: {row['qt']['q']}")
+            shown = True
+        row.setdefault("qt", {})
         row.setdefault("fy", "-")  # "-" = BSE has no annual table for it: not asked again until the weekly refresh
         if row:
             d[code] = dict(row, at=today.isoformat())

@@ -1048,6 +1048,8 @@ def summarise_one(call, lib, pool, prev=None):
         verdicts, out = watch.parse(out, items)
     q = re.search(r"\*\*Quarter:\*\*\s*Q\s*([1-4])\s*[-' ]*FY\s*'?(\d{2,4})", out, re.I)
     call["quarter"] = f"Q{q.group(1)} FY{int(q.group(2)) % 100:02d}" if q else filing_quarter(call)
+    import checks
+    call["quarter"] = checks.sane_quarter(call, call["quarter"])
     tone = re.search(r"\*\*Tone:\*\*\s*\**\s*([A-Za-z]+)", out)
     call["tone"] = tone.group(1).capitalize() if tone else ""
     source = text
@@ -1055,9 +1057,17 @@ def summarise_one(call, lib, pool, prev=None):
         old = TXT_DIR / f"{prev['id']}.txt"
         if old.exists():  # check against the real transcript only - never against AI-written text
             source += "\n" + old.read_text(encoding="utf-8")
+    import checks  # "INR 2,238 million" written as "Rs 2,238 crore": fixed here, against the transcript's own unit
+    out, ufix = checks.unit_fix(out, text)
     bad = unverified_numbers(out, source)
+    if ufix:
+        fixed_nums = {checks._digits(checks.CR_RE.search(n).group(2)) for _, n in ufix}
+        bad = [x for x in bad if checks._digits(x) not in fixed_nums]
+        say("    units fixed: " + "; ".join(f"{o} -> {n}" for o, n in ufix))
+        call["unit_checked"] = True
     call["unverified"] = bad
     if metrics:
+        checks.fix_metrics(metrics, ufix)
         call["metrics"] = metrics
         call["metrics_unchecked"] = metrics_unchecked(metrics, source)
     call["compared"] = bool(prev_info)

@@ -1266,6 +1266,7 @@
         ${call.checks.length ? `<span class="badge w">⚠ ${call.checks.length} to check</span>` : ""}
         ${call.draft ? `<span class="badge" title="Written by a lighter AI model; a full-quality version replaces it as the free allowance allows">Quick draft · full version coming</span>` : ""}</div>
         ${call.checks.length ? `<div class="warn">Highlighted figures weren't found word-for-word in the transcript - check them in the PDF.</div>` : ""}
+        ${bseWarn(call)}
         ${callHtml}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p></div>` : "";
     const deckCard = decks.length ? `<div class="card md"><h2>Investor deck <span class="m">${when(decks[0].when)}</span></h2>
         ${decks[0].one ? `<p><b>${esc(decks[0].one)}</b></p>` : ""}${decks[0].html || (decks[0].scan ? `<div class="m">The slides are images, so there's no text to summarise.</div>` : `<div class="m">Summary not written yet - it'll appear after a coming update.</div>`)}
@@ -1331,11 +1332,20 @@
     bindNews();
   }
 
+  // figures far from the company's own quarterly results on BSE (concall = usually consolidated, BSE table may be standalone)
+  function bseWarn(c) {
+    const f = c.bse || [];
+    if (!f.length) return "";
+    const nm = { revenue_cr: "Revenue", pat_cr: "Net profit", ebitda_margin_pct: "EBITDA margin", revenue_growth_yoy_pct: "Revenue growth (YoY)" };
+    const u = (k, v) => (k.endsWith("_pct") ? fmtM(v) + "%" : "Rs " + fmtM(v) + " cr");
+    return `<div class="warn">Check against its BSE filing: ${f.map((x) => `${nm[x.k] || x.k} here ${u(x.k, x.say)} vs ${u(x.k, x.bse)} in its ${esc(c.quarter)} results on BSE${x.slip ? " (looks like a unit slip)" : ""}`).join("; ")}. BSE's table can be standalone, so small gaps are normal - big ones mean one figure is wrong.</div>`;
+  }
   function keyFigures(c) {
     const m = c.metrics || {};
     const ks = colsFor(c.sector).filter((k) => typeof m[k] === "number");
     if (!ks.length) return "";
     return `<div class="tiles" style="margin:6px 0 4px">${ks.map((k) => `<div class="tile"><div class="v" style="font-size:19px">${fmtM(m[k])}${
+      (c.bse || []).some((x) => x.k === k) ? ' <span title="Far from its BSE-filed results - see the note in the concall card" style="font-size:13px;color:#c0392b">⚠</span>' :
       c.unchecked.includes(k) ? ' <span title="Not stated word-for-word in the transcript - likely calculated" style="font-size:13px">⚠</span>' : ""}</div>
       <div class="k">${esc(MET[k][0])} · ${esc(MET[k][1])}</div></div>`).join("")}</div>
       <div class="m" style="margin-bottom:6px"><a href="#peers/${encodeURIComponent(c.sector)}">Compare with ${esc(c.sector)} peers →</a></div>`;
@@ -1581,7 +1591,7 @@
         sorted.map((c) => `<tr><td><a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company.replace(/\s+(Ltd|Limited)\.?(-\$)?$|-\$$/i, ""))}</a><br><span class="m">${esc(c.quarter)}</span></td>
           <td>${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : "–"}${c.prev_tone && c.prev_tone !== c.tone ? `<br><span class="m">was ${esc(c.prev_tone)}</span>` : ""}
             ${(c.ex || {}).v ? `<details class="why"><summary>${scoreBadge(c)}</summary><div class="whypop">${scoreWhy(c)}</div></details>` : ""}</td>
-          ${cols.map((k) => `<td class="num">${fmtM(c.metrics[k])}${c.unchecked.includes(k) && c.metrics[k] != null ? ' <span title="Not stated word-for-word in the transcript - likely calculated">⚠</span>' : ""}</td>`).join("")}
+          ${cols.map((k) => `<td class="num">${fmtM(c.metrics[k])}${(c.bse || []).some((x) => x.k === k) ? ' <span title="Far from its BSE-filed results - check" style="color:#c0392b">⚠</span>' : c.unchecked.includes(k) && c.metrics[k] != null ? ' <span title="Not stated word-for-word in the transcript - likely calculated">⚠</span>' : ""}</td>`).join("")}
           <td>${esc(c.metrics.guidance && c.metrics.guidance !== "none" ? c.metrics.guidance : "–")}</td></tr>`).join("");
       $("#pt").querySelectorAll("th").forEach((t) => t.onclick = () => { const k = t.dataset.k; dir = sortKey === k ? -dir : -1; sortKey = k; drawTable(); });
     };
