@@ -1,24 +1,19 @@
-"""One-off: which BSE JSON endpoints give annual results (revenue, profit, EPS by year)? Prints status + a sample."""
-import json, sys
+"""One-off: look inside BSE's results endpoints (as text)."""
+import json, re, sys
 sys.path.insert(0, ".")
 import concalls as C
 API = "https://api.bseindia.com/BseIndiaAPI/api"
-code = "500325"
-tries = [
-    ("TabResults_PAR/w", {"scripcode": code, "tabtype": "RESULTS"}),
-    ("TabResults/w", {"scripcode": code, "tabtype": "RESULTS"}),
-    ("TabResults_PAR/w", {"scripcode": code, "tabtype": "ANNUAL"}),
-    ("GetReportNewFor_Result/w", {"scripcode": code}),
-    ("Corpforthresults/w", {"scripcode": code}),
-    ("ResultsTrend/w", {"scripcode": code}),
-    ("FinancialResult/w", {"scripcode": code}),
-    ("StockReachGraph/w", {"scripcode": code, "flag": "1Y", "fromdate": "", "todate": "", "seriesid": ""}),
-    ("PeerSmartSearch/w", {"scripcode": code, "scripcomare": ""}),
-    ("EQPeerGp/w", {"scripcode": code, "scripcomare": ""}),
-]
-for ep, p in tries:
-    try:
-        r = C.bse().get(f"{API}/{ep}", params=p, timeout=25)
-        print(f"=== {ep} {p} -> {r.status_code} {len(r.text)}\n{r.text[:1500]}\n")
-    except Exception as e:
-        print(f"=== {ep} -> {e}")
+def text(h):
+    h = re.sub(r"</t[dh]>", " | ", h); h = re.sub(r"</tr>", "\n", h); h = re.sub(r"<[^>]+>", "", h)
+    return re.sub(r"[ \t]+", " ", h)
+for code in ("500325", "522074"):
+    for ep in ("FinancialResult/w", "GetReportNewFor_Result/w"):
+        r = C.bse().get(f"{API}/{ep}", params={"scripcode": code}, timeout=25)
+        try:
+            j = r.json()
+        except Exception:
+            print(ep, "not json"); continue
+        for k, v in (j.items() if isinstance(j, dict) else []):
+            print(f"=== {code} {ep} [{k}]\n{text(str(v))[:2500]}\n")
+    r = C.bse().get(f"{API}/TabResults/w", params={"scripcode": code, "tabtype": "RESULTS"}, timeout=25)
+    print("=== TabResults", code, r.text[:2000])
