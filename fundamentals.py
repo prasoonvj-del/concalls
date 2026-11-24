@@ -22,7 +22,7 @@ FRESH_DAYS = 7
 # BSE's field names vary between its endpoints; any of these spellings counts
 KEYS = {
     "mcap": ("mktcapfull", "mktcap", "marketcap", "mcapfull", "mcap", "fullmktcap", "mktcapfullcr"),
-    "pe": ("pe", "peratio", "pettm", "pe_ratio", "ttmpe"),
+    "pe": ("conpe", "pe", "peratio", "pettm", "pe_ratio", "ttmpe"),  # consolidated P/E first
     "pb": ("pb", "pbratio", "pbv", "pricetobook"),
     "roe": ("roe", "ronw"),
     "eps": ("eps", "epsttm", "ttmeps"),
@@ -70,7 +70,7 @@ def parse(*responses):
     for name, keys in KEYS.items():
         for k in keys:
             v = _val(flat.get(k))
-            if v is not None:
+            if v is not None and not (k.startswith("con") and v == 0):  # 0.00 = not reported on a consolidated basis
                 row[name] = round(v, 2)
                 break
     return row
@@ -90,7 +90,7 @@ def fetch_one(code):
     return out
 
 
-def step(lib=None, limit=250, budget=150):
+def step(lib=None, limit=400, budget=240):
     lib = lib or C.load_lib()
     d = load()
     today = dt.date.today()

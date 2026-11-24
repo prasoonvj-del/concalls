@@ -1446,8 +1446,9 @@
     const meRow = rows.find((c) => norm(c.company) === me);
     const median = (xs) => { const v = xs.slice().sort((a, b) => a - b); const n = v.length; return n ? (n % 2 ? v[(n - 1) / 2] : (v[n / 2 - 1] + v[n / 2]) / 2) : null; };
     const stand = cols.map(([k, label, unit, low]) => {
-      const vs = set.map((c) => val(c, k)).filter((v) => v != null), mine = val(meRow, k);
-      if (mine == null || vs.length < 3) return null;
+      const ok = (v) => v != null && !(k === "pe" && v <= 0);
+      const vs = set.map((c) => val(c, k)).filter(ok), mine = val(meRow, k);
+      if (!ok(mine) || vs.length < 3) return null;
       const rank = 1 + vs.filter((v) => (low ? v < mine : v > mine)).length;
       return { k, label, unit, rank, n: vs.length, med: median(vs), mine, low };
     }).filter(Boolean);
@@ -1462,7 +1463,7 @@
       const sorted = rows.slice().sort((a, b) => { const x = val(a, sortK), y = val(b, sortK); if (x == null) return 1; if (y == null) return -1; return (x - y) * dir; });
       return `<tr><th>Company</th>${cols.map(([k, l, u]) => `<th data-k="${k}">${esc(l)}<br><span class="m">${esc(u)}</span>${sortK === k ? (dir < 0 ? " ▼" : " ▲") : ""}</th>`).join("")}<th>Concall</th></tr>`
         + sorted.map((c) => `<tr class="${norm(c.company) === me ? "pme" : ""}"><td><a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company.replace(/\s+(Ltd|Limited)\.?(-\$)?$|-\$$/i, ""))}</a><br><span class="m">${esc(c.quarter || "")}</span></td>
-          ${cols.map(([k]) => `<td class="num">${fmtM(val(c, k))}</td>`).join("")}
+          ${cols.map(([k]) => `<td class="num">${k === "pe" && val(c, k) != null && val(c, k) < 0 ? '<span class="m">loss</span>' : fmtM(val(c, k))}</td>`).join("")}
           <td>${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : "–"}${(c.ex || {}).v ? ` ${scoreBadge(c)}` : ""}</td></tr>`).join("");
     };
     setTimeout(() => {
