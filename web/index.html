@@ -24,10 +24,15 @@ try{var L=JSON.parse(localStorage.getItem("look")||'"modern"');document.document
     <a href="#peers" data-tab="peers">Peers</a>
     <a href="#trackers" data-tab="trackers">Trackers</a>
     <a href="#mydesk" data-tab="mydesk" title="Watchlist, Search and Notes">★ My desk</a>
-    <a href="#archive" data-tab="archive">Archive</a>
-    <a href="#settings" data-tab="settings" title="Watchlist &amp; settings" aria-label="Settings">⚙</a>
+    <div class="more" id="more">
+      <button type="button" class="morebtn" id="morebtn" aria-haspopup="true" aria-expanded="false">More ▾</button>
+      <div class="morepanel" id="morepanel" hidden>
+        <a href="#archive" data-tab="archive">Archive</a>
+        <a href="#settings" data-tab="settings" title="Watchlist &amp; settings">⚙ Settings</a>
+        <button class="lookbtn" id="lookbtn" type="button" title="Switch between the Modern and Classic look"></button>
+      </div>
+    </div>
   </nav>
-  <button class="lookbtn" id="lookbtn" type="button" title="Switch between the Modern and Classic look"></button>
 </header>
 <main id="view" aria-live="polite"><div class="loading">Loading…</div></main>
 <footer class="foot">Personal research notes, built automatically from public BSE filings and news using AI. Summaries can contain mistakes - check the source before relying on anything. Not investment advice.</footer>

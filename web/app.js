@@ -2378,6 +2378,10 @@
     const key = tab === "tab" ? "tab-" + arg : tab === "presentations" ? "concalls" : ["watchlist", "search", "notes"].includes(tab) ? "mydesk" : tab;
     if (["watchlist", "search", "notes"].includes(tab)) store.set("mydesk", tab);
     document.querySelectorAll("#tabs a").forEach((a) => a.classList.toggle("on", a.dataset.tab === key));
+    const inMore = $("#morepanel").querySelector("a.on");
+    $("#morebtn").classList.toggle("on", !!inMore);
+    $("#morebtn").textContent = (inMore ? inMore.textContent.replace(/^⚙\s*/, "") : "More") + " ▾";
+    closeMore();
     const on = document.querySelector("#tabs a.on");
     if (on) on.scrollIntoView({ block: "nearest", inline: "center" });
     try {
@@ -2408,6 +2412,16 @@
     if (!route.warm) { route.warm = 1; const warm = () => { loadCtx(); readsData(); if (!window.DESK_CONEWS) loadScript("data/conews.js").catch(() => {}); }; if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 2500 }); else setTimeout(warm, 1200); }
   }
   // extra tabs (e.g. Tech, Auto) from the latest edition, placed before Archive
+  // "More": Tech, Auto, Archive, Settings and the look switch - so the tab bar never needs scrolling
+  function closeMore() { $("#morepanel").hidden = true; $("#morebtn").setAttribute("aria-expanded", "false"); }
+  $("#morebtn").onclick = (e) => {
+    e.stopPropagation();
+    const p = $("#morepanel"), open = p.hidden;
+    p.hidden = !open; $("#morebtn").setAttribute("aria-expanded", String(open));
+    if (open) { p.classList.remove("left"); if (p.getBoundingClientRect().left < 8) p.classList.add("left"); }
+  };
+  document.addEventListener("click", (e) => { if (!e.target.closest("#more")) closeMore(); });
+  addEventListener("keydown", (e) => { if (e.key === "Escape") closeMore(); });
   const arch = document.querySelector('#tabs a[data-tab="archive"]');
   (IDX.tabs || []).forEach((n) => {
     const a = document.createElement("a");
