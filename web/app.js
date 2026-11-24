@@ -1338,7 +1338,7 @@
     if (!f.length) return "";
     const nm = { revenue_cr: "Revenue", pat_cr: "Net profit", ebitda_margin_pct: "EBITDA margin", revenue_growth_yoy_pct: "Revenue growth (YoY)" };
     const u = (k, v) => (k.endsWith("_pct") ? fmtM(v) + "%" : "Rs " + fmtM(v) + " cr");
-    return `<div class="warn">Check against its BSE filing: ${f.map((x) => `${nm[x.k] || x.k} here ${u(x.k, x.say)} vs ${u(x.k, x.bse)} in its ${esc(c.quarter)} results on BSE${x.slip ? " (looks like a unit slip)" : ""}`).join("; ")}. BSE's table can be standalone, so small gaps are normal - big ones mean one figure is wrong.</div>`;
+    return `<div class="warn">Check against its BSE filing: ${f.map((x) => `${nm[x.k] || x.k} here ${u(x.k, x.say)} vs ${u(x.k, x.bse)} in its ${esc(c.quarter)} results on BSE${x.slip ? " (looks like a unit slip)" : ""}`).join("; ")}. BSE's table is standalone while concalls quote consolidated numbers, so check this one in the PDF.</div>`;
   }
   function keyFigures(c) {
     const m = c.metrics || {};

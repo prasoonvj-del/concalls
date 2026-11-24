@@ -54,7 +54,7 @@ def concall_data():
                       "company": c["company"], "code": c["code"], "sector": C.sector_of(lib, c), "id": c["id"],
                       "ind": (lib.get("industries") or {}).get(c["code"], ""),
                       "quarter": c["quarter"], "date": c["date"], "tone": c.get("tone", ""),
-                      "compared": bool(c.get("compared")), "checks": bad, "bse": c.get("bse_flags") or [],
+                      "compared": bool(c.get("compared")), "checks": bad, "bse": [f for f in (c.get("bse_flags") or []) if f.get("slip")],  # BSE's table is standalone: show unit slips only
                       "ex": c.get("expect") or {}, "dl": c.get("delivery") or {}, "ft": c.get("ft") or {},
                       "draft": "lite" in (c.get("model") or "lite").lower(),
                       "pdf": c.get("pdf_url", C.BSE_PDF[0] + c["pdf"]), "html": html})

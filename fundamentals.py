@@ -174,7 +174,7 @@ def step(lib=None, limit=400, budget=330):
         row = parse(*res)
         row.update(annual(rep))
         if row.get("qt") and not shown:
-            say(f"  BSE quarterly columns look like: {row['qt']['q']}")
+            say(f"  BSE quarterly columns look like: {row['qt']['q']}; results tables offered: {sorted((rep or {}).keys())[:20]}")
             shown = True
         row.setdefault("qt", {})
         row.setdefault("fy", "-")  # "-" = BSE has no annual table for it: not asked again until the weekly refresh
