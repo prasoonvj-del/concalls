@@ -400,3 +400,9 @@ details.why{min-width:170px}details.why summary{cursor:pointer;list-style:none;w
 .top nav{flex:1 1 auto;min-width:0}
 .lookbtn{flex:0 0 auto;margin-left:0}
 @media (max-width:760px){.top{flex-wrap:wrap}.top nav{order:3;flex-basis:100%}.lookbtn{margin-left:auto}}
+.pstand{display:flex;flex-wrap:wrap;gap:6px 10px;margin:2px 0 10px}
+.pst{font-size:13.5px;padding:4px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line-2)}
+.pst.good{background:color-mix(in srgb,var(--pos) 10%,var(--surface));border-color:color-mix(in srgb,var(--pos) 30%,transparent)}
+.pst.bad{background:color-mix(in srgb,var(--neg) 9%,var(--surface));border-color:color-mix(in srgb,var(--neg) 28%,transparent)}
+table.cpeer tr.pme td{background:var(--accent-soft);font-weight:600}
+table.cpeer th[data-k]{cursor:pointer}

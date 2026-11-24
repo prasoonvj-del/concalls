@@ -862,6 +862,11 @@ def step(pool=None):
             fn()
         except Exception as e:
             say(f"  {name} skipped: {str(e)[:150]}")
+    try:  # market cap, P/E, P/B, ROE from BSE for the company page's peer table (no AI)
+        import fundamentals
+        fundamentals.step()
+    except Exception as e:
+        say(f"  ratios skipped: {str(e)[:150]}")
     try:  # global -> India commodity board: LME prices & stocks, flags with the Indian stocks they touch (no AI)
         import commods
         commods.step()

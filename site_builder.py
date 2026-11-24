@@ -253,6 +253,12 @@ def build(quiet=False):
     arch = json.loads(arch_path.read_text(encoding="utf-8")) if arch_path.exists() else []
     (data / "newsarchive.js").write_text(_js("DESK_NEWSARCH", None, arch), encoding="utf-8")
     (data / "trackers.js").write_text(_js("DESK_TRACK", None, track), encoding="utf-8")
+    try:  # market cap and ratios by BSE code, for the company page's peer table
+        import fundamentals
+        F = {k: {x: v[x] for x in ("mcap", "pe", "pb", "roe", "opm", "npm") if v.get(x) is not None} for k, v in fundamentals.load().items()}
+        (data / "fund.js").write_text(_js("DESK_FUND", None, {k: v for k, v in F.items() if v}), encoding="utf-8")
+    except Exception as e:
+        C.say(f"  (ratios not built: {e})")
     try:  # global -> India: the commodity board and its flags (small file, for the Today page)
         import commods
         G = commods.load()
