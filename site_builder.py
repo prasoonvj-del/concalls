@@ -255,7 +255,9 @@ def build(quiet=False):
     (data / "trackers.js").write_text(_js("DESK_TRACK", None, track), encoding="utf-8")
     try:  # market cap and ratios by BSE code, for the company page's peer table
         import fundamentals
-        F = {k: {x: v[x] for x in ("mcap", "pe", "pb", "roe", "opm", "npm") if v.get(x) is not None} for k, v in fundamentals.load().items()}
+        keep = ("mcap", "pe", "pb", "roe", "fy", "rev", "rev_g", "rev_cagr3", "np", "np_g", "np_cagr3", "opm_fy", "npm_fy", "icr",
+                "ttm_rev", "ttm_np", "hist")
+        F = {k: {x: v[x] for x in keep if v.get(x) not in (None, "-")} for k, v in fundamentals.load().items()}
         (data / "fund.js").write_text(_js("DESK_FUND", None, {k: v for k, v in F.items() if v}), encoding="utf-8")
     except Exception as e:
         C.say(f"  (ratios not built: {e})")

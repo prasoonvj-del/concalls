@@ -1421,25 +1421,24 @@
     const [cc, F] = await Promise.all([getConcalls(), getFund()]);
     const byCo = {};
     cc.calls.forEach((c) => { const k = norm(c.company); if (!byCo[k] || c.date > byCo[k].date) byCo[k] = c; });
-    const latest = Object.values(byCo).filter((c) => Object.values(c.metrics || {}).some((v) => typeof v === "number") || F[c.code]);
+    const latest = Object.values(byCo).filter((c) => F[c.code] && (F[c.code].rev != null || F[c.code].mcap != null));
+    if (!F[call.code]) return "";
     let set = call.ind ? latest.filter((c) => c.ind === call.ind) : [];
     let scope = call.ind || call.sector;
     if (set.length < 3) { set = latest.filter((c) => c.sector === call.sector); scope = call.sector; }
     if (set.length < 2) return "";
     const fin = FIN.includes(call.sector);
     const me = norm(call.company);
-    const mc = (c) => (F[c.code] || {}).mcap;
-    const size = (c) => mc(c) ?? (c.metrics || {}).revenue_cr ?? (c.metrics || {}).pat_cr ?? -1;
+    const size = (c) => (F[c.code] || {}).mcap ?? (F[c.code] || {}).rev ?? -1;
     // the biggest names in the peer set, plus the company itself
     let rows = set.slice().sort((a, b) => size(b) - size(a)).slice(0, 10);
     if (!rows.some((c) => norm(c.company) === me)) rows = rows.slice(0, 9).concat(set.filter((c) => norm(c.company) === me));
-    const COLS = (fin
-      ? [["mcap", "Market cap", "Rs cr"], ["loan_book_or_aum_growth_yoy_pct", "Loan/AUM growth", "% YoY"], ["nim_pct", "NIM", "%"], ["gross_npa_pct", "Gross NPA", "%", 1],
-         ["credit_cost_pct", "Credit cost", "%", 1], ["pat_growth_yoy_pct", "PAT growth", "% YoY"], ["pe", "P/E", "x", 1], ["pb", "P/B", "x", 1], ["roe", "ROE", "%"]]
-      : [["mcap", "Market cap", "Rs cr"], ["revenue_cr", "Revenue", "Rs cr, qtr"], ["revenue_growth_yoy_pct", "Revenue growth", "% YoY"], ["ebitda_margin_pct", "EBITDA margin", "%"],
-         ["ebitda_margin_change_bps_yoy", "Margin change", "bps YoY"], ["pat_growth_yoy_pct", "PAT growth", "% YoY"], ["capacity_utilisation_pct", "Utilisation", "%"],
-         ["net_debt_cr", "Net debt", "Rs cr", 1], ["pe", "P/E", "x", 1], ["pb", "P/B", "x", 1], ["roe", "ROE", "%"]]);
-    const val = (c, k) => (["mcap", "pe", "pb", "roe"].includes(k) ? (F[c.code] || {})[k] : (c.metrics || {})[k]) ?? null;
+    // annual figures only (the quarter is what the concall section is for); lenders: no operating margin / interest cover
+    const COLS = [["mcap", "Market cap", "Rs cr"], ["rev", fin ? "Total income" : "Revenue", "Rs cr, FY"], ["rev_g", "Growth", "% last FY"],
+      ["rev_cagr3", "Growth", "% a yr, 3 yr"], ...(fin ? [] : [["opm_fy", "Operating margin", "%"]]), ["np", "Net profit", "Rs cr, FY"],
+      ["np_cagr3", "Profit growth", "% a yr, 3 yr"], ["npm_fy", "Net margin", "%"], ["roe", "ROE", "%"], ...(fin ? [] : [["icr", "Interest cover", "x"]]),
+      ["pe", "P/E", "x", 1], ["pb", "P/B", "x", 1]];
+    const val = (c, k) => (F[c.code] || {})[k] ?? null;
     const cols = COLS.filter(([k]) => rows.filter((c) => val(c, k) != null).length >= 2);
     if (!cols.length) return "";
     // where it stands: rank among peers that have the figure (lower is better for NPA, credit cost, debt, P/E, P/B)
@@ -1455,14 +1454,21 @@
     const pick = (k) => stand.find((x) => x.k === k);
     const say = (x, what) => x ? `<span class="pst ${x.rank <= Math.ceil(x.n / 3) ? "good" : x.rank > x.n - Math.ceil(x.n / 3) ? "bad" : ""}"><b>${what}</b> #${x.rank} of ${x.n}
         <span class="m">(${fmtM(x.mine)}${x.unit.startsWith("%") || x.unit === "x" ? (x.unit === "x" ? "x" : "%") : ""} vs median ${fmtM(x.med)}${x.unit === "x" ? "x" : x.unit.startsWith("%") ? "%" : ""})</span></span>` : "";
-    const summary = fin
-      ? [say(pick("mcap"), "Scale"), say(pick("loan_book_or_aum_growth_yoy_pct"), "Growth"), say(pick("nim_pct"), "NIM"), say(pick("gross_npa_pct"), "Asset quality"), say(pick("roe"), "ROE"), say(pick("pb"), "Valuation (P/B)")]
-      : [say(pick("mcap") || pick("revenue_cr"), "Scale"), say(pick("revenue_growth_yoy_pct"), "Growth"), say(pick("ebitda_margin_pct"), "Margin"), say(pick("roe"), "ROE"), say(pick("pe"), "Valuation (P/E)")];
+    const summary = [say(pick("mcap") || pick("rev"), "Scale"), say(pick("rev_cagr3"), "3-yr growth"), say(pick("np_cagr3"), "3-yr profit growth"),
+      fin ? say(pick("npm_fy"), "Net margin") : say(pick("opm_fy"), "Margin"), say(pick("roe"), "ROE"), fin ? say(pick("pb"), "Valuation (P/B)") : say(pick("pe"), "Valuation (P/E)")];
+    const mine = F[call.code] || {}, H = mine.hist;
+    const trend = H && H.rev && H.rev.length > 1 ? (() => {
+      const r = H.rev.slice().reverse(), n = (H.np || []).slice().reverse(), y = H.y.slice().reverse();
+      const mx = Math.max(...r.filter((v) => v != null), 1);
+      return `<div class="ptrend"><span class="m">${esc(call.company.replace(/\s+(Ltd|Limited)\.?(-\$)?$|-\$$/i, ""))}, FY${esc(y[0])}–FY${esc(y[y.length - 1])}:</span>
+        ${r.map((v, i) => `<span class="pbar" title="FY${esc(y[i])}: revenue Rs ${fmtM(v)} cr, net profit Rs ${fmtM(n[i])} cr"><i style="height:${v == null ? 0 : Math.max(4, Math.round((34 * v) / mx))}px"></i><em>${esc(String(y[i]).slice(-2))}</em></span>`).join("")}
+        <span class="m">revenue Rs ${fmtM(r[0])} → ${fmtM(r[r.length - 1])} cr · net profit Rs ${fmtM(n[0])} → ${fmtM(n[n.length - 1])} cr${mine.ttm_rev ? ` · last 4 quarters: revenue Rs ${fmtM(mine.ttm_rev)} cr, profit Rs ${fmtM(mine.ttm_np)} cr` : ""}</span></div>`;
+    })() : "";
     let sortK = cols[0][0], dir = -1;
     const table = () => {
       const sorted = rows.slice().sort((a, b) => { const x = val(a, sortK), y = val(b, sortK); if (x == null) return 1; if (y == null) return -1; return (x - y) * dir; });
       return `<tr><th>Company</th>${cols.map(([k, l, u]) => `<th data-k="${k}">${esc(l)}<br><span class="m">${esc(u)}</span>${sortK === k ? (dir < 0 ? " ▼" : " ▲") : ""}</th>`).join("")}<th>Concall</th></tr>`
-        + sorted.map((c) => `<tr class="${norm(c.company) === me ? "pme" : ""}"><td><a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company.replace(/\s+(Ltd|Limited)\.?(-\$)?$|-\$$/i, ""))}</a><br><span class="m">${esc(c.quarter || "")}</span></td>
+        + sorted.map((c) => `<tr class="${norm(c.company) === me ? "pme" : ""}"><td><a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company.replace(/\s+(Ltd|Limited)\.?(-\$)?$|-\$$/i, ""))}</a><br><span class="m">${(F[c.code] || {}).fy ? "FY" + esc(F[c.code].fy) : ""}</span></td>
           ${cols.map(([k]) => `<td class="num">${k === "pe" && val(c, k) != null && val(c, k) < 0 ? '<span class="m">loss</span>' : fmtM(val(c, k))}</td>`).join("")}
           <td>${c.tone ? `<span class="tone ${esc(c.tone)}">${esc(c.tone)}</span>` : "–"}${(c.ex || {}).v ? ` ${scoreBadge(c)}` : ""}</td></tr>`).join("");
     };
@@ -1471,8 +1477,8 @@
       const wire = () => t.querySelectorAll("th[data-k]").forEach((h) => h.onclick = () => { const k = h.dataset.k; dir = sortK === k ? -dir : -1; sortK = k; t.innerHTML = table(); wire(); });
       wire();
     }, 0);
-    return `<div class="card"><h2>Against its peers <span class="m">${esc(scope)} · ${rows.length} of ${set.length} companies, largest first · latest quarter from each concall; market cap, P/E, P/B, ROE from BSE · tap a column to sort</span></h2>
-      ${summary.filter(Boolean).length ? `<div class="pstand">${summary.filter(Boolean).join("")}</div>` : ""}
+    return `<div class="card"><h2>Against its peers <span class="m">${esc(scope)} · ${rows.length} of ${set.length} companies, largest first · annual results and ratios from BSE · tap a column to sort</span></h2>
+      ${summary.filter(Boolean).length ? `<div class="pstand">${summary.filter(Boolean).join("")}</div>` : ""}${trend}
       <div class="tw"><table class="peer cpeer" id="cpt">${table()}</table></div>
       <div class="m"><a href="#peers/${encodeURIComponent(call.sector)}">Full ${esc(call.sector)} comparison →</a></div></div>`;
   }

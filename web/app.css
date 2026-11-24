@@ -406,3 +406,8 @@ details.why{min-width:170px}details.why summary{cursor:pointer;list-style:none;w
 .pst.bad{background:color-mix(in srgb,var(--neg) 9%,var(--surface));border-color:color-mix(in srgb,var(--neg) 28%,transparent)}
 table.cpeer tr.pme td{background:var(--accent-soft);font-weight:600}
 table.cpeer th[data-k]{cursor:pointer}
+.ptrend{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap;margin:0 0 10px;font-size:13px}
+.pbar{display:inline-flex;flex-direction:column;align-items:center;justify-content:flex-end;height:48px;width:22px}
+.pbar i{display:block;width:14px;border-radius:4px 4px 1px 1px;background:var(--accent);opacity:.75}
+.pbar em{font-style:normal;font-size:10.5px;color:var(--muted)}
+.ptrend .pbar{background:none!important;border:0!important;padding:0!important;box-shadow:none!important}

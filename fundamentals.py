@@ -76,6 +76,58 @@ def parse(*responses):
     return row
 
 
+def _cells(row):
+    return [re.sub(r"<[^>]+>", "", c).replace("&nbsp;", " ").strip() for c in re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", row, re.S)]
+
+
+def parse_table(html):
+    """BSE's results table (HTML) -> (column labels, {row title: [numbers]})."""
+    rows = re.findall(r"<tr[^>]*>(.*?)</tr>", html or "", re.S)
+    if not rows:
+        return [], {}
+    head = _cells(rows[0])[1:]
+    out = {}
+    for r in rows[1:]:
+        c = _cells(r)
+        if len(c) >= 2 and c[0] and c[0] not in out:
+            out[c[0]] = [_val(x) for x in c[1:1 + len(head)]]
+    return head, out
+
+
+def annual(rep):
+    """Five years of annual results (Rs cr) and the last few quarters, plus the comparisons the peer table needs."""
+    if not isinstance(rep, dict):
+        return {}
+    yrs, A = parse_table(rep.get("AnninCr"))
+    qs, Q = parse_table(rep.get("QtlyinCr"))
+    if not yrs or "Revenue" not in A:
+        return {}
+    g = lambda k: A.get(k) or [None] * len(yrs)
+    rev, np_, opm, npm, intr, pbt = g("Revenue"), g("Net Profit"), g("OPM %"), g("NPM %"), g("Interest"), g("PBT")
+
+    def yoy(xs):
+        return round(100 * (xs[0] / xs[1] - 1), 1) if len(xs) > 1 and xs[0] is not None and xs[1] and xs[1] > 0 else None
+
+    def cagr(xs, n=3):
+        if len(xs) > n and xs[0] and xs[n] and xs[0] > 0 and xs[n] > 0:
+            return round(100 * ((xs[0] / xs[n]) ** (1 / n) - 1), 1)
+        return None
+    out = {"fy": yrs[0], "rev": rev[0], "rev_g": yoy(rev), "rev_cagr3": cagr(rev), "np": np_[0], "np_g": yoy(np_),
+           "np_cagr3": cagr(np_), "opm_fy": opm[0], "npm_fy": npm[0],
+           "hist": {"y": yrs, "rev": rev, "np": np_}}
+    if intr[0] and pbt[0] is not None and abs(intr[0]) > 0:
+        out["icr"] = round((pbt[0] + abs(intr[0])) / abs(intr[0]), 1)
+    # trailing four quarters, when BSE lists them (the last column is the full year, not a quarter)
+    qcols = [i for i, h in enumerate(qs) if not h.upper().startswith("FY")][:4]
+    if len(qcols) == 4 and "Revenue" in Q:
+        qr, qn = [Q["Revenue"][i] for i in qcols], [(Q.get("Net Profit") or [None] * 9)[i] for i in qcols]
+        if all(v is not None for v in qr):
+            out["ttm_rev"] = round(sum(qr), 1)
+        if all(v is not None for v in qn):
+            out["ttm_np"] = round(sum(qn), 1)
+    return {k: v for k, v in out.items() if v is not None}
+
+
 def fetch_one(code):
     out = []
     for ep, params in (("ComHeadernew/w", {"quotetype": "EQ", "scripcode": code, "seriesid": ""}),
@@ -87,28 +139,34 @@ def fetch_one(code):
         except Exception:
             pass
         time.sleep(0.25)
-    return out
+    rep = None
+    try:  # five years of annual results
+        r = C.bse().get(f"{API}/GetReportNewFor_Result/w", params={"scripcode": code}, timeout=25)
+        if r.status_code == 200 and r.text.strip().startswith("{"):
+            rep = r.json()
+    except Exception:
+        pass
+    return out, rep
 
 
-def step(lib=None, limit=400, budget=240):
+def step(lib=None, limit=400, budget=330):
     lib = lib or C.load_lib()
     d = load()
     today = dt.date.today()
     cut = (today - dt.timedelta(days=FRESH_DAYS)).isoformat()
     codes = sorted({c["code"] for c in C.latest_call_each(list(lib["calls"].values())) if str(c.get("code", "")).isdigit()},
                    key=lambda k: (d.get(k) or {}).get("at", ""))
-    todo = [k for k in codes if (d.get(k) or {}).get("at", "") < cut][:limit]
+    todo = [k for k in codes if (d.get(k) or {}).get("at", "") < cut or "fy" not in (d.get(k) or {})][:limit]
     if not todo:
         return 0
     stop, n, empty = time.time() + budget, 0, 0
-    sample = C.DATA / "bse_ratio_sample.json"
     for code in todo:
         if time.time() > stop:
             break
-        res = fetch_one(code)
-        if res and not sample.exists():  # one raw reply kept, to check BSE's field names
-            sample.write_text(json.dumps(res, ensure_ascii=False, indent=1)[:20000], encoding="utf-8")
+        res, rep = fetch_one(code)
         row = parse(*res)
+        row.update(annual(rep))
+        row.setdefault("fy", "-")  # "-" = BSE has no annual table for it: not asked again until the weekly refresh
         if row:
             d[code] = dict(row, at=today.isoformat())
             n += 1
