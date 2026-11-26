@@ -86,7 +86,8 @@ def main():
             C.say(f"{section}: not available ({str(e)[:120]})")
             continue
         (OUT / f"{section}_models.json").write_text(json.dumps(ms, indent=1), encoding="utf-8")
-        chosen = pick(ms)
+        C.say(f"{section} free models: " + ", ".join(f"{m} ({c // 1000}k)" for m, c in ms))
+        chosen = [m for m in os.environ.get("MODELS", "").split(",") if m.strip() and any(m.strip() == x for x, _ in ms)] or pick(ms)
         C.say(f"{section}: {len(ms)} free models; testing {chosen}")
         cands += [(section, m) for m in chosen]
     calls = calls_to_test(lib)

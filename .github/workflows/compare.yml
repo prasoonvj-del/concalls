@@ -8,9 +8,12 @@ on:
       calls:
         description: "How many concalls to test"
         default: "5"
+      models:
+        description: "Model ids to test, comma-separated (blank = pick automatically)"
+        default: ""
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   compare:
@@ -33,10 +36,15 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           N_CALLS: ${{ inputs.calls }}
+          MODELS: ${{ inputs.models }}
           PYTHONUNBUFFERED: "1"
         run: python tools/compare_models.py
-      - uses: actions/upload-artifact@v4
+      - name: Keep the results on the 'compare' branch (readable without downloads)
         if: always()
-        with:
-          name: model-compare
-          path: compare/
+        run: |
+          cd compare
+          git init -q -b compare
+          git config user.name "market-desk-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "Model comparison $(date -u '+%F %H:%M') UTC"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:compare
