@@ -250,19 +250,21 @@ class AI:
         self.patient = True  # set False when a backup provider can take over
         # Most free tiers other than Gemini accept only a few thousand tokens per request;
         # longer transcripts are then summarised in parts (0 = no limit).
-        self.max_input_tokens = int(c.get("max_input_tokens", "0" if section in ("ai", "mistral", "sambanova") else "5000") or 0)
+        self.max_input_tokens = int(c.get("max_input_tokens", "0" if section in ("ai", "mistral", "sambanova", "openrouter", "nvidia") else "5000") or 0)
         if os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY", "").startswith("xai-") or \
                 c.get("api_key", "").strip().startswith("xai-"):
             self.max_input_tokens = 0 if section != "ai" else self.max_input_tokens  # Grok takes whole transcripts
         # In the cloud (GitHub Actions) keys come from encrypted secrets, not config.ini
         names = {"ai": ("GEMINI_API_KEY",), "mistral": ("MISTRAL_API_KEY",),
-                 "sambanova": ("SAMBANOVA_API_KEY",)}.get(
+                 "sambanova": ("SAMBANOVA_API_KEY",), "openrouter": ("OPENROUTER_API_KEY",),
+                 "nvidia": ("NVIDIA_API_KEY",)}.get(
             section, ("GROQ_API_KEY", "GROK_API_KEY", "XAI_API_KEY"))
         env_key = next((os.environ[n].strip() for n in names if os.environ.get(n, "").strip()), "")
         self.key = env_key or c.get("api_key", "").strip()
         default_url = {"ai": "https://generativelanguage.googleapis.com/v1beta/openai",
                        "mistral": "https://api.mistral.ai/v1",
-                       "sambanova": "https://api.sambanova.ai/v1"}.get(section, "https://api.groq.com/openai/v1")
+                       "sambanova": "https://api.sambanova.ai/v1", "openrouter": "https://openrouter.ai/api/v1",
+                       "nvidia": "https://integrate.api.nvidia.com/v1"}.get(section, "https://api.groq.com/openai/v1")
         self.url = c.get("base_url", default_url).strip().rstrip("/")
         self.model = c.get("model", "mistral-large-latest" if section == "mistral" else "auto").strip()
         if section == "mistral":  # free "Experiment" plan: large model first, smaller ones if its limit is used
@@ -278,6 +280,10 @@ class AI:
             self.provider = "Mistral"
         elif "sambanova" in self.url:
             self.provider = "SambaNova"
+        elif "openrouter.ai" in self.url:
+            self.provider = "OpenRouter"
+        elif "nvidia.com" in self.url:
+            self.provider = "NVIDIA"
         else:
             self.provider = "Gemini" if "generativelanguage" in self.url else self.url.split("/")[2]
         self.max_wait = int(c.get("max_wait_seconds", "180") or 180)
