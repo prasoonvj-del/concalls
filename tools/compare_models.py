@@ -87,7 +87,8 @@ def main():
             continue
         (OUT / f"{section}_models.json").write_text(json.dumps(ms, indent=1), encoding="utf-8")
         C.say(f"{section} free models: " + ", ".join(f"{m} ({c // 1000}k)" for m, c in ms))
-        chosen = [m for m in os.environ.get("MODELS", "").split(",") if m.strip() and any(m.strip() == x for x, _ in ms)] or pick(ms)
+        want = [m.strip() for m in os.environ.get("MODELS", "").split(",") if m.strip()]
+        chosen = [m for m in want if any(m == x for x, _ in ms)] if want else pick(ms)
         C.say(f"{section}: {len(ms)} free models; testing {chosen}")
         cands += [(section, m) for m in chosen]
     calls = calls_to_test(lib)
@@ -116,7 +117,7 @@ def main():
                "gemini": dict(checks_for(gem.split("\n---\n")[0], text, source), model=c.get("model"))}
         for section, mid in cands:
             ai = C.AI(section)
-            ai.model, ai.backups, ai.patient, ai.max_wait = mid, [], False, 240
+            ai.model, ai.backups, ai.patient, ai.max_wait = mid, [], False, int(os.environ.get("MAX_WAIT", "420"))
             t0 = time.time()
             try:
                 out = C.build_summary(ai, c, text, prev_info, [])

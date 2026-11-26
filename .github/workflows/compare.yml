@@ -3,6 +3,8 @@ name: Model comparison (one-off test)
 # Started by hand. Summarises a few recent concalls with free OpenRouter / NVIDIA models using the site's own prompt,
 # next to what Gemini's full model already wrote. Changes nothing on the site; results are a downloadable artifact.
 on:
+  schedule:  # one early-morning IST rerun (quiet hours on the free endpoints); removed after the test
+    - cron: "30 0 27 11 *"
   workflow_dispatch:
     inputs:
       calls:
@@ -18,7 +20,7 @@ permissions:
 jobs:
   compare:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 170
     steps:
       - uses: actions/checkout@v4
       - name: Restore saved data (read-only copy)
@@ -35,8 +37,9 @@ jobs:
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
-          N_CALLS: ${{ inputs.calls }}
-          MODELS: ${{ inputs.models }}
+          N_CALLS: ${{ inputs.calls || '4' }}
+          MODELS: ${{ inputs.models || 'nvidia/nemotron-3-ultra-550b-a55b:free,nvidia/nemotron-3-ultra-550b-a55b,moonshotai/kimi-k3.1-pro,z-ai/glm-5.3-flash,mistralai/mistral-large-4-1t-a52b' }}
+          MAX_WAIT: "420"
           PYTHONUNBUFFERED: "1"
         run: python tools/compare_models.py
       - name: Keep the results on the 'compare' branch (readable without downloads)
