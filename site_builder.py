@@ -150,7 +150,7 @@ def why_file(tl, stories):
     except Exception:
         pass
     pend = [p for p in T.get("policy", []) or [] if p.get("status") == "pending"]
-    shifts_by = {}
+    shifts_by, texts = {}, {}
     try:
         import direction
         for o in lib.get("overviews", {}).values():
@@ -158,9 +158,35 @@ def why_file(tl, stories):
                 key = (o["sector"], o.get("industry") or "")
                 if key not in shifts_by or C.quarter_key(o["quarter"]) > C.quarter_key(shifts_by[key][0]):
                     shifts_by[key] = (o["quarter"], o["shifts"])
+        # each company's own words (latest concall + recent events), and which shift keywords are specific enough to
+        # mean something: a word most concalls use ("revenue", "volume", "capex") says nothing about a shift
+        for code_, c_ in latest.items():
+            try:
+                t_ = C.here(c_["summary"]).read_text(encoding="utf-8").lower() if c_.get("summary") else ""
+            except OSError:
+                t_ = ""
+            texts[code_] = t_ + " " + " ".join(e["t"].lower() for e in tl.get("companies", {}).get(code_, []) if e["d"] >= cut)
+        STOP = {"and", "the", "for", "with", "shift", "growth", "scaling", "expansion", "profitability", "aggressive",
+                "focus", "strategy", "business", "led", "driven", "new", "towards", "from", "into", "reduction", "rise"}
+        cands = {w for _, sh in shifts_by.values() for x in sh
+                 for w in list(x.get("kw") or []) + re.findall(r"[a-z0-9&\-]{2,}", x["name"].lower()) if w not in STOP}
+        n_ = max(1, len(texts))
+        bags = [set(re.findall(r"[a-z0-9&\-]+", t_)) for t_ in texts.values()]
+        df = {}
+        for w in cands:
+            if " " in w:
+                df[w] = sum(1 for t_ in texts.values() if w in t_) / n_
+            else:
+                df[w] = sum(1 for b_ in bags if w in b_ or w + "s" in b_) / n_
         momentum = {}
         for key, (q, sh) in shifts_by.items():
-            momentum[key] = direction.momentum(lib, key[0], key[1] or None, sh)
+            sh2 = []
+            for x in sh:
+                kw = [w for w in dict.fromkeys(list(x.get("kw") or []) + re.findall(r"[a-z0-9&\-]{2,}", x["name"].lower()))
+                      if w in df and 0 < df[w] <= 0.12]
+                if kw:
+                    sh2.append(dict(x, kw=kw))
+            momentum[key] = direction.momentum(lib, key[0], key[1] or None, sh2)
     except Exception:
         momentum = {}
 
@@ -188,7 +214,8 @@ def why_file(tl, stories):
         return sorted(out_, key=lambda x: x[0] or "9999")
 
     def shifts_of(sector, industry, mine):
-        """Its own industry's shifts, and any other industry's shift its own concall / news clearly talks about."""
+        """Its own industry's shifts, and any other industry's shift its own concall / news clearly talks about
+        (only specific keywords count, see above)."""
         hits = lambda x: sum(1 for w in x["kw"] if re.search(r"\b" + re.escape(w) + r"s?\b", mine)) if mine else 0
         rows, seen_ = [], set()
         own = momentum.get((sector, industry)) or []
@@ -200,7 +227,8 @@ def why_file(tl, stories):
                     continue
                 seen_.add(x["name"])
                 ser = x.get("series") or []
-                rows.append({"n": x["name"], "st": x.get("stage", ""), "s": [[q, n, t] for q, n, t in ser[-2:]], "me": h >= 1})
+                rows.append({"n": x["name"], "st": x.get("stage", ""), "s": [[q, n, t] for q, n, t in ser[-2:]], "me": h >= 1,
+                             "own": x in own})
         return [r for r in rows if r["me"]][:3] + [r for r in rows if not r["me"]][:max(0, 3 - sum(r["me"] for r in rows))]
 
     out = {}
@@ -228,11 +256,7 @@ def why_file(tl, stories):
             x = short[code]
             row["early"] = {"s": x["s"], "k": x["k"], "since": x["since"], "move": x.get("move")}
         if c:  # covered by Market Desk: what's coming, and its industry's direction
-            try:
-                mine = C.here(c["summary"]).read_text(encoding="utf-8").lower() if c.get("summary") else ""
-            except OSError:
-                mine = ""
-            mine += " " + " ".join(e[2].lower() for e in ev)
+            mine = texts.get(code, "")
             ah = ahead_of(code, row["s"], row["i"], mine)
             if ah:
                 row["ahead"] = ah
