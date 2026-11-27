@@ -121,6 +121,88 @@ def why_file(tl, stories):
         short = {x["key"]: x for x in (H["short"][sday] if sday else [])}
     except Exception:
         H, short = None, {}
+    # ---- catalysts for breakout alerts (TradeCharts): what's coming in the next 45 days, and the industry's shifts
+    horizon = today + dt.timedelta(days=45)
+    try:
+        import highlights as HL2
+        dues = HL2.company_dues(tl.get("companies", {}), today, horizon_days=45)
+    except Exception:
+        dues = {}
+    try:
+        T = json.loads((C.DATA / "trackers.json").read_text(encoding="utf-8"))
+    except Exception:
+        T = {}
+    res_dates = {}
+    for e in T.get("calendar", []) or []:
+        if e.get("code") and today.isoformat() <= (e.get("when") or "") <= horizon.isoformat():
+            res_dates.setdefault(str(e["code"]), e["when"])
+    monthly = {}
+    try:
+        for ln in (C.BASE / "monthly_data.txt").read_text(encoding="utf-8").splitlines():
+            p = [x.strip() for x in ln.split("|")]
+            if ln.strip().startswith("#") or len(p) < 3 or not p[1].isdigit():
+                continue
+            d = today.replace(day=min(int(p[1]), 28))
+            if d < today:
+                d = (d.replace(day=1) + dt.timedelta(days=32)).replace(day=min(int(p[1]), 28))
+            kws = [k.strip().lower() for k in (p[3] if len(p) > 3 else "").split(",") if k.strip()]
+            monthly.setdefault(p[0], []).append((d, p[2], kws))
+    except Exception:
+        pass
+    pend = [p for p in T.get("policy", []) or [] if p.get("status") == "pending"]
+    shifts_by = {}
+    try:
+        import direction
+        for o in lib.get("overviews", {}).values():
+            if o.get("shifts"):
+                key = (o["sector"], o.get("industry") or "")
+                if key not in shifts_by or C.quarter_key(o["quarter"]) > C.quarter_key(shifts_by[key][0]):
+                    shifts_by[key] = (o["quarter"], o["shifts"])
+        momentum = {}
+        for key, (q, sh) in shifts_by.items():
+            momentum[key] = direction.momentum(lib, key[0], key[1] or None, sh)
+    except Exception:
+        momentum = {}
+
+    GENERIC = {"goods", "capital", "services", "products", "engineering", "others", "other", "industries", "industry",
+               "materials", "building", "consumer", "financial", "health", "healthcare", "equipment", "infrastructure"}
+
+    def ahead_of(code, sector, industry, text):
+        out_ = []
+        if code in res_dates:
+            out_.append([res_dates[code], "results", "board meeting for results"])
+        for d, t in sorted(dues.get(code, []))[:3]:
+            out_.append([d.isoformat(), "due", t])
+        seen_ = set()
+        for sec_, rows_ in monthly.items():  # its sector's monthly data, or another sector's it clearly talks about
+            for d, t, kws in rows_:
+                if (sec_ == sector or any(k in text for k in kws)) and t not in seen_:
+                    seen_.add(t)
+                    out_.append([d.isoformat(), "data", "around this date: " + t])
+        words = {w for w in re.findall(r"[a-z]{4,}", (sector + " " + industry).lower())} - GENERIC
+        for p in pend:
+            if words & set(re.findall(r"[a-z]{4,}", (p.get("sectors") or "").lower())):
+                out_.append(["", "decision", f"{p.get('body') or 'Govt'}: {p.get('what', '')}"[:160]])
+                if sum(1 for x in out_ if x[1] == "decision") >= 2:
+                    break
+        return sorted(out_, key=lambda x: x[0] or "9999")
+
+    def shifts_of(sector, industry, mine):
+        """Its own industry's shifts, and any other industry's shift its own concall / news clearly talks about."""
+        hits = lambda x: sum(1 for w in x["kw"] if re.search(r"\b" + re.escape(w) + r"s?\b", mine)) if mine else 0
+        rows, seen_ = [], set()
+        own = momentum.get((sector, industry)) or []
+        others = [x for k, m in momentum.items() if k != (sector, industry) for x in m]
+        for x in own + sorted(others, key=hits, reverse=True):
+            h = hits(x)
+            if x in own or h >= 2:
+                if x["name"] in seen_:
+                    continue
+                seen_.add(x["name"])
+                ser = x.get("series") or []
+                rows.append({"n": x["name"], "st": x.get("stage", ""), "s": [[q, n, t] for q, n, t in ser[-2:]], "me": h >= 1})
+        return [r for r in rows if r["me"]][:3] + [r for r in rows if not r["me"]][:max(0, 3 - sum(r["me"] for r in rows))]
+
     out = {}
     for code in set(latest) | {k for k in tl.get("companies", {}) if not k.startswith("n:")}:
         c = latest.get(code)
@@ -145,6 +227,18 @@ def why_file(tl, stories):
         if code in short:  # on Market Desk's early-signal shortlist today
             x = short[code]
             row["early"] = {"s": x["s"], "k": x["k"], "since": x["since"], "move": x.get("move")}
+        if c:  # covered by Market Desk: what's coming, and its industry's direction
+            try:
+                mine = C.here(c["summary"]).read_text(encoding="utf-8").lower() if c.get("summary") else ""
+            except OSError:
+                mine = ""
+            mine += " " + " ".join(e[2].lower() for e in ev)
+            ah = ahead_of(code, row["s"], row["i"], mine)
+            if ah:
+                row["ahead"] = ah
+            sh = shifts_of(row["s"], row["i"], mine)
+            if sh:
+                row["shifts"] = sh
         if len(row) > 3:  # something beyond the name and sector
             out[code] = row
     return {"at": dt.datetime.now().isoformat(timespec="minutes"), "n": len(out), "cos": out}

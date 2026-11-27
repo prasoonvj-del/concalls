@@ -272,6 +272,24 @@ DONE = re.compile(r"(?i)\b(commenced|started|began|received|completed|achieved|l
                   r"operational|secured|won|bagged)\b")
 
 
+def company_dues(cos, today, back=150, horizon_days=95):
+    """What each company itself said is due (plant, approval, launch, deal closing), from its turning points:
+    {code: [(date, text), ...]} for dates from today to the horizon."""
+    out = {}
+    horizon = today + dt.timedelta(days=horizon_days)
+    since = (today - dt.timedelta(days=back)).isoformat()
+    for key, lst in cos.items():
+        for e in lst:
+            if e["k"] != "pivot" or e["d"] < since:
+                continue
+            if DONE.search(e["t"]) and not AHEAD_WORDS.search(e["t"]):
+                continue  # it already happened ("commenced", "received approvals")
+            due = _due(e["t"])
+            if due and today <= due <= horizon:
+                out.setdefault(key, []).append((due, re.split(r"\s+-\s+", re.sub(r"\s*\[[^\]]*\]$", "", e["t"]))[0][:150]))
+    return out
+
+
 def _due(text):
     """A date the text says something is due by: "by March 2027", "Dec 2026", "Q4 FY27", "H2 FY27" -> month end."""
     t = text.lower()
