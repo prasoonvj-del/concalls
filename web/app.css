@@ -57,8 +57,8 @@ h1{font-size:22px;margin:0 0 2px;letter-spacing:-.2px}h2{font-size:17px;margin:0
 .md table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0;display:block;overflow-x:auto}
 .md td,.md th{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}.md th{background:var(--surface-2)}
 mark{background:#ffe8a3;color:#1b1c1f;border-bottom:2px solid #d99a00;cursor:help}
-a.r{display:inline-block;font-size:11px;line-height:16px;min-width:18px;text-align:center;color:var(--accent);
-  background:var(--accent-soft);border-radius:5px;padding:0 4px;margin:0 1px;text-decoration:none;cursor:pointer;vertical-align:1px}
+a.r{display:inline-block;font-size:10px;line-height:14px;min-width:14px;text-align:center;color:var(--accent);
+  background:var(--accent-soft);border-radius:4px;padding:0 3px;margin:0 1px;text-decoration:none;cursor:pointer;vertical-align:4px}
 .chip{display:inline-block;font-size:12px;padding:1px 9px;border-radius:99px;background:var(--surface-2);color:var(--text-2);margin:0 4px 4px 0;white-space:nowrap}
 .chip.link{cursor:pointer}.chip.link:hover{background:var(--accent-soft);color:var(--accent)}
 .sent{font-weight:600}.sent.p{color:var(--pos)}.sent.n{color:var(--neg)}.sent.z{color:var(--muted)}
@@ -446,3 +446,30 @@ table.cpeer th[data-k]{cursor:pointer}
 #rk .chip.on{background:var(--accent);color:#fff}
 .seasonp{display:grid;gap:4px;width:100%;margin-top:4px}.seasonp>div{display:grid;grid-template-columns:minmax(0,300px) 160px auto;gap:10px;align-items:center;font-size:13px}
 @media (max-width:600px){.seasonp>div{grid-template-columns:1fr 90px;}.seasonp>div .m{grid-column:1/-1}}
+/* Today: compact Global -> India, Coming up, Deep dives */
+.clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.gchips{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-bottom:10px}
+.gchip{padding:8px 10px;border-radius:12px;background:var(--surface-2);border-left:3px solid var(--line-2);font-size:13.5px}
+.gchip.gp{border-left-color:var(--pos)}.gchip.gn2{border-left-color:var(--neg)}
+.gchip .gr{color:var(--muted);font-size:12.5px;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gnews{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
+.gnw{padding:9px 11px;border-radius:12px;border:1px solid var(--line-2);cursor:pointer;transition:background .15s}
+.gnw:hover{background:var(--surface-2)}
+.gnw .gi{font-weight:600;font-size:14px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gnw .gh{font-size:12.5px;color:var(--muted);margin-top:3px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.cuf{margin-bottom:8px}.cuf .chip.on{background:var(--accent);color:#fff}
+.cup{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:2px 22px}
+.cu{display:grid;grid-template-columns:64px 74px 1fr;gap:8px;align-items:start;padding:6px 0;border-top:1px solid var(--line-2);font-size:13.5px}
+.cud{color:var(--muted);font-size:12.5px;padding-top:2px;white-space:nowrap}
+.cut{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 6px;border-radius:5px;text-align:center;align-self:start;margin-top:1px}
+.cut.cr{background:var(--accent-soft);color:var(--accent)}.cut.cc{background:rgba(30,123,70,.13);color:#1e7b46}.cut.cg{background:rgba(192,57,43,.1);color:#b03a2e}
+.ddg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.ddt{padding:10px 12px;border-radius:12px;border:1px solid var(--line-2);display:flex;flex-direction:column;gap:4px}
+.ddt .rt{font-weight:600;color:var(--text);text-decoration:none;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ddt .rt:hover{color:var(--accent)}.ddt .rm{font-size:12px;color:var(--muted)}.ddt .rx{font-size:13.5px;line-height:1.45}
+@media (max-width:600px){.cup{grid-template-columns:1fr}.cu{display:flex;flex-wrap:wrap;gap:3px 8px;align-items:center}.cu .cub{flex-basis:100%}
+  .gnews,.ddg{grid-template-columns:1fr}.gchips{grid-template-columns:1fr 1fr}}
+.gws{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}.gw{font-size:12px;padding:1px 7px;border-radius:999px;background:var(--surface-2)}
+.gw.up{color:var(--pos);background:color-mix(in srgb,var(--pos) 12%,transparent)}.gw.down{color:var(--neg);background:color-mix(in srgb,var(--neg) 12%,transparent)}
+.rdv{font-weight:700;font-size:13px}.rdv.positive{color:var(--pos)}.rdv.negative{color:var(--neg)}.rdv.mixed,.rdv.neutral{color:var(--muted)}

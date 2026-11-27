@@ -241,9 +241,33 @@
     const x = window.DESK_DECKH[k];
     el.innerHTML = x && x.c === el.dataset.co ? x.h : `<div class="m">Couldn't load the summary - open the PDF.</div>`;
   }
+  // story citations: small numbers (1 2 3) per point instead of internal story ids; the headline shows on hover
+  function numberRefs(root) {
+    const B = currentBrief || {};
+    const byId = Object.fromEntries((B.stories || []).map((s) => [String(s.id), s]));
+    root.querySelectorAll(".bigcard td").forEach((td) => {  // the read column: colour it
+      const t = td.textContent.trim();
+      if (/^(Positive|Negative|Mixed|Neutral)$/i.test(t) && !td.querySelector(".rdv")) td.innerHTML = `<span class="rdv ${t.toLowerCase()}">${esc(t)}</span>`;
+    });
+    root.querySelectorAll("li, p, td, .sone").forEach((blk) => {
+      let n = 0;
+      blk.querySelectorAll(":scope > a.r, :scope > * > a.r").forEach((a) => {
+        if (a.dataset.n) return;
+        n += 1; a.dataset.n = n; a.textContent = n;
+        const st = byId[String(a.dataset.id)];
+        if (st) a.title = st.title;
+      });
+    });
+  }
   function fillDecks(root) {
     (root || document).querySelectorAll("[data-deckh]:not([data-done])").forEach((el) => { const dt = el.closest("details"); if (!dt || dt.open) fillDeck(el); });
   }
+  document.addEventListener("click", (e) => {  // "Coming up" filter chips on Today
+    const c = e.target.closest("[data-cuf]"); if (!c) return;
+    const card = c.closest(".card"), k = c.dataset.cuf;
+    card.querySelectorAll("[data-cuf]").forEach((x) => x.classList.toggle("on", x === c));
+    card.querySelectorAll(".cu").forEach((r) => { r.style.display = !k || r.dataset.k === k ? "" : "none"; });
+  });
   document.addEventListener("toggle", (e) => { if (e.target.open) e.target.querySelectorAll("[data-deckh]:not([data-done])").forEach(fillDeck); }, true);
   const dates = () => IDX.briefs.map((b) => b.date);
   const latest = () => (IDX.briefs.length ? IDX.briefs[IDX.briefs.length - 1].date : null);
@@ -887,18 +911,21 @@
       </tbody></table></div>${rows.some((r) => r.days < 25) ? `<div class="m">History builds up daily - weekly and monthly changes fill in as days are collected.</div>` : ""}</div>`;
   }
   function globalCard(g, b, byId) {
-    const flags = ((g && g.flags) || []).slice(0, 5);
+    const flags = ((g && g.flags) || []).slice(0, 6);
     const stories = (b.stories || []).filter((s) => s.india && (s.imp || 0) >= 3)
       .sort((x, y) => (y.imp || 0) - (x.imp || 0) || (y.outlets || 0) - (x.outlets || 0)).slice(0, 6);
     if (!flags.length && !stories.length) return "";
-    const src = (s) => { const l = (s.sources || [])[0]; const u = l ? fixLink(l.link) : ""; return u ? ` <a class="m" href="${esc(u)}" target="_blank" rel="noopener">${esc(l.name || "source")}</a>` : ""; };
-    return `<div class="card glc"><h2>Global → India <span class="m">only what moves Indian stocks: commodity moves that cross a threshold, and world news with a clear Indian read</span></h2>
-      <div class="glg">
-      ${flags.length ? `<div><h3>Commodities <span class="m">prices${flags.some((f) => /LME stocks/.test(f.move)) ? " & LME warehouse stocks" : ""}</span></h3><ul class="gll">${flags.map((f) =>
-        `<li><b>${esc(f.name)}</b> <span class="${f.tone === "+" ? "up" : "down"}">${esc(f.move)}</span><div class="m">→ ${esc(f.read)}</div></li>`).join("")}</ul></div>` : ""}
-      ${stories.length ? `<div><h3>World news <span class="m">and who it touches in India</span></h3><ul class="gll">${stories.map((s) =>
-        `<li>${esc(s.title)}${src(s)}<div class="m">→ ${esc(s.india)}</div></li>`).join("")}</ul></div>` : ""}
-      </div></div>`;
+    return `<div class="card glc"><h2>Global → India <span class="m">only world moves with a clear read for Indian stocks · tap a story for sources</span></h2>
+      ${flags.length ? `<div class="gchips">${flags.map((f) => `<div class="gchip ${f.tone === "+" ? "gp" : "gn2"}" title="${esc(f.read)}">
+        <div><b>${esc(f.name)}</b> <span class="${f.tone === "+" ? "up" : "down"}">${esc(f.move)}</span></div><div class="gr">→ ${esc(f.read)}</div></div>`).join("")}</div>` : ""}
+      ${stories.length ? `<div class="gnews">${stories.map((s) => {
+        // the India read is a short list of who it touches, each ending in + or - ("Tata Steel+, APL Apollo-")
+        const who = String(s.india).split(/[,;]/).map((x) => x.trim()).filter(Boolean).map((x) => {
+          const sg = /\+\s*$/.test(x) ? "up" : /[-–]\s*$/.test(x) ? "down" : "";
+          return `<span class="gw ${sg}">${sg === "up" ? "▲ " : sg === "down" ? "▼ " : ""}${esc(x.replace(/\s*[+\-–]\s*$/, ""))}</span>`; }).join("");
+        return `<div class="gnw" data-story="${s.id}" title="${esc(s.title)}">
+          <div class="gi">${esc(s.title)}</div><div class="gws">${who}</div><div class="gh">${esc(((s.sources || [])[0] || {}).name || "")}</div></div>`; }).join("")}</div>` : ""}
+    </div>`;
   }
   // top 10 developments: the list for this brief's day (or the latest one before it)
   async function hlFor(date) {
@@ -914,15 +941,29 @@
   function hlCal(cal) {
     if (!cal.length) return "";
     const coLink = (n) => `<a href="#companies/${encodeURIComponent(n)}">${esc(n)}</a>`;
-    const fmt = (d) => d ? new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "";
-    const col = (title, sub, rows) => rows.length ? `<div><h3>${title} <span class="m">${sub}</span></h3><ul class="hlcal">${rows.join("")}</ul></div>` : "";
-    const res = cal.filter((x) => x.k === "results").map((x) => `<li><span class="m">${fmt(x.d)}</span> ${coLink(x.name)} <span class="m">· ${esc(x.t)}</span></li>`);
-    const due = cal.filter((x) => x.k === "due").map((x) => `<li><span class="m">by ${fmt(x.d)}</span> ${coLink(x.name)}${x.hot ? ' <span class="chip">on the radar</span>' : ""} <span class="m">· ${esc(x.t)}</span></li>`);
-    const dec = cal.filter((x) => x.k === "decision").map((x) => `<li><b>${esc(x.name)}</b> <span class="m">· ${esc(x.t)}</span>${x.cos && x.cos.length ? ` <span class="m">(${x.cos.map(esc).join(", ")})</span>` : ""}</li>`);
-    return `<div class="hlcalw"><h2>Coming up <span class="m">the next triggers - get ahead of them</span></h2><div class="hlcalg">
-      ${col("Results due", "and what industry peers already said this season", res)}
-      ${col("Due, by the companies' own word", "plants, approvals, launches, deals", due)}
-      ${col("Government decisions awaited", "pending in the last 3 weeks", dec)}</div></div>`;
+    const day = (d) => d ? new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "pending";
+    const T = { results: ["Results", "cr"], due: ["Company", "cc"], decision: ["Govt", "cg"] };
+    const rows = [...cal].sort((a, b) => (a.d || "9999").localeCompare(b.d || "9999")).map((x) => {
+      const t = T[x.k] || T.due;
+      const who = x.k === "decision" ? `<b>${esc(x.name)}</b>` : `<b>${coLink(x.name)}</b>`;
+      const extra = x.k === "decision" && x.cos && x.cos.length ? ` (${x.cos.map(esc).join(", ")})` : "";
+      return `<div class="cu" data-k="${esc(x.k)}"><span class="cud">${x.k === "due" && x.d ? "by " : ""}${day(x.d)}</span><span class="cut ${t[1]}">${t[0]}</span>
+        <div class="cub">${who}${x.hot ? ' <span class="chip">on the radar</span>' : ""}<div class="m clamp2" title="${esc(x.t + extra)}">${esc(x.t)}${esc(extra)}</div></div></div>`;
+    }).join("");
+    const n = (k) => cal.filter((x) => x.k === k).length;
+    return `<div class="card"><h2>Coming up <span class="m">the next triggers, by date - get ahead of them</span></h2>
+      <div class="chips cuf">${[["", `All ${cal.length}`], ["results", `Results ${n("results")}`], ["due", `Company milestones ${n("due")}`], ["decision", `Govt decisions ${n("decision")}`]]
+        .filter(([k, l]) => !k || n(k)).map(([k, l]) => `<span class="chip link${k ? "" : " on"}" data-cuf="${k}">${l}</span>`).join("")}</div>
+      <div class="cup">${rows}</div></div>`;
+  }
+  // deep dives this week: tiles - what each piece argues, then where to read it
+  function deepCard(list) {
+    if (!list.length) return "";
+    return `<div class="card"><h2>Deep dives this week <span class="m">analysts and newsletters worth your time · <a href="#reads">all analysis →</a></span></h2>
+      <div class="ddg">${list.map((v) => `<div class="ddt"><div class="rm"><span class="rk ${esc(v.k || "other")}">${esc(KIND[v.k] || "Other")}</span> ${esc(v.s)} · ${esc(v.d.slice(5))}${v.r >= 5 ? " · ★" : ""}</div>
+        <a class="rt" href="${esc(v.l)}" target="_blank" rel="noopener">${esc(v.t)}</a>
+        ${v.x ? `<div class="rx clamp3" title="${esc(v.x)}">${esc(v.x)}</div>` : ""}
+        ${(v.c || []).length ? `<div class="m">${v.c.slice(0, 3).map((c) => `<a href="#companies/${encodeURIComponent(c)}">${esc(c)}</a>`).join(" · ")}</div>` : ""}</div>`).join("")}</div></div>`;
   }
   function hlCard(hl) {
     const dir = { up: ["▲ upside", "pos"], down: ["▼ risk", "neg"], watch: ["● watch", "neu"] };
@@ -938,8 +979,7 @@
           <ul class="hlth">${(it.thread || []).map((t) => { const m = t.match(/^(\d{4}-\d{2}-\d{2}):\s*(.*)$/); return `<li>${m ? `<span class="m">${esc(m[1].slice(5))}</span> ${esc(m[2])}` : esc(t)}</li>`; }).join("")}</ul>
           ${it.cooking ? `<div><span class="lbl">COOKING</span> ${esc(it.cooking)}</div>` : ""}
           <div class="m">${it.confirm ? `<span class="lbl">NEXT TRIGGER</span> ${esc(it.confirm)}` : ""}${it.risk ? ` &nbsp;<span class="lbl">RISK</span> ${esc(it.risk)}` : ""}</div></div>`; }).join("")}</div>
-      ${hl.dropped && hl.dropped.length ? `<div class="m" style="margin-top:8px">Dropped since the last list: ${hl.dropped.map(esc).join(" · ")}</div>` : ""}
-      ${hlCal(hl.cal || [])}</div>`;
+      ${hl.dropped && hl.dropped.length ? `<div class="m" style="margin-top:8px">Dropped since the last list: ${hl.dropped.map(esc).join(" · ")}</div>` : ""}</div>`;
   }
   async function pageToday(date) {
     if (!IDX.briefs.length) { view.innerHTML = empty("No news brief yet - it appears here after the first morning run."); return; }
@@ -963,9 +1003,6 @@
       <div class="sub">${esc(b.label)} · last ${b.hours}h · ${fmt(st.articles)} articles from ${plural(st.sources, "source")} → ${plural(st.relevant, "market story")} · built ${esc(b.built.slice(11, 16))}</div>
       ${dateNav(date)}
       ${b.big ? `<div class="card md bigcard"><h2>The big picture${b.bigFrom ? ` <span class="m">from the ${esc(b.bigFrom)} brief - today's is written once the AI is free</span>` : ""}</h2><div id="bigp">${b.big}</div></div>` : ""}
-      ${globalCard(gl, b, byId)}
-      ${hl ? hlCard(hl) : ""}
-      ${readsCard(deep, "Deep dives this week", "analysts and newsletters worth your time", "#reads")}
       ${top.length ? `<div class="card"><h2>Top stories, explained <span class="m">${top.length} that matter most today</span></h2><div class="xgrid" id="topx">${top.map((t) => {
         const s = byId[t.id];
         return `<div class="xs"><div class="t" data-story="${s.id}">${esc(s.title)}</div>
@@ -976,10 +1013,14 @@
           ${t.context ? `<p class="cx" title="Tap to read all"><b>Background</b> ${esc(t.context)}</p>` : ""}
           <div class="ctxs" data-cos="${esc(JSON.stringify(s.companies.slice(0, 3)))}"></div></div>`;
       }).join("")}</div></div>` : ""}
-      <div id="wah"></div>
       <div class="card"><h2>Sector by sector <span class="m">tap a row for the full sector page</span></h2><div class="secs2">${b.sections.map((s) => `<div class="srow" data-go="#sectors/${encodeURIComponent(s.cat)}">
           <div><b>${esc(s.cat)}</b><div class="m">${s.ids.length} · ${s.pos}▲ ${s.neg}▼</div><span class="mb">${s.ids.length ? `<i style="width:${(100 * s.pos) / s.ids.length}%;background:var(--pos)"></i><i style="width:${(100 * s.neg) / s.ids.length}%;background:var(--neg)"></i>` : ""}</span></div>
           <div>${s.one ? `<div class="md sone">${s.one}</div>` : `<span class="m">-</span>`}</div></div>`).join("")}</div></div>
+      <div id="wah"></div>
+      ${globalCard(gl, b, byId)}
+      ${hl ? hlCard(hl) : ""}
+      ${hl && (hl.cal || []).length ? hlCal(hl.cal) : ""}
+      ${deepCard(deep)}
       ${wl.length ? `<div class="card"><h2>Your watchlist <span class="m">${esc(wl.join(", "))}</span></h2>${
         wlStories.length ? `<div id="wlf"></div>` : `<div class="m">No news on your watchlist in this brief.</div>`}</div>` : ""}
       <div class="tiles">
@@ -1012,7 +1053,7 @@
         const known = x || b.stories.some((st2) => st2.companies.some((c) => sameCo(c, name)));
         if (!known) return;
         td.innerHTML = `<a href="#companies/${encodeURIComponent(x ? x.name : name)}">${esc(name)}</a>` +
-          (x && x.call && x.call.tone ? `<div><span class="tone ${esc(x.call.tone)}" title="Tone of the last concall (${esc(x.call.quarter)})">${esc(x.call.tone)}</span></div>` : "");
+          (x && x.call && x.call.tone ? `<div><span class="tone ${esc(x.call.tone)}" title="Tone of the last concall (${esc(x.call.quarter)})">concall: ${esc(x.call.tone)}</span></div>` : "");
       });
     });
 
@@ -1404,12 +1445,15 @@
     const myName = (call ? call.company : decodeURIComponent(name || "")).toLowerCase();
     const myReads = rdAll.filter((v) => (myCode && (v.cc || []).map(String).includes(myCode)) || (v.c || []).some((c) => c.toLowerCase() === myName)).slice(0, 6);
     const readCard = readsCard(myReads, "Worth reading", "analysis that names this company", "");
-    const sideCards = `${readCard}${notesCard}${exCard}${storyCard}${raCard}${icCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
+    // right column: the story first, then what's moving it; your own notes last
+    const sideCards = `${storyCard}${exCard}${raCard}${readCard}${icCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
       <div class="card"><h2>In the news <span class="m">${plural(items.length, "story")} · ${pz}▲ ${nz}▼</span></h2>
         ${items.length >= 4 ? `<div id="cod"></div>` : ""}
-        ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>`;
+        ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>
+      ${notesCard}`;
+    // the wide peer table sits below the concall, right above the timeline, both full width
     body.innerHTML = call || decks.length
-      ? `${bizCard}${shiftLine}${await peerCard(call)}<div class="cogrid"><div>${concallCard}${deckCard}${tlCard}</div><div>${sideCards}</div></div>`
+      ? `${bizCard}${shiftLine}<div class="cogrid"><div>${concallCard}${deckCard}</div><div>${sideCards}</div></div>${await peerCard(call)}${tlCard}`
       : `<div class="grid g2" style="align-items:start"><div>${bizCard}${askCard}${tlCard}</div><div>${sideCards}</div></div>`;
     clampBlock($("#tlb"), 520, "timeline");
     if ($("#conote")) $("#conote").onclick = () => openNote({ company: key });
@@ -2422,6 +2466,7 @@
         + ` <button class="btn" onclick="location.href=location.pathname+'?r='+Date.now()+location.hash">Reload fresh</button>`);
     }
     fillDecks(view);
+    numberRefs(view);
     if (!arg) scrollTo(0, 0);
     // after the first page is on screen, fetch the shared company data quietly so the next page opens at once
     if (!route.warm) { route.warm = 1; const warm = () => { loadCtx(); readsData(); if (!window.DESK_CONEWS) loadScript("data/conews.js").catch(() => {}); }; if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 2500 }); else setTimeout(warm, 1200); }
