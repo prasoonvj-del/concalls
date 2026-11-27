@@ -1019,7 +1019,6 @@
       <div id="wah"></div>
       ${globalCard(gl, b, byId)}
       ${hl ? hlCard(hl) : ""}
-      ${hl && (hl.cal || []).length ? hlCal(hl.cal) : ""}
       ${deepCard(deep)}
       ${wl.length ? `<div class="card"><h2>Your watchlist <span class="m">${esc(wl.join(", "))}</span></h2>${
         wlStories.length ? `<div id="wlf"></div>` : `<div class="m">No news on your watchlist in this brief.</div>`}</div>` : ""}
@@ -1042,7 +1041,7 @@
     clampBlock($("#topx"), 1100, "explained");
     view.querySelectorAll(".xs .cx").forEach((p) => { p.onclick = () => p.classList.toggle("open"); });
     loadCtx().then(() => {
-      if ($("#wah")) renderWeekAhead($("#wah"));
+      if ($("#wah")) renderWeekAhead($("#wah"), (hl && hl.cal) || []);
       view.querySelectorAll(".ctxs").forEach((d) => { d.innerHTML = JSON.parse(d.dataset.cos).map(ctxLine).join(""); });
       // "Stocks in focus": company names open the company page, with the tone of their last concall
       const bp = $("#bigp");
@@ -1786,14 +1785,14 @@
   }
 
   /** Week ahead: what can move Indian stocks in the next two weeks (shown on Today). */
-  function renderWeekAhead(host) {
+  function renderWeekAhead(host, upc = []) {
     const T = (window.DESK_TRACK || {}).trackers || {};
     const today = new Date().toISOString().slice(0, 10);
     const ahead = new Date(); ahead.setDate(ahead.getDate() + 14);
     const aheadS = ahead.toISOString().slice(0, 10);
     // agenda: India policy & data, global data, foreign companies with Indian links, big Indian companies
     const KIND = { "india-policy": ["India policy", "--s1"], "india-data": ["India data", "--s3"], global: ["Global", "--s2"],
-      "global-co": ["Global company", "--s4"], company: ["Company", "--s5"] };
+      "global-co": ["Global company", "--s4"], company: ["Company", "--s5"], milestone: ["Milestone", "--s6"] };
     const NIFTY = ["Reliance Industries", "HDFC Bank", "ICICI Bank", "Infosys", "Tata Consultancy Services", "Bharti Airtel", "ITC", "State Bank of India",
       "Larsen & Toubro", "Kotak Mahindra Bank", "Axis Bank", "Hindustan Unilever", "Bajaj Finance", "Bajaj Finserv", "Maruti Suzuki", "Mahindra & Mahindra",
       "Sun Pharmaceutical", "HCL Technologies", "Titan Company", "Asian Paints", "UltraTech Cement", "NTPC", "Power Grid Corporation", "Tata Motors",
@@ -1839,11 +1838,24 @@
       if (e.when && e.when !== "_soon" && e.when > aheadS) e.when = "_soon";
       items.push(e);
     });
+    const shortD = (d) => new Date(d + "T00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+    upc.forEach((x) => {
+      if (x.k === "results" && x.d >= today && x.d <= aheadS) {
+        if (!items.some((y) => y.when === x.d && y.co === x.name)) items.push({ kind: "company", co: x.name, what: "results", impact: x.t, when: x.d });
+      } else if (x.k === "due" && x.d) {
+        if (x.d < today) return;
+        items.push({ kind: "milestone", co: x.name, what: x.t, hot: x.hot, when: x.d <= aheadS ? x.d : "_later", by: x.d });
+      } else if (x.k === "decision") {
+        if (items.some((y) => y.pol && same(y.what, x.t))) return;
+        items.push({ pol: 1, kind: "india-policy", status: "pending", body: x.name, what: x.t, sectors: "", cos: x.cos || [], when: "_soon" });
+      }
+    });
     const cal = (T.calendar || []).filter((e) => e.when >= today && e.when <= aheadS);
     const daysA = [...new Set(items.map((e) => e.when).concat(cal.map((e) => e.when)))].sort((a, b) => (a[0] === "_") - (b[0] === "_") || a.localeCompare(b))
       .sort((a, b) => (a === "_recent" ? -1 : b === "_recent" ? 1 : 0));
     // "no date yet" right after today
     const iS = daysA.indexOf("_soon"); if (iS >= 0) { daysA.splice(iS, 1); daysA.splice(daysA[0] === "_recent" ? 2 : 1, 0, "_soon"); }
+    const iL = daysA.indexOf("_later"); if (iL >= 0) { daysA.splice(iL, 1); daysA.push("_later"); }  // beyond two weeks: last
     const secs = (t) => esc(t || "").replace(/([^,;]+?)\s*\+/g, '<span class="up">$1 ▲</span>').replace(/([^,;]+?)\s*[-−–]\s*(?=,|;|$)/g, '<span class="dn">$1 ▼</span>');
     const polLine = (e) => `<div class="ag"><span class="kc" style="background:var(--s1)">${e.status === "decided" ? "Decided" : "Pending"}</span>
       <span class="chip">${esc(e.body || "Govt")}</span> <b>${esc(e.what)}</b>${e.status === "pending" && e.when_txt ? ` <span class="m">· ${esc(e.when_txt)}</span>` : ""}
@@ -1851,21 +1863,23 @@
       ${e.sectors ? `<div class="m">→ ${secs(e.sectors)}</div>` : ""}${e.cos.length ? `<div class="m">${e.cos.map((c) => `<a href="#companies/${encodeURIComponent(c)}">${esc(c)}</a>`).join(", ")}</div>` : ""}</div>`;
     const kf = store.get("wakind", "");
     host.innerHTML = `<div class="card"><h2>Week ahead <span class="m">next two weeks · what can move Indian stocks · scroll sideways for later days</span></h2>
-        <div class="filters seg" id="wak">${[["", "All"], ["india", "India policy & data"], ["global", "Global"], ["co", "Companies"]].map(([k, l]) => `<button data-k="${k}" class="${k === kf ? "on" : ""}">${l}</button>`).join("")}</div>
+        <div class="filters seg" id="wak">${[["", "All"], ["india", "India policy & data"], ["global", "Global"], ["co", "Companies"], ["due", "Company milestones"]].map(([k, l]) => `<button data-k="${k}" class="${k === kf ? "on" : ""}">${l}</button>`).join("")}</div>
         <div id="wal"></div></div>`;
     const drawAgenda = () => {
       const k = store.get("wakind", "");
-      const keep = (e) => !k || (k === "india" ? /^india/.test(e.kind) : k === "global" ? e.kind === "global" : /co|company/.test(e.kind));
+      const keep = (e) => !k || (k === "india" ? /^india/.test(e.kind) : k === "global" ? e.kind === "global" : k === "due" ? e.kind === "milestone" : /co|company/.test(e.kind));
       const rows = daysA.map((d) => {
-        const e1 = items.filter((e) => e.when === d && keep(e)).sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+        const e1 = items.filter((e) => e.when === d && keep(e)).sort((a, b) => (a.by || a.time || "").localeCompare(b.by || b.time || ""));
         const c1 = !k || k === "co" ? cal.filter((e) => e.when === d) : [];
         const bigCos = c1.filter((c) => big(c.company)), rest = c1.length - bigCos.length;
         if (!e1.length && !bigCos.length) return "";
-        const nice = d === "_recent" ? "Recently decided <span class='m'>last 10 days</span>" : d === "_soon" ? "Coming up <span class='m'>date not fixed</span>"
+        const nice = d === "_recent" ? "Recently decided <span class='m'>last 10 days</span>" : d === "_soon" ? "Awaited <span class='m'>date not fixed</span>"
+          : d === "_later" ? "Due later <span class='m'>companies' own target dates</span>"
           : esc(new Date(d + "T00:00").toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" }));
         return `<div class="wcol${d[0] === "_" ? " wpol" : ""}"><div class="wd">${nice}</div><div>
           ${e1.map((e) => e.pol ? polLine(e) : `<div class="ag"><span class="kc" style="background:var(${(KIND[e.kind] || KIND.company)[1]})">${(KIND[e.kind] || KIND.company)[0]}</span>
-            <b>${esc(e.what)}</b>${e.time ? ` <span class="m">${esc(e.time)}</span>` : ""}${e.usual ? ` <span class="m" title="Usual release day - can shift by a day or two">(usual date)</span>` : ""}
+            ${e.co ? `<b><a href="#companies/${encodeURIComponent(e.co)}">${esc(e.co)}</a></b>${e.hot ? ' <span class="chip">on the radar</span>' : ""}${e.by ? ` <span class="m">· by ${shortD(e.by)}</span>` : ""}
+              ${e.what === "results" ? " <b>results</b>" : `<div class="m">${esc(e.what)}</div>`}` : `<b>${esc(e.what)}</b>`}${e.time ? ` <span class="m">${esc(e.time)}</span>` : ""}${e.usual ? ` <span class="m" title="Usual release day - can shift by a day or two">(usual date)</span>` : ""}
             ${e.link ? ` <a class="m" href="${esc(e.link)}" target="_blank" rel="noopener">source</a>` : ""}
             ${e.impact ? `<div class="m">→ ${esc(e.impact)}</div>` : ""}</div>`).join("")}
           ${bigCos.length ? `<div class="ag"><span class="kc" style="background:var(--s5)">Results</span> <b>${bigCos.map((c) => `<a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a>`).join(", ")}</b>${rest > 0 ? ` <span class="m">+ ${rest} smaller companies</span>` : ""}</div>` : ""}
