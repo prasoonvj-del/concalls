@@ -793,8 +793,12 @@ def build(conf=None, log_failed=True):
         except Exception:
             pass
         try:
-            big = ask_fitted(pool, BIG_PROMPT.format(date=label, n=len(relevant), hours=conf["hours"]), lines,
-                             label="big picture")
+            head = BIG_PROMPT.format(date=label, n=len(relevant), hours=conf["hours"])
+            try:  # the most-read section: the best writer first (Nemotron 3 Ultra, then Gemini full)
+                big = ask_fitted(C.Pool(quality=True), head, lines, label="big picture")
+            except C.AIError as e1:
+                say(f"  full-quality writers busy ({str(e1)[:80]}) - the usual model writes it")
+                big = ask_fitted(pool, head, lines, label="big picture")
             big = re.sub(r"^\s*#+\s*(Morning brief.*|The big picture)\s*$", "", big, count=2,
                          flags=re.M | re.I).strip()
         except C.AIError as e:

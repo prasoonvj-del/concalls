@@ -349,6 +349,16 @@ def step_concalls(conf):
     say(f"\n{len(queue)} companies have a call without a summary. Doing up to {budget} AI summaries this run "
         f"(watchlist first, then sectors in turn).")
     touched, fails, done = set(), 0, 0
+    # your watchlist and the ~150 largest companies: the full-quality version straight away (up to 12 a run);
+    # everyone else gets the quick draft now and the fuller version later
+    try:
+        import fundamentals
+        F = fundamentals.load()
+        caps = sorted(((v.get("mcap") or 0), k) for k, v in F.items() if isinstance(v, dict))
+        bigco = {k for _, k in caps[-150:]}
+    except Exception:
+        bigco = set()
+    first_full = 0
     for c in queue:
         if budget <= 0:
             say("\nReached this run's limit - the rest continue on the next run.")
@@ -366,7 +376,17 @@ def step_concalls(conf):
                 budget -= 1
                 time.sleep(pool.pause)
             # compare whenever last quarter's summary already exists (costs nothing extra)
-            C.summarise_one(c, lib, pool, prev if prev and prev.get("summary") else None)
+            use = pool
+            if first_full < 12 and (is_watch(c) or str(c.get("code")) in bigco):
+                use = qpool
+            try:
+                C.summarise_one(c, lib, use, prev if prev and prev.get("summary") else None)
+                first_full += use is qpool
+            except C.AIError:
+                if use is pool:
+                    raise
+                say("    full-quality writers busy - quick draft now, the fuller version follows later")
+                C.summarise_one(c, lib, pool, prev if prev and prev.get("summary") else None)
             budget -= 1
             done += 1
             fails = 0

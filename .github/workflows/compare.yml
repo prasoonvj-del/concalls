@@ -3,6 +3,8 @@ name: Model comparison (one-off test)
 # Started by hand. Summarises a few recent concalls with free OpenRouter / NVIDIA models using the site's own prompt,
 # next to what Gemini's full model already wrote. Changes nothing on the site; results are a downloadable artifact.
 on:
+  schedule:  # monthly re-test of the free models (2nd of the month, 06:10 IST - quiet hours on the free endpoints)
+    - cron: "40 0 2 * *"
   workflow_dispatch:
     inputs:
       calls:
@@ -36,7 +38,7 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           N_CALLS: ${{ inputs.calls || '4' }}
-          MODELS: ${{ inputs.models || 'nvidia/nemotron-3-ultra-550b-a55b:free,nvidia/nemotron-3-ultra-550b-a55b,moonshotai/kimi-k3.1-pro,z-ai/glm-5.3-flash,mistralai/mistral-large-4-1t-a52b' }}
+          MODELS: ${{ github.event_name == 'schedule' && 'auto' || inputs.models || 'auto' }}
           MAX_WAIT: "420"
           PYTHONUNBUFFERED: "1"
         run: python tools/compare_models.py

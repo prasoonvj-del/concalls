@@ -1419,7 +1419,9 @@
     const storyCard = story ? `<div class="card md"><h2>The story so far <span class="m">last 2 years · what changed in the business, and how the stock was re-valued</span></h2>
         ${story.one ? `<p><b>${esc(story.one)}</b></p>` : ""}<div id="bspx"></div>
         ${story.moves && story.moves.length ? `<div class="m" style="margin:2px 0 8px">Shaded: biggest 4-week moves - ${story.moves.map((m) => `<span class="${m.pct >= 0 ? "up" : "dn"}">${esc(m.from.slice(2, 7))} ${m.pct > 0 ? "+" : ""}${Math.round(m.pct)}%</span>`).join(" · ")}</div>` : ""}
-        ${story.html}<div class="m">Researched on the web ${esc(story.at)}${story.sources ? " · sources: " + esc(story.sources) : ""} · price moves from real share-price data. Check before acting ·
+        ${story.html}
+        ${(story.check || []).length ? `<div class="warn">A second model couldn't find these in the research it was written from - treat them with care:<ul>${story.check.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+        <div class="m">${story.v >= 6 ? `Facts researched on the web, written by ${esc(/nemotron/i.test(story.model || "") ? "Nemotron 3 Ultra" : /gemini/i.test((story.model || "").split("+").pop()) ? "Gemini" : "AI")}${story.check && !story.check.length ? " · every claim matched to its research" : ""} · ` : ""}Researched on the web ${esc(story.at)}${story.sources ? " · sources: " + esc(story.sources) : ""} · price moves from real share-price data. Check before acting ·
         ${isOwner() ? `<a href="${requestLink(bsCode, story.company)}" target="_blank" rel="noopener">refresh it</a>` : ""}</div></div>`
       : bsCode ? `<div class="card"><h2>The story so far</h2><div class="m">Not written yet for this company${(() => { const M = window.DESK_BSIDX.meta || {}; const i = (M.next || []).findIndex((n) => sameCo(n, key)); return i >= 0 ? ` - it's number ${i + 1} in the queue` : ""; })()}.</div>
         ${isOwner() ? `<p><a class="btn" href="${requestLink(bsCode, call ? call.company : key)}" target="_blank" rel="noopener">Write it now</a></p>` : ""}

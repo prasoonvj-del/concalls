@@ -88,7 +88,11 @@ def main():
         (OUT / f"{section}_models.json").write_text(json.dumps(ms, indent=1), encoding="utf-8")
         C.say(f"{section} free models: " + ", ".join(f"{m} ({c // 1000}k)" for m, c in ms))
         want = [m.strip() for m in os.environ.get("MODELS", "").split(",") if m.strip()]
-        chosen = [m for m in want if any(m == x for x, _ in ms)] if want else pick(ms)
+        if want == ["auto"]:  # monthly re-test: the strongest free models now listed, plus the one in use as the benchmark
+            current = [m for _, m in C.QUALITY_BACKUPS if any(m == x for x, _ in ms)]
+            chosen = current + [m for m in pick(ms, 4) if m not in current]
+        else:
+            chosen = [m for m in want if any(m == x for x, _ in ms)] if want else pick(ms)
         C.say(f"{section}: {len(ms)} free models; testing {chosen}")
         cands += [(section, m) for m in chosen]
     calls = calls_to_test(lib)

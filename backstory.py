@@ -110,6 +110,29 @@ End with one line: Sources: <3-5 site names from the research notes that you rel
 """
 
 
+CHECK = """Below is MATERIAL (research notes from the web, our concall notes, our record, share prices) and a TEXT written
+only from it. List every factual claim in the TEXT - a number, date, name, plant, order, market share, event - that the
+MATERIAL does not support. Ignore opinions, wording and price moves that match the price data.
+Answer one claim per line starting with "- ", quoting the claim briefly, or exactly NONE if everything is supported.
+
+MATERIAL:
+{material}
+
+TEXT:
+{text}"""
+
+
+def check_claims(material, text):
+    """A second model reads the story against the evidence it was written from: unsupported claims, flagged (not edited)."""
+    try:
+        out, _ = C.Pool(bulk=True).ask(CHECK.format(material=material[:30000], text=text[:9000]), label="claim check")
+    except C.AIError:
+        return None  # couldn't check this time
+    if re.search(r"^\s*NONE\s*$", out.strip(), re.I):
+        return []
+    return [re.sub(r"^\s*[-*]\s*", "", ln).strip()[:220] for ln in out.splitlines() if re.match(r"^\s*[-*]\s+\S", ln)][:8]
+
+
 def load():
     try:
         return json.loads(STORE.read_text(encoding="utf-8")) if STORE.exists() else {}
@@ -570,6 +593,11 @@ def step(mode="full"):
                        "one": one, "html": C.md(text), "biz": C.md(biz) if biz else "", "pts": pts, "moves": moves,
                        "sources": src[:300], "v": 6,
                        "model": used}
+        flags = check_claims(body.split("Markdown, plain and specific")[0], (biz or "") + "\n" + text)
+        if flags is not None:
+            store[code]["check"] = flags
+            if flags:
+                say(f"    claim check: {len(flags)} statement(s) not found in the material - shown on the page")
         made += 1
         STORE.write_text(json.dumps(store, ensure_ascii=False), encoding="utf-8")
         if code in asked:
