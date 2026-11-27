@@ -1,0 +1,880 @@
+# Breakout + news back-test, 03 Nov to 27 Nov 2026
+
+1536 Market Desk companies, 459 signals (cloud breakouts, launches, retests; ₹5 cr+ a day).
+
+| Grade | Signals | Avg return to date | Hit target first | Stopped | Still open |
+|---|---|---|---|---|---|
+| A | 1 | +0.0% | 0 | 0 | 1 |
+| B | 211 | +0.4% | 56 | 80 | 75 |
+| C | 247 | +0.1% | 50 | 124 | 73 |
+| launch (all grades) | 70 | +0.5% | 15 | 26 | 29 |
+| breakout (all grades) | 356 | +0.2% | 86 | 166 | 104 |
+| retest (all grades) | 33 | +0.6% | 5 | 12 | 16 |
+
+## Grade A
+
+- **Creative Newtech Ltd** (CNL.NS) 2026-11-27 retest: 1304.9 → 1304.9 (+0.0%, best +0.0%, worst +0.0%) – open
+  - coming: 30 Nov: company said due: M&A: Proposed acquisition of Infinova India Private Limited targeted for completion by November 2026. · awaited: Delhi govt: New liquor policy expanding premium brand access and revising excise duty · awaited: GST Council: GST Council may do away with 5% rate; move items to 3% & 8% slabs
+  - build: Q2 FY27 concall positive · Order: Secured BSNL BharatNet project worth Rs 3,194.83 crore spanning 3.5 years.
+
+## Grade B
+
+- **Tata Consumer Products Ltd** (TATACONSUM.NS) 2026-11-03 launch: 1073.0 → 1155.0 (+7.6%, best +10.5%, worst -1.2%) – target day 10
+  - coming: awaited: Supreme Court: Ruling on salt, sugar, fat warnings on food · awaited: Finance Ministry: review 40 percent GST on beverages to provide relief to low-priced products
+  - build: Q2 FY27 concall positive
+  - industry: Quick commerce channel adoption for innerwear/essentials (from another industry)
+- **UltraTech Cement Ltd** (ULTRACEMCO.NS) 2026-11-03 breakout: 11700.0 → 12578.0 (+7.5%, best +11.0%, worst -0.9%) – target day 3
+  - coming: 20 Nov: monthly data: core sector output (cement)
+  - build: Q2 FY27 concall positive · Capacity: Commissioned 4.6 million tonnes capacity in September, taking total domestic cement capacity to 204.7 million  · Strategy: Launched Wires and Cables business under brand Ultravolt, establishing mother plant, warehouses, and distribut
+  - industry: Inorganic regional cable consolidation (from another industry)
+  - news_after: 2026-11-17 pivot: Legal: Challenged Delhi HC ruling on BAI role in CCI cartel probe - May impact antitrust investigation timelin · 2026-11-16 broker: Motilal Oswal Financial Services Ltd: Buy, target Rs 14,250 (initiate) · 2026-11-15 pivot: Capacity: Commissions 4.6 mtpa capacity - Increases cement production scale
+- **Lumax Auto Technologies Ltd** (LUMAXTECH.NS) 2026-11-03 breakout: 2047.7 → 2327.8 (+13.7%, best +22.2%, worst -0.9%) – target day 2
+  - coming: 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Q2 FY27 concall positive, guidance raised · Capacity: Setting up a new Mechatronics facility in Manesar with ~INR 1,500 crore outlay
+- **Billionbrains Garage Ventures Ltd** (GROWW.NS) 2026-11-03 launch: 205.98 → 222.41 (+8.0%, best +13.3%, worst -0.5%) – target day 2
+  - coming: 10 Nov: monthly data: mutual fund flows and SIP inflows (AMFI) · awaited: RBI: Allow online brokerages to offer retail investors access to trade government securities · awaited: SEBI: remove additional disclosure framework for foreign portfolio investors
+  - build: Q2 FY27 concall positive
+  - industry: Backward Integration and Tech (from another industry)
+- **Satin Creditcare Network Ltd** (SATIN.NS) 2026-11-03 breakout: 242.41 → 255.72 (+5.5%, best +12.8%, worst -1.3%) – target day 2
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI)
+  - build: Q2 FY27 concall positive · Funding: Promoters committed Rs 100 crore through warrants at Rs 260 per share
+  - industry: Diversification into Non-MFI Portfolio (scaling, 4 of 5 peers) · Digital Collections Adoption (scaling, 5 of 5 peers)
+- **Orient Electric Ltd** (ORIENTELEC.NS) 2026-11-03 retest: 183.78 → 189.52 (+3.1%, best +13.0%, worst +0.1%) – open
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Q2 FY27 concall positive · Strategy: Expanded Direct-to-Market model across Madhya Pradesh, Chhattisgarh, Jharkhand, Punjab, and Nagpur
+  - industry: Quick commerce channel adoption for innerwear/essentials (from another industry)
+- **Garware Hi-Tech Films Ltd** (GRWRHITECH.NS) 2026-11-03 breakout: 7395.5 → 7580.0 (+2.5%, best +9.2%, worst -3.3%) – open
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Q2 FY27 concall positive, guidance raised · Capacity: Targeting 50 Garware Home Solutions studios by December 2027, up from 14 currently
+  - industry: Backward Integration and Tech (from another industry) · Captive solar adoption (from another industry)
+- **Unimech Aerospace and Manufacturing Ltd** (UNIMECH.NS) 2026-11-04 breakout: 1772.0 → 1848.9 (+4.3%, best +14.3%, worst -4.0%) – target day 5
+  - coming: awaited: Defence Ministry: Plans to buy 76 military helicopters · awaited: PMO: Deepen R&D collaboration with private players
+  - build: Q2 FY27 concall positive
+  - industry: Long term supply agreements (scaling, 5 of 5 peers) · Multi industry precision platforms (scaling, 4 of 5 peers)
+  - news_after: 2026-11-24 broker: Choice Institutional Equities: Buy (maintain) · 2026-11-12 result: Results Q2 FY27: net profit Rs 32 cr (+102%) - strong
+- **Parag Milk Foods Ltd** (PARAGMILK.NS) 2026-11-04 breakout: 291.98 → 321.63 (+10.2%, best +20.2%, worst +1.0%) – target day 2
+  - coming: awaited: Supreme Court: Ruling on salt, sugar, fat warnings on food · awaited: Finance Ministry: review 40 percent GST on beverages to provide relief to low-priced products
+  - build: Investor deck: Parag Milk Foods delivered its highest-ever Q2 and H1 revenue in FY27, driven by robust volume growth in  · Capacity: Investing Rs 105 crore brownfield capex to double cheese capacity from 60 to 120 MT/day by FY28 · M&A: Board approved amalgamation of Bhagyalaxmi Dairy Farms Pvt. Ltd
+- **Jindal Steel Ltd** (JINDALSTEL.NS) 2026-11-04 breakout: 1149.0 → 1138.7 (-0.9%, best +2.3%, worst -5.8%) – stopped day 8
+  - coming: 20 Nov: monthly data: core sector output (steel, coal) · 01 Dec: monthly data: monthly production / sales updates (Coal India, NMDC, steel makers) · awaited: Rajasthan govt: Fast-track operationalising auctioned mines
+  - build: Q2 FY27 concall positive
+- **Ind-Swift Laboratories Ltd** (INDSWFTLAB.NS) 2026-11-04 breakout: 370.55 → 312.75 (-15.6%, best +3.1%, worst -17.0%) – stopped day 3
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Investor deck: Ind-Swift Laboratories has successfully pivoted to a net-debt-free, high-margin Finished Dosage Formulati · M&A: Exited API/CRAMS business via ₹1,650 crore slump sale to become net-debt-free · Capacity Expansion: ₹250 crore capex program funded entirely through internal accruals
+  - industry: Formulation CDMO integration (scaling, 23 of 34 peers) · De-risking Chinese sourcing (scaling, 12 of 34 peers)
+- **HFCL Ltd** (HFCL.NS) 2026-11-04 breakout: 228.16 → 172.48 (-24.4%, best +1.2%, worst -30.5%) – stopped day 2
+  - coming: awaited: Telecom: Telecom PLI 2.0 to shift focus to design and backward integration
+  - build: Q2 FY27 concall positive, guidance raised · M&A: Acquisition of aerospace business with Rs 1,600 crore order book expected to complete Q2 · Capacity: Allotted 1,000 acres in Andhra Pradesh to set up an ammunition manufacturing complex
+  - industry: Optical fiber pivot to AI data centers (scaling, 4 of 7 peers) · Strategic diversification into Defence & Aerospace (scaling, 3 of 7 peers)
+  - news_after: 2026-11-12 order: Order Rs 834 cr - optical fibre cables · 2026-11-09 result: Results Q2 FY27: net profit Rs 394 cr - strong
+- **APL Apollo Tubes Ltd** (APLAPOLLO.NS) 2026-11-04 breakout: 2199.8 → 1509.5 (-31.4%, best +5.1%, worst -39.0%) – stopped day 11
+  - coming: 20 Nov: monthly data: core sector output (steel, coal) · 01 Dec: monthly data: monthly production / sales updates (Coal India, NMDC, steel makers) · awaited: Rajasthan govt: Fast-track operationalising auctioned mines
+  - build: Q2 FY27 concall positive
+  - industry: Strategic diversification into Defence & Aerospace (from another industry) · Asset Rationalization & Deleveraging (from another industry)
+  - news_after: 2026-11-26 broker: HDFC Securities: Sell (downgrade) · 2026-11-25 pivot: Funding: Equity plan of 18000 crore - dilution concerns · 2026-11-25 broker: Nuvama:  (cut target)
+- **Affle 3I Ltd** (AFFLE.NS) 2026-11-04 breakout: 1623.9 → 1644.2 (+1.3%, best +2.1%, worst -5.5%) – stopped day 8
+  - coming: awaited: RBI: proposed new measures to enhance the safety of electronic bank transactions · awaited: Finance Ministry: Proposed flat Rs 5 MDR for B2B UPI payments
+  - build: Q1 FY27 concall positive · M&A: Acquired strategic assets of AdColony to enhance publisher ecosystem and audience intelligence
+  - industry: Quick commerce channel adoption for innerwear/essentials (from another industry) · Digital Collections Adoption (from another industry)
+  - news_after: 2026-11-21 result: Results Q2 FY27: net profit Rs 130 cr (+17%)
+- **Sejal Glass Ltd** (SEJALLTD.NS) 2026-11-04 retest: 831.95 → 934.0 (+12.3%, best +17.1%, worst -1.2%) – open
+  - coming: 20 Nov: monthly data: core sector output (cement)
+  - build: Q2 FY27 concall positive · Capacity: Importing fire-rated glass manufacturing line; commercial production targeted for Q4 FY27.
+  - industry: Value-added product mix (scaling, 2 of 7 peers) · Value-added specialty products (VAPs) (from another industry)
+  - news_after: 2026-11-21 pivot: M&A: Approved ₹40.80 crore acquisition of Magnumtuff glass business - Expands glass manufacturing capacity and · 2026-11-08 pivot: M&A: To acquire Magnumtuff India's glass business for 40.80 crore - Expands glass business operations and mark
+- **Aeroflex Industries Ltd** (AEROFLEX.NS) 2026-11-04 breakout: 567.2 → 484.65 (-14.6%, best +3.1%, worst -20.1%) – stopped day 2
+  - coming: 20 Nov: monthly data: core sector output (steel, coal) · 01 Dec: monthly data: monthly production / sales updates (Coal India, NMDC, steel makers) · awaited: Rajasthan govt: Fast-track operationalising auctioned mines
+  - build: Q2 FY27 concall positive, guidance raised · Capacity: Total capex of Rs 202 crore to expand flow solutions and skid assemblies capacity by March 2028 · M&A: Merger of wholly-owned subsidiary Hyd-Air Engineering into Aeroflex to streamline operations
+  - flags: the breakout came with the news - a reaction, not anticipation
+  - news_after: 2026-11-13 pivot: M&A: Acquired 55 percent stake in Aerolex Cables - Enters and expands into wire and wire-related products busi
+- **Gillette India Ltd** (GILLETTE.NS) 2026-11-04 launch: 7527.0 → 7243.0 (-3.8%, best +1.0%, worst -6.3%) – stopped day 2
+  - coming: awaited: Supreme Court: Ruling on salt, sugar, fat warnings on food · awaited: Finance Ministry: review 40 percent GST on beverages to provide relief to low-priced products
+  - build: Q4 FY26 concall positive
+  - industry: Agentic & Full-Stack AI Integration (from another industry) · Quick commerce channel adoption for innerwear/essentials (from another industry)
+  - news_after: 2026-11-13 result: Results Q2 FY27: revenue Rs 4 cr (+159%), net profit Rs 11 cr
+- **Tatva Chintan Pharma Chem Ltd** (TATVA.NS) 2026-11-04 breakout: 1690.2 → 1590.6 (-5.9%, best +2.4%, worst -9.0%) – stopped day 2
+  - coming: awaited: Finance Ministry: proposes antidumping tariffs on PVC suspension from China · awaited: Coal Ministry: Rs 37,500-crore coal gasification initiative to boost synthetic natural gas and methanol
+  - build: Q1 FY27 concall positive
+  - industry: Battery materials expansion (scaling, 4 of 35 peers) · Electronic and semiconductor chemicals (early, 34 of 35 peers)
+- **Transformers and Rectifiers (India) Ltd** (TARIL.NS) 2026-11-04 breakout: 317.55 → 291.5 (-8.2%, best +3.0%, worst -9.9%) – stopped day 9
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Q2 FY27 concall positive · Order: Secured first-ever nuclear power sector order from NPCIL for Kaiga Units 5 and 6 · Capacity: Changodar expansion capacity of 35,000 MVA with ~Rs 150 crore capex starting commercial production around Diwa
+  - industry: Grid transmission curtailment (from another industry) · Backward Integration & Sourcing (from another industry)
+- **Multi Commodity Exchange of India Ltd** (MCX.NS) 2026-11-05 retest: 3366.0 → 3900.0 (+15.9%, best +17.0%, worst -1.8%) – target day 5
+  - coming: 10 Nov: monthly data: mutual fund flows and SIP inflows (AMFI) · awaited: RBI: Allow online brokerages to offer retail investors access to trade government securities · awaited: SEBI: Revise MD tenure limits to term-based
+  - build: Investor deck: MCX delivered robust H1 FY27 performance, characterized by triple-digit growth in profitability and signi · Strategy: Launched new products like Silver 100, Crude Sunflower Oil futures, and coal platforms. · Strategy: Incorporated the MCX Coal Exchange of India, pending next steps upon regulatory approval
+  - industry: Multi industry precision platforms (from another industry)
+  - flags: the retest came with the news - a reaction, not anticipation
+  - news_after: 2026-11-19 broker: UBS: Buy (raise target) · 2026-11-16 broker: Jefferies: Buy, target Rs 4,300 (raise target) · 2026-11-15 result: Results Q2 FY27: net profit Rs 455 cr (+130%) - strong
+- **NHPC Ltd** (NHPC.NS) 2026-11-05 launch: 80.6 → 75.65 (-6.1%, best +3.1%, worst -8.7%) – stopped day 3
+  - coming: 20 Nov: monthly data: core sector output (electricity, coal) · 01 Dec: monthly data: monthly power demand and peak load · awaited: Ministry of Power: Revised Draft Electricity (Rights of Consumers) Amendment Rules
+  - industry: Pumped hydro storage shift (scaling, spreading: 2 of 4 peers → 4 of 6) · Grid transmission curtailment (scaling, spreading: 1 of 4 peers → 5 of 6)
+  - news_after: 2026-11-20 pivot: Approval: CERC approves NHPC 1.05 GW FDRE Greenshoe Option - enhances renewable energy capacity and earnings v · 2026-11-13 pivot: Capacity: Commissioned 250 MW Subansiri unit; targeting 1,744 MW total capacity addition in FY27 - Significant
+- **Sunteck Realty Ltd** (SUNTECK.NS) 2026-11-05 breakout: 298.05 → 332.4 (+11.5%, best +13.0%, worst -2.4%) – target day 10
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Q2 FY27 concall positive · M&A: Acquired a 4.5-acre land parcel at Borivali West for Rs 3.9 billion business development
+- **Piramal Finance Ltd** (PIRAMALFIN.NS) 2026-11-05 launch: 2119.6 → 1937.6 (-8.6%, best +3.8%, worst -8.8%) – stopped day 9
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: Finance Ministry: Dedicated financing framework for manufacturing · awaited: MSME Ministry: Third phase of compliance burden reduction reforms
+  - build: Q2 FY27 concall positive · Funding: Completed equity fundraise of Rs 3,850 crore via QIP and preferential allotment · Capacity: Gold loan branches expanded to 100; targeting 200 by March 2027
+  - news_after: 2026-11-16 deck: Investor deck: Piramal Finance delivered robust Q2 FY27 performance with PAT up 67% YoY to Rs 545 crore and to · 2026-11-10 deck: Investor deck: Piramal Finance is successfully executing its transformation into a retail-focused NBFC, delive · 2026-11-10 pivot: Funding: Raised Rs 3,850 crore via QIP and preferential allotment for capital base - Strengthens balance sheet
+- **Anthem Biosciences Ltd** (ANTHEM.NS) 2026-11-05 breakout: 913.55 → 984.15 (+7.7%, best +8.8%, worst -1.6%) – target day 2
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - industry: Peptides Oligos ADCs expansion (scaling, 11 of 34 peers) · Formulation CDMO integration (scaling, 23 of 34 peers)
+  - news_after: 2026-11-06 pivot: Capacity: Unit 4 Phase 1 capex of Rs 1,200 crore for large-scale facility commissioning by March 2028 - Signif
+- **Indian Bank** (INDIANB.NS) 2026-11-05 launch: 892.15 → 929.85 (+4.2%, best +8.1%, worst -1.2%) – open
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive, guidance raised · Funding: Raised USD 2.3 billion (~Rs.21,000 crore) in FCNR(B) deposits during the quarter.
+  - news_after: 2026-11-22 pivot: Funding: Raising up to Rs 3,000 crore through AT1/Tier 2 bonds - Strengthens capital base
+- **HDFC Asset Management Company Ltd** (HDFCAMC.NS) 2026-11-05 launch: 2640.0 → 2706.0 (+2.5%, best +4.8%, worst -2.7%) – open
+  - coming: 10 Nov: monthly data: mutual fund flows and SIP inflows (AMFI) · awaited: RBI: Allow online brokerages to offer retail investors access to trade government securities · awaited: SEBI: remove additional disclosure framework for foreign portfolio investors
+  - build: Q2 FY27 concall positive
+- **Bank of Maharashtra** (MAHABANK.NS) 2026-11-05 launch: 85.1 → 95.73 (+12.5%, best +18.3%, worst -2.0%) – target day 4
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive · Funding: Raised $1.65 billion via first-ever foreign bond issuance (MTN program) with 3x subscription.
+  - news_after: 2026-11-20 pivot: Strategy: Exploring entry into asset management and overseas bond issue - Could expand revenue streams and opt
+- **360 ONE WAM LTD** (360ONE.NS) 2026-11-05 launch: 1140.9 → 1230.0 (+7.8%, best +8.2%, worst -2.8%) – target day 7
+  - coming: 10 Nov: monthly data: mutual fund flows and SIP inflows (AMFI) · awaited: RBI: Allow online brokerages to offer retail investors access to trade government securities · awaited: SEBI: remove additional disclosure framework for foreign portfolio investors
+  - build: Q2 FY27 concall positive
+- **Adani Green Energy Ltd** (ADANIGREEN.NS) 2026-11-05 breakout: 1414.9 → 1327.6 (-6.2%, best +4.5%, worst -6.6%) – stopped day 12
+  - coming: 20 Nov: monthly data: core sector output (electricity, coal) · 01 Dec: monthly data: monthly power demand and peak load · awaited: Ministry of Power: Revised Draft Electricity (Rights of Consumers) Amendment Rules
+  - build: Q2 FY27 concall positive · Capacity: Crossed 20 GW operational capacity milestone with 10.8 GW at Khavda
+  - industry: Grid transmission curtailment (from another industry) · Expansion into Battery Energy Storage Systems (from another industry)
+  - news_after: 2026-11-16 broker: Jefferies: Buy (maintain) · 2026-11-16 pivot: Legal: Clarified Tarali project involves no forest land - Removes regulatory uncertainty
+- **ICICI Lombard General Insurance Company Ltd** (ICICIGI.NS) 2026-11-05 breakout: 1620.0 → 1738.5 (+7.3%, best +9.6%, worst -1.5%) – target day 4
+  - coming: 10 Nov: monthly data: monthly premium data (life and general insurers) · 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · awaited: IRDAI: Expert committee set up on distribution reforms
+  - build: Q2 FY27 concall positive
+  - industry: Digital D2C and GenAI Scaling (scaling, spreading: 1 of 3 peers → 3 of 6) · Ind AS Accounting Transition (mainstream, 6 of 6 peers)
+  - news_after: 2026-11-16 pivot: M&A: Acquisition of Axis Bank stake - expands distribution network
+- **UNO Minda Ltd** (UNOMINDA.NS) 2026-11-05 launch: 1335.0 → 1354.0 (+1.4%, best +5.6%, worst -3.2%) – open
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: US Govt: Proposed 25% tariff on Indian goods
+  - build: Investor deck: Uno Minda posted robust Q2 FY27 performance, driven by strong auto industry growth, higher EV penetration · Capacity: Approved Rs 1,415 crore capex including greenfield aluminum casting and TGSIN plants
+  - industry: Green Energy and Passenger Rail (from another industry)
+  - news_after: 2026-11-26 pivot: Capacity: Eicher-axle plant to boost profitability - Green mobility revenue doubles · 2026-11-07 result: Results Q2 FY27: net profit Rs 441 cr (+37%) - strong
+- **Samvardhana Motherson International Ltd** (MOTHERSON.NS) 2026-11-05 launch: 168.0 → 161.5 (-3.9%, best +1.0%, worst -9.2%) – stopped day 1
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - industry: De-risking Chinese sourcing (from another industry) · Backward Integration and Tech (from another industry)
+  - news_after: 2026-11-21 broker: Choice Broking: Buy, target Rs 180 (initiate) · 2026-11-19 broker: Geojit: Buy, target Rs 190 (maintain) · 2026-11-19 broker: Geojit Retail Equity Research: Buy (maintain)
+- **Angel One Ltd** (ANGELONE.NS) 2026-11-05 breakout: 326.15 → 376.0 (+15.3%, best +17.4%, worst -2.8%) – target day 7
+  - coming: 10 Nov: monthly data: mutual fund flows and SIP inflows (AMFI) · awaited: RBI: Allow online brokerages to offer retail investors access to trade government securities · awaited: SEBI: remove additional disclosure framework for foreign portfolio investors
+  - build: Q2 FY27 concall positive · Strategy: Received authorization as Global Access Provider in IFSC; U.S. stocks pilot launched
+  - news_after: 2026-11-13 pivot: Strategy: Diversifying into active mutual fund management - Expands revenue streams beyond broking
+- **One 97 Communications Ltd** (PAYTM.NS) 2026-11-05 breakout: 1781.6 → 1741.9 (-2.2%, best +10.0%, worst -6.6%) – target day 4
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Proposed digital payments fraud safeguards to increase customer control · awaited: RBI: Proposed "stop switch" to block digital banking debits
+  - build: Q2 FY27 concall positive
+  - industry: Broadband-cable bundling and HITS migration (from another industry)
+  - news_after: 2026-11-21 result: Results Q2 FY27: revenue Rs 2,648 cr · 2026-11-20 broker: Nomura: Buy, target Rs 2,300 (maintain) · 2026-11-20 broker: Bernstein:  (initiate)
+- **JK Cement Ltd** (JKCEMENT.NS) 2026-11-05 breakout: 5250.1 → 5470.3 (+4.2%, best +6.6%, worst -4.2%) – stopped day 2
+  - coming: 20 Nov: monthly data: core sector output (cement)
+  - build: Q2 FY27 concall positive · Capacity: Commissioned 0.6 million tonne wall putty plant at Nathdwara, taking capacity to 3.65 million tonnes · Strategy: Board approved JK Maxx paint plant of 75,000 KL costing Rs 130 crore
+- **Fedbank Financial Services Ltd** (FEDFINA.NS) 2026-11-05 breakout: 158.7 → 138.6 (-12.7%, best +4.5%, worst -14.8%) – stopped day 8
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Clarification on selling stressed gold loans to ARCs · awaited: RBI: consider new restrictions preventing PE firms from controlling multiple NBFCs
+  - build: Q2 FY27 concall positive · Capacity: Added 74 branches in Q2, planning at least 150 more in H2
+- **Poonawalla Fincorp Ltd** (POONAWALLA.NS) 2026-11-05 breakout: 474.95 → 494.9 (+4.2%, best +12.1%, worst -2.1%) – target day 10
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Clarification on selling stressed gold loans to ARCs · awaited: RBI: consider new restrictions preventing PE firms from controlling multiple NBFCs
+  - build: Q2 FY27 concall positive · Strategy: Gold loan branch network expanded by 90 branches to reach 550 total branches
+  - industry: Quick commerce channel adoption for innerwear/essentials (from another industry) · Digital Collections Adoption (from another industry)
+  - news_after: 2026-11-24 broker: JM Financial: Buy, target Rs 625 (raise target) · 2026-11-18 broker: Motilal Oswal: Buy (maintain)
+- **HDFC Bank Ltd** (HDFCBANK.NS) 2026-11-05 launch: 760.0 → 857.25 (+12.8%, best +14.7%, worst -0.8%) – target day 2
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive
+  - news_after: 2026-11-27 pivot: Legal: SC orders prosecution sanctions in subvention fraud - Potential reputational and legal risk · 2026-11-26 pivot: Management: Board approves re-appointment of Dr Harsh Kumar Bhanwala - Continuity in independent directorship · 2026-11-25 broker: Jefferies: Buy (raise target)
+- **Shree Cement Ltd** (SHREECEM.NS) 2026-11-05 breakout: 24895.0 → 25160.0 (+1.1%, best +3.1%, worst -1.8%) – open
+  - coming: 20 Nov: monthly data: core sector output (cement)
+  - build: Q2 FY27 concall positive · Capacity: Commissioned a new 3 million tonnes cement mill in UAE, reaching 7 MTPA capacity.
+  - industry: Green Energy and Passenger Rail (from another industry)
+  - news_after: 2026-11-22 pivot: Capacity: Target to cross 100 mt capacity in 3-4 years - Long-term growth visibility
+- **Tata Capital Ltd** (TATACAP.NS) 2026-11-06 breakout: 358.05 → 340.1 (-5.0%, best +1.1%, worst -5.3%) – stopped day 6
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Clarification on selling stressed gold loans to ARCs · awaited: RBI: consider new restrictions preventing PE firms from controlling multiple NBFCs
+  - build: Q2 FY27 concall positive · Funding: Planned a capital raise for the second half of FY28 based on growth trajectories.
+  - news_after: 2026-11-18 broker: Ambit Capital: Buy, target Rs 463 (maintain)
+- **HDFC Life Insurance Company Ltd** (HDFCLIFE.NS) 2026-11-06 breakout: 565.3 → 588.45 (+4.1%, best +7.9%, worst -0.9%) – open
+  - coming: 10 Nov: monthly data: monthly premium data (life and general insurers) · awaited: IRDAI: Expert committee set up on distribution reforms · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Q1 FY27 concall positive
+  - industry: Pivot to non-par and protection (scaling, 4 of 4 peers)
+  - news_after: 2026-11-26 broker: AMSEC: Buy, target Rs 720 (maintain) · 2026-11-25 pivot: Rating: IRDAI panel eased commission-cap fears - Relieves pressure on commission caps, boosting stock · 2026-11-21 broker: Choice Broking: Buy (maintain)
+- **Bajaj Finance Ltd** (BAJFINANCE.NS) 2026-11-06 breakout: 1087.75 → 1080.0 (-0.7%, best +5.5%, worst -2.4%) – open
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Clarification on selling stressed gold loans to ARCs · awaited: RBI: consider new restrictions preventing PE firms from controlling multiple NBFCs
+  - build: Q2 FY27 concall positive, guidance raised · Funding: Board approved Rs 11,700 crore via QIP and preferential warrants from Bajaj Finserv · Capacity: Added 320 gold loan branches in Q2; target 2,800 standalone branches by FY27 end
+  - industry: Agentic & Full-Stack AI Integration (from another industry)
+  - news_after: 2026-11-21 broker: Choice Broking: Buy (maintain) · 2026-11-12 pivot: Funding: Launched ₹11,700 crore qualified institutional placement (QIP) - Dilutes equity but raises capital fo · 2026-11-11 pivot: Funding: Launched a share sale to raise up to 117 billion rupees - Strengthens capital base for lending growth
+- **Manorama Industries Ltd** (MANORAMA.NS) 2026-11-06 breakout: 1957.8 → 1864.0 (-4.8%, best +10.4%, worst -6.7%) – target day 3
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Capacity: Added 4,500 tonnes debottlenecking capacity, taking total to ~52,000 tonnes per annum. · M&A: Incorporated subsidiary in Chad and acquired land in Burkina Faso for processing facility.
+  - industry: Deep Backward Integration into Foundries & Mining (from another industry) · Captive solar adoption (from another industry)
+  - news_after: 2026-11-17 pivot: Management: Appointed Mudit Kumar Singh as Chairman and Deep Saraf as MD in leadership restructuring - Leaders · 2026-11-12 deck: Investor deck: Manorama Industries posted robust Q2 and H1 FY27 consolidated financial results, driven by stro · 2026-11-12 pivot: Capacity: Proposed capex over next 2-3 years to add refining capabilities and debottleneck fractionation. - En
+- **Aarti Drugs Ltd** (AARTIDRUGS.NS) 2026-11-06 retest: 446.75 → 487.05 (+9.0%, best +18.1%, worst +0.0%) – target day 1
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - industry: Formulation CDMO integration (scaling, 23 of 34 peers) · De-risking Chinese sourcing (scaling, 12 of 34 peers)
+  - news_after: 2026-11-10 pivot: Capacity: Expanding Tarapur USFDA block with three multipurpose plants, commercial production by FY29 end - En
+- **ICICI Lombard General Insurance Company Ltd** (ICICIGI.NS) 2026-11-06 retest: 1649.0 → 1738.5 (+5.4%, best +7.6%, worst -0.9%) – open
+  - coming: 10 Nov: monthly data: monthly premium data (life and general insurers) · 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · awaited: IRDAI: Expert committee set up on distribution reforms
+  - build: Q2 FY27 concall positive
+  - industry: Digital D2C and GenAI Scaling (scaling, spreading: 1 of 3 peers → 3 of 6) · Ind AS Accounting Transition (mainstream, 6 of 6 peers)
+  - news_after: 2026-11-16 pivot: M&A: Acquisition of Axis Bank stake - expands distribution network
+- **Indus Towers Ltd** (INDUSTOWER.NS) 2026-11-06 breakout: 383.1 → 377.65 (-1.4%, best +5.1%, worst -1.8%) – open
+  - coming: awaited: Telecom: Telecom PLI 2.0 to shift focus to design and backward integration
+  - build: Q2 FY27 concall positive · Strategy: Africa expansion commenced with initial tower deployments in Zambia, Uganda, and Nigeria
+  - industry: Expansion into Battery Energy Storage Systems (scaling, 4 of 7 peers) · Strategic diversification into Defence & Aerospace (scaling, 3 of 7 peers)
+- **MM Forgings Ltd** (MMFL.NS) 2026-11-06 launch: 629.4 → 631.65 (+0.4%, best +11.7%, worst -5.4%) – target day 4
+  - coming: 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: Finance Ministry: Link motor insurance premiums to traffic violations · awaited: Transport Ministry: Safety standards for e-rickshaws like Bharat NCAP
+  - build: Results Q2 FY27:  · Capacity: Investing Rs 30-50 crore in automation and AI tools for inventory/WIP optimization
+  - news_after: 2026-11-16 pivot: M&A: DVS Industries merged into MM Forgings, consolidating operations and results - Expands business scale and · 2026-11-16 pivot: Capacity: Total capacity increased to 130,000 tonnes following the addition of a 4,000-ton press - Enhances ma
+- **SBI Life Insurance Company Ltd** (SBILIFE.NS) 2026-11-06 breakout: 1784.0 → 1856.0 (+4.0%, best +4.4%, worst -3.0%) – stopped day 1
+  - coming: 10 Nov: monthly data: monthly premium data (life and general insurers) · awaited: IRDAI: Expert committee set up on distribution reforms · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Q2 FY27 concall positive · Strategy: Plans to launch a regular pay deferred annuity product soon
+  - industry: Pivot to non-par and protection (scaling, 4 of 4 peers) · Quick commerce channel adoption for innerwear/essentials (from another industry)
+  - news_after: 2026-11-12 broker: -: Buy, target Rs 1,820
+- **Bank of India** (BANKINDIA.NS) 2026-11-09 launch: 145.0 → 162.5 (+12.1%, best +16.5%, worst +0.6%) – target day 5
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive
+  - news_after: 2026-11-21 broker: Anand Rathi: Buy, target Rs 200 (initiate)
+- **Karnataka Bank Ltd** (KTKBANK.NS) 2026-11-09 breakout: 331.9 → 335.25 (+1.0%, best +11.7%, worst +0.3%) – target day 2
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive · Strategy: Guided portfolio shift towards retail (60%) and mid-corporate (22%), reducing large corporate to 18%
+  - news_after: 2026-11-15 pivot: Management: Appointed Bijji Sankaranarayanan as interim MD and CEO - Fills interim leadership role
+- **Pidilite Industries Ltd** (PIDILITIND.NS) 2026-11-09 breakout: 1587.5 → 1594.8 (+0.5%, best +2.7%, worst -4.5%) – stopped day 3
+  - coming: awaited: Finance Ministry: proposes antidumping tariffs on PVC suspension from China · awaited: Coal Ministry: Rs 37,500-crore coal gasification initiative to boost synthetic natural gas and methanol
+  - build: Q1 FY27 concall positive · Capacity: Expanded NioPro tile adhesive manufacturing capacity from 1 plant to 4 plants
+- **Canara Bank** (CANBK.NS) 2026-11-09 breakout: 128.1 → 131.11 (+2.3%, best +9.5%, worst +0.4%) – target day 5
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive
+  - industry: Expansion into Battery Energy Storage Systems (from another industry)
+  - news_after: 2026-11-21 broker: Anand Rathi: Buy, target Rs 200 (initiate) · 2026-11-15 broker: Canara Bank: Buy (maintain)
+- **Central Bank of India** (CENTRALBK.NS) 2026-11-09 breakout: 31.23 → 32.99 (+5.6%, best +11.9%, worst +1.0%) – target day 1
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive · Strategy: Opened GIFT City branch contributing Rs 8,093 crore to overseas advances · Capacity: Setting up 116 customized gold loan branches with 30-minute TAT
+  - news_after: 2026-11-15 result: Results Q2 FY27: revenue Rs 1,007 cr, net profit Rs 1,324 cr (+13%) - strong
+- **Affle 3I Ltd** (AFFLE.NS) 2026-11-09 breakout: 1626.1 → 1644.2 (+1.1%, best +1.4%, worst -5.6%) – stopped day 5
+  - coming: awaited: RBI: proposed new measures to enhance the safety of electronic bank transactions · awaited: Finance Ministry: Proposed flat Rs 5 MDR for B2B UPI payments
+  - build: Q1 FY27 concall positive · M&A: Acquired strategic assets of AdColony to enhance publisher ecosystem and audience intelligence
+  - industry: Quick commerce channel adoption for innerwear/essentials (from another industry) · Digital Collections Adoption (from another industry)
+  - news_after: 2026-11-21 result: Results Q2 FY27: net profit Rs 130 cr (+17%)
+- **Sudeep Pharma Ltd** (SUDEEPPHRM.NS) 2026-11-09 breakout: 1210.3 → 1293.4 (+6.9%, best +10.2%, worst -8.1%) – stopped day 5
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Q2 FY27 concall positive · Approval: Nandesari greenfield facility received US FDA approval with 51,000 tonnes annual capacity
+  - industry: De-risking Chinese sourcing (scaling, 12 of 34 peers)
+- **IOL Chemicals & Pharmaceuticals Ltd** (IOLCP.NS) 2026-11-09 breakout: 202.95 → 172.45 (-15.0%, best +4.6%, worst -15.5%) – stopped day 5
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Results Q2 FY27: net profit Rs 65 cr · Q2 FY27 concall positive, guidance raised · Capacity: Rs 500 crore for Ibuprofen expansion (12k to 18k MTPA) and new CDMO facility
+  - industry: Formulation CDMO integration (scaling, 23 of 34 peers)
+- **IIFL Finance Ltd** (IIFL.NS) 2026-11-09 breakout: 627.0 → 598.5 (-4.5%, best +10.7%, worst -5.7%) – target day 1
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Clarification on selling stressed gold loans to ARCs · awaited: RBI: consider new restrictions preventing PE firms from controlling multiple NBFCs
+  - build: Q2 FY27 concall positive · Funding: Raised USD 300 million via social bonds and planning equity raise
+  - news_after: 2026-11-26 pivot: M&A: Capital Group offloads 1.31% stake · 2026-11-19 pivot: Ownership: Fairfax exits stake in IIFL Finance - change in shareholding could affect rating · 2026-11-18 pivot: Strategy: Prem Watsa sells 3441 stake - Funds IDBI Bank acquisition
+- **Anupam Rasayan India Ltd** (ANURAS.NS) 2026-11-09 breakout: 1198.3 → 1322.5 (+10.4%, best +11.8%, worst -1.7%) – target day 3
+  - coming: awaited: Finance Ministry: proposes antidumping tariffs on PVC suspension from China · awaited: Coal Ministry: Rs 37,500-crore coal gasification initiative to boost synthetic natural gas and methanol
+  - build: Investor deck: Anupam Rasayan delivered record Q2 FY27 consolidated revenue of Rs 821 crore, driven by strategic acquisi · Order Rs 17,496 cr · M&A: Acquired a 50.07% controlling stake in Bliss GVS Pharma entering finished formulations.
+  - industry: Electronic and semiconductor chemicals (early, 34 of 35 peers) · Formulation CDMO integration (from another industry)
+- **Ajmera Realty & Infra India Ltd** (AJMERA.NS) 2026-11-09 retest: 133.02 → 160.48 (+20.6%, best +27.6%, worst -2.2%) – target day 9
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Q2 FY27 concall positive · Strategy: Launching a 1 million sq. ft. boutique office project in Wadala by February
+  - news_after: 2026-11-25 result: Results Q2 FY27: net profit Rs 48 cr (+55%) - strong
+- **Dr. Agarwals Health Care Ltd** (AGARWALEYE.NS) 2026-11-09 breakout: 537.3 → 581.35 (+8.2%, best +10.0%, worst -1.1%) – target day 11
+  - coming: awaited: NHA: Expand AB-PMJAY packages for public hospitals from 23 to 112
+  - build: Investor deck: Dr. Agarwal’s Health Care Ltd. delivered robust H1 FY27 financial and operational growth, driven by aggre · Strategy: Added 39 facilities in H1 FY27, scaling network to 324 facilities across 172 cities · Strategy: Plans to add facility in Zambia and enter Ethiopia to strengthen African presence
+  - industry: Senior Care Expansion (from another industry)
+- **GHCL Textiles Ltd** (GHCLTEXTIL.NS) 2026-11-09 breakout: 132.74 → 150.86 (+13.7%, best +14.5%, worst -4.0%) – target day 7
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Investor deck: GHCL Textiles posted robust Q2 & H1 FY27 financial growth, underpinned by high capacity utilization, a gr · Capacity: Adding 58k spindles and 5 MW rooftop solar (Rs 410 crore project) · Capacity: Setting up fabric processing facilities at PM Mitra Park (Rs 300 crore, FY29)
+  - industry: Captive solar adoption (from another industry) · Green energy integration (from another industry)
+- **Tata Capital Ltd** (TATACAP.NS) 2026-11-11 breakout: 356.15 → 340.1 (-4.5%, best +1.6%, worst -4.8%) – stopped day 4
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Clarification on selling stressed gold loans to ARCs · awaited: RBI: consider new restrictions preventing PE firms from controlling multiple NBFCs
+  - build: Q2 FY27 concall positive · Funding: Planned a capital raise for the second half of FY28 based on growth trajectories.
+  - news_after: 2026-11-18 broker: Ambit Capital: Buy, target Rs 463 (maintain)
+- **Ramkrishna Forgings Ltd** (RKFORGE.NS) 2026-11-11 launch: 764.7 → 781.25 (+2.2%, best +5.1%, worst -3.9%) – open
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Q2 FY27 concall positive · Capacity: Railway wheels JV commercial production starting Dec, scaling to 4,000-5,000 wheels/month in Q4 · Capacity: Casting order win of Rs 272 crore for North American light vehicles opens export market
+  - industry: Asset Rationalization & Deleveraging (from another industry)
+- **Minda Corporation Ltd** (MINDACORP.NS) 2026-11-11 breakout: 714.8 → 711.55 (-0.5%, best +6.7%, worst -1.8%) – open
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: US Govt: Proposed 25% tariff on Indian goods
+  - build: Q2 FY27 concall positive · Order: Secured TFT instrument cluster orders with cumulative lifetime value exceeding Rs 1,000 crore. · Capacity: Greenfield TFT display module facility in Pune/Chakan with ~Rs 200 crore investment.
+  - industry: Backward Integration & Sourcing (from another industry) · Copper Downstream Integration (from another industry)
+- **Havells India Ltd** (HAVELLS.NS) 2026-11-11 breakout: 1174.1 → 1142.4 (-2.7%, best +4.0%, worst -3.5%) – stopped day 5
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Results Q2 FY27: net profit Rs 353 cr (+11%) · Q2 FY27 concall positive · Capacity: Investing Rs 1,400 crore in cables, wires, and R&D center over FY27
+  - news_after: 2026-11-18 broker: CLSA: Outperform, target Rs 1,290 (maintain)
+- **Cipla Ltd** (CIPLA.NS) 2026-11-11 breakout: 1419.9 → 1439.9 (+1.4%, best +3.7%, worst -2.7%) – stopped day 2
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Q2 FY27 concall positive · M&A: Partnered with Qilu for Pembrolizumab and initiated clinical development for a respiratory biosimilar
+  - news_after: 2026-11-25 pivot: Strategy: Launches generic Flovent HFA in US - New product revenue stream · 2026-11-17 pivot: Approval: USFDA classified InvaGen's New York facility as No Action Indicated - Clears regulatory hurdle and r
+- **KRBL Ltd** (KRBL.NS) 2026-11-11 breakout: 415.45 → 414.6 (-0.2%, best +6.6%, worst -2.5%) – open
+  - coming: awaited: SEBI: Early pay-out of up to 80 percent of sale proceeds for FPOs · awaited: Finance Ministry: FY27 fertiliser subsidy estimated at Rs 250000 crore
+  - build: Q2 FY27 concall positive, delivered on last quarter's promises · Capacity: New Gangavathi facility expected operational by end of Q3 to support regional rice
+  - industry: Quick commerce channel adoption for innerwear/essentials (from another industry)
+- **Bajaj Finance Ltd** (BAJFINANCE.NS) 2026-11-11 breakout: 1078.8 → 1080.0 (+0.1%, best +6.4%, worst -0.2%) – target day 9
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Clarification on selling stressed gold loans to ARCs · awaited: RBI: consider new restrictions preventing PE firms from controlling multiple NBFCs
+  - build: Funding: Launched a share sale to raise up to 117 billion rupees · Q2 FY27 concall positive, guidance raised · Funding: Board approved Rs 11,700 crore via QIP and preferential warrants from Bajaj Finserv
+  - industry: Agentic & Full-Stack AI Integration (from another industry)
+  - news_after: 2026-11-21 broker: Choice Broking: Buy (maintain) · 2026-11-12 pivot: Funding: Launched ₹11,700 crore qualified institutional placement (QIP) - Dilutes equity but raises capital fo
+- **City Union Bank Ltd** (CUB.NS) 2026-11-11 breakout: 230.75 → 233.1 (+1.0%, best +10.1%, worst -0.8%) – target day 7
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive
+  - news_after: 2026-11-18 pivot: Management: Shuttered NEFT and RTGS gateways after unauthorised transaction - Operational risk and temporary g
+- **Hindustan Unilever Ltd** (HINDUNILVR.NS) 2026-11-11 breakout: 2022.4 → 2117.2 (+4.7%, best +7.3%, worst -3.0%) – stopped day 1
+  - coming: awaited: Supreme Court: Ruling on salt, sugar, fat warnings on food · awaited: Finance Ministry: review 40 percent GST on beverages to provide relief to low-priced products
+  - build: Q2 FY27 concall positive · Investor deck: HUL is sustaining volume-led revenue growth through undisputed market leadership, targeted multi-year por · Strategy: Unveiled ‘Winning In New India’ strategy focusing on consumption, premiumisation, and new spaces
+  - industry: Quick commerce channel adoption for innerwear/essentials (from another industry)
+- **Nitin Spinners Ltd** (NITINSPIN.NS) 2026-11-11 retest: 664.7 → 693.65 (+4.4%, best +9.1%, worst -0.6%) – target day 7
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Q1 FY27 concall positive · Capacity: Adding 35 million meters of fabric capacity and 74,000 spindles coming online in H2 FY27
+- **Greaves Cotton Ltd** (GREAVESCOT.NS) 2026-11-11 launch: 220.62 → 322.69 (+46.3%, best +52.6%, worst -1.6%) – target day 4
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · awaited: Tamil Nadu govt: New Industrial Policy under preparation, expected ready by January 2027
+  - build: Q2 FY27 concall positive · M&A: Acquired remaining 20% stake in Excel Controlinkage, making it a 100% subsidiary · Strategy: Developed in-house rare-earth-free motor to reduce import dependence and improve performance
+  - industry: B2B EV Charging Pivot (from another industry)
+  - news_after: 2026-11-26 pivot: Capacity: Ampere escooter targets 2x sales volume in FY27 - Strong volume growth could rerate the stock
+- **Coromandel International Ltd** (COROMANDEL.NS) 2026-11-11 launch: 1991.0 → 1959.8 (-1.6%, best +1.5%, worst -3.4%) – open
+  - coming: awaited: Finance Ministry: FY27 fertiliser subsidy estimated at Rs 250000 crore · awaited: Centre: fertiliser subsidy sharing model considered amid rising costs
+  - build: Results Q2 FY27: revenue Rs 10,294 cr (+6%), net profit Rs 523 cr (-34%)
+  - industry: Backward integration into raw materials (scaling, 1 of 6 peers) · Backward Integration & Sourcing (from another industry)
+  - news_after: 2026-11-18 pivot: Capacity: Kakinada granulation plant remains on track for February commissioning - Expanded capacity drives hi
+- **ASK Automotive Ltd** (ASKAUTOLTD.NS) 2026-11-11 breakout: 648.3 → 625.55 (-3.5%, best +1.2%, worst -5.9%) – stopped day 3
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: US Govt: Proposed 25% tariff on Indian goods
+  - build: Q2 FY27 concall positive · Capacity: Commissioned 19th plant; 20th plant (Bangalore) to be commissioned in January 2027 · Strategy: Commenced HPDC alloy wheel supplies to Japanese customer via technical collaboration
+  - industry: Captive solar adoption (from another industry)
+  - flags: the breakout came with the news - a reaction, not anticipation
+  - news_after: 2026-11-19 result: Results Q2 FY27: revenue Rs 1,561 cr (+48%) - strong
+- **DCB Bank Ltd** (DCBBANK.NS) 2026-11-11 breakout: 221.37 → 223.66 (+1.0%, best +9.8%, worst -0.0%) – target day 9
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive · Funding: Raised $194 million through the FCNR (B) window in August at lower cost.
+  - industry: Digital-First Sourcing and AI Underwriting (from another industry) · In-House Sourcing and Co-Lending Wind-Down (from another industry)
+- **APL Apollo Tubes Ltd** (APLAPOLLO.NS) 2026-11-11 breakout: 2198.0 → 1509.5 (-31.3%, best +5.2%, worst -38.9%) – stopped day 7
+  - coming: 20 Nov: monthly data: core sector output (steel, coal) · 01 Dec: monthly data: monthly production / sales updates (Coal India, NMDC, steel makers) · awaited: Rajasthan govt: Fast-track operationalising auctioned mines
+  - build: Q2 FY27 concall positive
+  - industry: Strategic diversification into Defence & Aerospace (from another industry) · Asset Rationalization & Deleveraging (from another industry)
+  - news_after: 2026-11-26 broker: HDFC Securities: Sell (downgrade) · 2026-11-25 pivot: Funding: Equity plan of 18000 crore - dilution concerns · 2026-11-25 broker: Nuvama:  (cut target)
+- **KFin Technologies Ltd** (KFINTECH.NS) 2026-11-11 breakout: 935.0 → 989.0 (+5.8%, best +7.2%, worst -2.2%) – open
+  - coming: 10 Dec: monthly data: mutual fund flows and SIP inflows (AMFI) · awaited: RBI: Allow online brokerages to offer retail investors access to trade government securities · awaited: SEBI: remove additional disclosure framework for foreign portfolio investors
+  - build: Q2 FY27 concall positive · Strategy: Aria.AI GenAI platform beta live and FinEx Mutual Fund platform rollout by Q4
+  - news_after: 2026-11-15 result: Results Q2 FY27: net profit Rs 1,003 cr (+8%) - strong
+- **Samvardhana Motherson International Ltd** (MOTHERSON.NS) 2026-11-11 breakout: 169.69 → 161.5 (-4.8%, best -0.2%, worst -7.9%) – stopped day 5
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Citi: Sell · Results Q2 FY27: net profit Rs 1,175 cr (+42%)
+  - industry: De-risking Chinese sourcing (from another industry) · Backward Integration and Tech (from another industry)
+  - news_after: 2026-11-21 broker: Choice Broking: Buy, target Rs 180 (initiate) · 2026-11-19 broker: Geojit: Buy, target Rs 190 (maintain) · 2026-11-19 broker: Geojit Retail Equity Research: Buy (maintain)
+- **LT Foods Ltd** (LTFOODS.NS) 2026-11-11 breakout: 430.9 → 421.15 (-2.3%, best +7.1%, worst -3.7%) – stopped day 4
+  - coming: awaited: SEBI: Early pay-out of up to 80 percent of sale proceeds for FPOs · awaited: Finance Ministry: FY27 fertiliser subsidy estimated at Rs 250000 crore
+  - build: Q2 FY27 concall positive · Capacity: Nature Bio Foods consolidating manufacturing via a new Madhya Pradesh facility starting this FY.
+  - news_after: 2026-11-19 pivot: M&A: Acquired Maya Kaimal for 5.8 million USD - Deepens U.S. presence in sauces and rice · 2026-11-18 pivot: M&A: Acquiring 100% stake in MK Foods Holdings - Inorganic growth and market expansion
+- **JK Cement Ltd** (JKCEMENT.NS) 2026-11-11 breakout: 5273.8 → 5470.3 (+3.7%, best +6.1%, worst -2.8%) – open
+  - coming: 20 Nov: monthly data: core sector output (cement)
+  - build: Q2 FY27 concall positive · Capacity: Commissioned 0.6 million tonne wall putty plant at Nathdwara, taking capacity to 3.65 million tonnes · Strategy: Board approved JK Maxx paint plant of 75,000 KL costing Rs 130 crore
+- **Fedbank Financial Services Ltd** (FEDFINA.NS) 2026-11-11 breakout: 158.76 → 138.6 (-12.7%, best +4.4%, worst -14.8%) – stopped day 5
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Clarification on selling stressed gold loans to ARCs · awaited: RBI: consider new restrictions preventing PE firms from controlling multiple NBFCs
+  - build: Q2 FY27 concall positive · Capacity: Added 74 branches in Q2, planning at least 150 more in H2
+- **Adani Power Ltd** (ADANIPOWER.NS) 2026-11-11 breakout: 208.0 → 205.25 (-1.3%, best +3.9%, worst -2.1%) – open
+  - coming: 20 Nov: monthly data: core sector output (electricity, coal) · 01 Dec: monthly data: monthly power demand and peak load · awaited: Ministry of Power: Revised Draft Electricity (Rights of Consumers) Amendment Rules
+  - build: Rating: Long-term credit ratings upgraded by ICRA · Q2 FY27 concall positive
+  - industry: Data center thermal demand (scaling, spreading: 2 of 4 peers → 4 of 6) · Pumped hydro storage shift (scaling, spreading: 2 of 4 peers → 4 of 6)
+  - flags: the breakout came with the news - a reaction, not anticipation
+  - news_after: 2026-11-25 pivot: Order: Maharashtra awards power supply contract - May boost long-term contracted earnings · 2026-11-24 pivot: Rating: CRISIL upgrades Adani Power's rating to AA+/Stable - strengthens financial standing and lowers borrowi · 2026-11-17 deck: Investor deck: Adani Power is India's largest private thermal IPP, delivering robust H1 FY27 financial growth 
+- **Indian Railway Finance Corporation Ltd** (IRFC.NS) 2026-11-11 launch: 86.7 → 82.25 (-5.1%, best +0.7%, worst -7.2%) – stopped day 3
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: National Housing Bank: Reclassify affordable housing loans for smaller cities · awaited: Finance Ministry: FICCI seeks manufacturing credit push, tax exemption
+  - build: Q2 FY27 concall positive · Strategy: Diversified lending into metros, ports, renewable energy, and thermal power
+- **Astra Microwave Products Ltd** (ASTRAMICRO.NS) 2026-11-12 breakout: 1785.8 → 1666.9 (-6.7%, best +1.3%, worst -10.6%) – stopped day 1
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Investor deck: Astra Microwave reported strong H1 FY27 financial growth, backed by a record standalone order book of Rs. · Order: Secured record standalone order book of Rs 3,937 crore including Rs 1,878.8 crore HAL radar order · Order: Secured a landmark order worth ~Rs 2,205 crore from HAL for Uttam Radar critical subsystems
+  - industry: Defense & Aerospace Indigenization (from another industry) · Strategic diversification into Defence & Aerospace (from another industry)
+  - news_after: 2026-11-19 pivot: Management: Dr. M.V. Reddy took charge as Managing Director effective October 1, 2026. - Leadership transition · 2026-11-19 pivot: M&A: Space and weather divisions are being demerged into Astra Space Technologies Limited. - Unlocking value t · 2026-11-13 pivot: Strategy: Targeting Rs 2,000 crore revenue by FY29 and space listing - Drives growth in space and defence segm
+- **Jyoti CNC Automation Ltd** (JYOTICNC.NS) 2026-11-12 breakout: 1072.0 → 1058.65 (-1.2%, best +3.6%, worst -5.7%) – stopped day 4
+  - coming: awaited: Tamil Nadu govt: New Industrial Policy under preparation, expected ready by January 2027
+  - build: Q2 FY27 concall positive · Approval: Received PLI (ECMS) approval for Rs 1,020 crore investment with ~Rs 255 crore subsidy · Capacity: Scaling foundry capacity from 1,500 to 5,000 tonnes per month using new vacuum casting
+  - industry: Defense & Aerospace Indigenization (scaling, 14 of 39 peers) · Deep Backward Integration into Foundries & Mining (scaling, 10 of 39 peers)
+- **Hindustan Oil Exploration Company Ltd** (HINDOILEXP.NS) 2026-11-12 launch: 188.79 → 218.15 (+15.6%, best +26.5%, worst -3.3%) – target day 3
+  - coming: 20 Nov: monthly data: core sector output (crude, natural gas, refinery products)
+  - build: Investor deck: HOEC's 2P reserves crossed 100 MMBOE following the B174 block award, even as H1 FY27 financials reflected · Strategy: Awarded B174 DSF-4 block, increasing total net 2P reserves to 104.4 MMBOE · Legal: Resolved B-80 crude off-take dispute with HPCL and secured 10-year Dirok PSC extension
+  - news_after: 2026-11-13 pivot: Management: Introduced Debabrata Das as the new CFO effective October 16, 2026. - Ensures smooth financial lea
+- **PNB Housing Finance Ltd** (PNBHOUSING.NS) 2026-11-12 breakout: 1135.4 → 1162.0 (+2.3%, best +8.0%, worst -2.0%) – target day 8
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: National Housing Bank: Reclassify affordable housing loans for smaller cities · awaited: Finance Ministry: FICCI seeks manufacturing credit push, tax exemption
+  - build: Q2 FY27 concall positive · Strategy: Launched Micro Housing business in Q2 FY27, disbursing Rs 71 crore
+  - news_after: 2026-11-27 pivot: Legal: Supreme Court ordered sanction to prosecute bank officials - could de-rate due to governance and legal  · 2026-11-18 pivot: Capacity: Targeting 300 affordable segment branches in a year - Expands reach in high-growth affordable housin
+- **Waaree Energies Ltd** (WAAREEENER.NS) 2026-11-12 breakout: 2572.0 → 2377.0 (-7.6%, best +2.3%, worst -8.0%) – stopped day 2
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Capacity: Plans Rs 15,000 crore 1.2 MT green ammonia plant in Andhra Pradesh · Q2 FY27 concall positive · Capacity: 10 GW solar cell expansion at Unn facility on track for FY27 commissioning.
+  - industry: Expansion into Battery Energy Storage Systems (from another industry) · Renewable & BESS Expansion (from another industry)
+  - news_after: 2026-11-21 order: Order from 700 MW solar project in Maharashtra · 2026-11-20 order: Order Rs 100 cr - BESS project · 2026-11-19 pivot: Order: Subsidiary bagged over Rs 100 crore NTPC order - Entry into grid-scale energy storage ecosystem
+- **UCO Bank** (UCOBANK.NS) 2026-11-12 breakout: 25.11 → 24.26 (-3.4%, best +3.9%, worst -3.8%) – stopped day 4
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive · Capacity: Opened a new GIFT City IBU branch during the quarter to expand operations.
+  - news_after: 2026-11-22 result: Results Q4 FY26: net profit Rs 801 cr (+22%) - strong · 2026-11-18 pivot: Funding: Established a 1-billion medium-term note programme - Enhances global fundraising capability · 2026-11-13 result: Results Q2 FY27:  - strong
+- **Gulf Oil Lubricants India Ltd** (GULFOILLUB.NS) 2026-11-12 breakout: 1111.4 → 1150.3 (+3.5%, best +7.5%, worst -1.0%) – target day 8
+  - coming: 20 Nov: monthly data: core sector output (crude, natural gas, refinery products) · 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers)
+  - build: Q2 FY27 concall positive · Capacity: Tirex charger capacity expansion to 3,000 units by end of year
+  - industry: B2B EV Charging Pivot (from another industry)
+- **Hariom Pipe Industries Ltd** (HARIOMPIPE.NS) 2026-11-12 breakout: 370.2 → 318.25 (-14.0%, best +0.7%, worst -15.9%) – stopped day 5
+  - coming: 20 Nov: monthly data: core sector output (steel, coal) · 01 Dec: monthly data: monthly production / sales updates (Coal India, NMDC, steel makers) · awaited: Rajasthan govt: Fast-track operationalising auctioned mines
+  - build: Q2 FY27 concall positive · Investor deck: Hariom Pipe achieved strong Q2 FY27 financial and operational growth fueled by the Perundurai plant resta · Capacity: Targeting completion of 52 MW AC solar capacity by January 2027
+  - industry: Deep Backward Integration into Foundries & Mining (from another industry) · Backward Integration & Sourcing (from another industry)
+  - flags: the breakout came with the news - a reaction, not anticipation
+- **Radico Khaitan Ltd** (RADICO.NS) 2026-11-12 breakout: 4638.2 → 4646.6 (+0.2%, best +2.3%, worst -3.0%) – open
+  - coming: awaited: Supreme Court: Ruling on salt, sugar, fat warnings on food · awaited: Commerce Ministry: Urges DRI to release confiscated Scotch whisky
+  - build: Q2 FY27 concall positive, guidance raised
+  - industry: Downstream FMCG and Liquor pivot (from another industry)
+  - news_after: 2026-11-19 broker: ICICI Securities: Buy (initiate) · 2026-11-19 policy: Finance Ministry: Imposed 162.5% customs duty on bulk Scotch whisky (Alcohol -, Alcohol +) · 2026-11-19 policy: Cabinet: effective levy on Scotch whisky higher than 150% duty (Alcoholic beverages +)
+- **Lodha Developers Ltd** (LODHA.NS) 2026-11-12 breakout: 1226.0 → 1251.8 (+2.1%, best +5.9%, worst -4.2%) – stopped day 2
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Q2 FY27 concall positive · Strategy: Launched first residential real estate project in Gurugram NCR market. · Capacity: Increased data center power approval capacity to 5 GW.
+  - news_after: 2026-11-27 broker: Lodha Developers: Buy, target Rs 1,360
+- **Godrej Properties Ltd** (GODREJPROP.NS) 2026-11-12 breakout: 1879.5 → 1943.0 (+3.4%, best +8.8%, worst -2.9%) – target day 9
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Strategy: Launching 32000 crore worth homes in H2 FY27 · Q2 FY27 concall positive
+  - news_after: 2026-11-18 pivot: Legal: Haryana pollution board orders closure of Gurugram project - execution and regulatory risks could de-ra · 2026-11-13 pivot: Capacity: Added 31 acres in Indore for plotted homes development - Strengthens residential market presence in 
+- **Anupam Rasayan India Ltd** (ANURAS.NS) 2026-11-12 breakout: 1201.8 → 1322.5 (+10.0%, best +11.5%, worst +0.2%) – target day 1
+  - coming: awaited: Finance Ministry: proposes antidumping tariffs on PVC suspension from China · awaited: Coal Ministry: Rs 37,500-crore coal gasification initiative to boost synthetic natural gas and methanol
+  - build: Investor deck: Anupam Rasayan delivered record Q2 FY27 consolidated revenue of Rs 821 crore, driven by strategic acquisi · Order Rs 17,496 cr · M&A: Acquired a 50.07% controlling stake in Bliss GVS Pharma entering finished formulations.
+  - industry: Electronic and semiconductor chemicals (early, 34 of 35 peers) · Formulation CDMO integration (from another industry)
+- **Nava Ltd** (NAVA.NS) 2026-11-12 launch: 574.15 → 538.6 (-6.2%, best +1.4%, worst -9.3%) – stopped day 2
+  - coming: 20 Nov: monthly data: core sector output (steel, coal) · 01 Dec: monthly data: monthly production / sales updates (Coal India, NMDC, steel makers) · 01 Dec: monthly data: monthly power demand and peak load
+  - build: Investor deck: Nava Ltd. delivered a strong Q2 FY27 with consolidated PAT doubling YoY to ₹403.5 crores, bolstered by ro · Capacity: Maamba Energy expanding Phase II 300 MW coal capacity with phase-wise commissioning targeted by July 2027 · Capacity: 100-megawatt solar power project in Zambia commissioning by end of September 2026
+  - news_after: 2026-11-18 pivot: Capacity: Commissioned 100 MW solar power project in Zambia, receiving an emergency tariff of USD0.09. - Secur
+- **Gabriel India Ltd** (GABRIEL.NS) 2026-11-12 launch: 1641.2 → 1546.8 (-5.8%, best -1.9%, worst -10.4%) – stopped day 4
+  - coming: 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: Finance Ministry: Link motor insurance premiums to traffic violations · awaited: Transport Ministry: Safety standards for e-rickshaws like Bharat NCAP
+  - build: Q2 FY27 concall neutral
+- **Urban Company Ltd** (URBANCO.NS) 2026-11-12 breakout: 167.9 → 174.92 (+4.2%, best +6.0%, worst -4.7%) – stopped day 3
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Q2 FY27 concall positive · Funding: Proposed a fundraise of up to ₹2,500 crores for organic expansion and potential M&A
+  - news_after: 2026-11-26 pivot: Strategy: Enters AC market with Native Ultra units - New product category driving future growth · 2026-11-19 pivot: Funding: Raised Rs 2500 crore through QIP - Growth capital infusion for expansion · 2026-11-17 pivot: Funding: Opens QIP with floor price at 161.03 per share
+- **Star Health and Allied Insurance Company Ltd** (STARHEALTH.NS) 2026-11-12 breakout: 570.95 → 570.45 (-0.1%, best +1.8%, worst -4.3%) – stopped day 3
+  - coming: 10 Dec: monthly data: monthly premium data (life and general insurers) · awaited: IRDAI: Expert committee set up on distribution reforms · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Approval: IRDAI nod for HDFC Mutual Fund stake · Q2 FY27 concall positive
+  - industry: Digital D2C and GenAI Scaling (scaling, spreading: 1 of 3 peers → 3 of 6) · Ind AS Accounting Transition (mainstream, 6 of 6 peers)
+  - news_after: 2026-11-21 pivot: Legal: IRDAI imposed Rs 2 crore penalty · 2026-11-13 pivot: Strategy: Targeting 24000 gross written premium by FY27 - Signals strong growth trajectory in health insurance
+- **Varun Beverages Ltd** (VBL.NS) 2026-11-12 breakout: 435.0 → 424.9 (-2.3%, best +1.1%, worst -4.6%) – stopped day 5
+  - coming: awaited: Supreme Court: Ruling on salt, sugar, fat warnings on food · awaited: Commerce Ministry: Urges DRI to release confiscated Scotch whisky
+  - build: Q2 FY27 concall positive · M&A: Merger of Twizza with BevCo completed and incorporated KIVA Spirits for alcoholic beverages. · Capacity: India capex for CY27 projected at Rs. 1,000 crore including greenfield plant at Suratgarh.
+  - industry: Backward Integration & Sourcing (from another industry)
+- **Marathon Nextgen Realty Ltd** (MARATHON.NS) 2026-11-12 launch: 439.05 → 441.7 (+0.6%, best +3.5%, worst -3.4%) – open
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Q2 FY27 concall positive · Investor deck: Marathon Nextgen Realty reported steady Q2 FY27 financial results and announced a strategic deal to acqui · M&A: Acquiring Adani Realty's 60% stake in Monte South project for Rs 335 crore
+  - flags: the breakout came with the news - a reaction, not anticipation
+- **SBI Life Insurance Company Ltd** (SBILIFE.NS) 2026-11-12 breakout: 1819.5 → 1856.0 (+2.0%, best +2.3%, worst -2.6%) – open
+  - coming: 10 Dec: monthly data: monthly premium data (life and general insurers) · awaited: IRDAI: Expert committee set up on distribution reforms · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: -: Buy, target Rs 1,820 · Q2 FY27 concall positive · Strategy: Plans to launch a regular pay deferred annuity product soon
+  - industry: Pivot to non-par and protection (scaling, 4 of 4 peers) · Quick commerce channel adoption for innerwear/essentials (from another industry)
+- **GE Vernova T&D India Ltd** (GVT&D.NS) 2026-11-13 breakout: 4420.0 → 4263.0 (-3.6%, best +0.5%, worst -8.9%) – stopped day 2
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Q2 FY27 concall positive
+  - industry: Pumped hydro storage shift (from another industry) · De-risking Chinese sourcing (from another industry)
+  - news_after: 2026-11-22 result: Results Q2 FY27: net profit Rs 431 cr (+44%) - strong · 2026-11-17 broker: Anand Rathi Research: Buy
+- **Centum Electronics Ltd** (CENTUM.NS) 2026-11-13 breakout: 4481.1 → 3991.5 (-10.9%, best +2.1%, worst -15.0%) – stopped day 6
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Q2 FY27 concall positive, delivered on last quarter's promises · Capacity: Planning a new dedicated facility for BTS business to build system-level and AIT capabilities. · Investor deck: Centum Electronics delivered strong H1-FY27 performance with 32% YoY revenue growth and a record Rs 1,952
+  - industry: Strategic diversification into Defence & Aerospace (from another industry) · Electronic and semiconductor chemicals (from another industry)
+  - news_after: 2026-11-24 broker: Choice Institutional Equities: Buy (maintain) · 2026-11-18 deck: Investor deck: Centum Electronics delivered a resilient H1 FY27 performance, underpinned by a record ~Rs 2,000
+- **TCPL Packaging Ltd** (TCPLPACK.NS) 2026-11-13 retest: 4481.5 → 4356.0 (-2.8%, best +4.5%, worst -6.3%) – open
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers)
+  - build: Q2 FY27 concall positive · Results Q2 FY27: revenue Rs 560 cr (+22%) · Investor deck: TCPL Packaging delivered a record-breaking Q2 FY27, crossing Rs 500 crore in quarterly revenue and Rs 100
+  - industry: Expansion into Battery Energy Storage Systems (from another industry) · De-risking Chinese sourcing (from another industry)
+  - flags: the retest came with the news - a reaction, not anticipation
+  - news_after: 2026-11-17 pivot: Strategy: Entering lithium battery separator sector to challenge Chinese imports - Diversification into high-g
+- **Blue Star Ltd** (BLUESTARCO.NS) 2026-11-13 breakout: 1587.2 → 1735.0 (+9.3%, best +16.5%, worst -2.1%) – target day 4
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Q2 FY27 concall mixed · M&A: Sold MedTech business for Rs 35.6 crore, completed in August 2026 · Strategy: Electromechanical projects business shifting focus from infrastructure to data centers and factories
+  - industry: Quick commerce channel adoption for innerwear/essentials (from another industry)
+- **MSTC Ltd** (MSTCLTD.NS) 2026-11-13 launch: 783.35 → 658.25 (-16.0%, best +2.0%, worst -23.0%) – stopped day 2
+  - coming: awaited: RBI: proposed new measures to enhance the safety of electronic bank transactions · awaited: Finance Ministry: Proposed flat Rs 5 MDR for B2B UPI payments
+  - build: Results Q2 FY27: revenue Rs 110 cr (+29%), net profit Rs 75 cr (+58%) · Investor deck: MSTC delivered its highest-ever H1 profit since its 2019 listing, driven by strong e-commerce growth and  · Strategy: Completed planned exit from the legacy Trading business to focus on e-commerce
+  - industry: Critical Minerals Exploration (from another industry)
+  - flags: the breakout came with the news - a reaction, not anticipation
+- **Havells India Ltd** (HAVELLS.NS) 2026-11-16 breakout: 1172.0 → 1142.4 (-2.5%, best +4.2%, worst -3.3%) – stopped day 2
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Results Q2 FY27: net profit Rs 353 cr (+11%) · Q2 FY27 concall positive · Capacity: Investing Rs 1,400 crore in cables, wires, and R&D center over FY27
+  - news_after: 2026-11-18 broker: CLSA: Outperform, target Rs 1,290 (maintain)
+- **Cantabil Retail India Ltd** (CANTABIL.NS) 2026-11-16 retest: 262.0 → 249.15 (-4.9%, best +1.3%, worst -8.3%) – stopped day 3
+  - coming: awaited: Delhi govt: New liquor policy expanding premium brand access and revising excise duty · awaited: GST Council: GST Council may do away with 5% rate; move items to 3% & 8% slabs
+  - build: Investor deck: Cantabil Retail delivered steady H1 FY27 revenue growth of 11% YoY to Rs 370.5 crore, backed by continued
+  - industry: Format rationalization towards larger EBOs (scaling, spreading: 6 of 11 peers → 17 of 24) · Quick commerce channel adoption for innerwear/essentials (scaling, spreading: 9 of 11 peers → 22 of 24)
+- **PNB Housing Finance Ltd** (PNBHOUSING.NS) 2026-11-16 breakout: 1135.9 → 1162.0 (+2.3%, best +8.0%, worst -1.7%) – target day 6
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: National Housing Bank: Reclassify affordable housing loans for smaller cities · awaited: Finance Ministry: FICCI seeks manufacturing credit push, tax exemption
+  - build: Q2 FY27 concall positive · Strategy: Launched Micro Housing business in Q2 FY27, disbursing Rs 71 crore
+  - news_after: 2026-11-27 pivot: Legal: Supreme Court ordered sanction to prosecute bank officials - could de-rate due to governance and legal  · 2026-11-18 pivot: Capacity: Targeting 300 affordable segment branches in a year - Expands reach in high-growth affordable housin
+- **IIFL Finance Ltd** (IIFL.NS) 2026-11-16 retest: 652.35 → 598.5 (-8.3%, best +4.5%, worst -9.3%) – stopped day 4
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Clarification on selling stressed gold loans to ARCs · awaited: RBI: consider new restrictions preventing PE firms from controlling multiple NBFCs
+  - build: DAM Capital: Buy, target Rs 880 (raise target) · Funding: Board approves 6414 crore fund raise · M&A: Blackstone proposed Rs 5,000 crore investment alongside promoters investing Rs 1,200 crore
+  - news_after: 2026-11-26 pivot: M&A: Capital Group offloads 1.31% stake · 2026-11-19 pivot: Ownership: Fairfax exits stake in IIFL Finance - change in shareholding could affect rating · 2026-11-18 pivot: Strategy: Prem Watsa sells 3441 stake - Funds IDBI Bank acquisition
+- **JK Cement Ltd** (JKCEMENT.NS) 2026-11-16 breakout: 5252.6 → 5470.3 (+4.1%, best +6.5%, worst -2.2%) – target day 4
+  - coming: 20 Nov: monthly data: core sector output (cement)
+  - build: Q2 FY27 concall positive · Capacity: Commissioned 0.6 million tonne wall putty plant at Nathdwara, taking capacity to 3.65 million tonnes · Strategy: Board approved JK Maxx paint plant of 75,000 KL costing Rs 130 crore
+- **Goodluck India Ltd** (GOODLUCK.NS) 2026-11-16 retest: 560.6 → 518.1 (-7.6%, best +2.9%, worst -9.8%) – stopped day 2
+  - coming: 20 Nov: monthly data: core sector output (steel, coal) · 01 Dec: monthly data: monthly production / sales updates (Coal India, NMDC, steel makers) · awaited: Rajasthan govt: Fast-track operationalising auctioned mines
+  - build: Order Rs 58 cr · Q2 FY27 concall positive · M&A: Proposed amalgamation of Goodluck Defence and Aerospace and Goodluck Green Energy
+  - industry: Strategic diversification into Defence & Aerospace (from another industry) · Diversification to New Verticals (from another industry)
+- **Adani Power Ltd** (ADANIPOWER.NS) 2026-11-16 breakout: 205.29 → 205.25 (-0.0%, best +5.3%, worst -0.7%) – open
+  - coming: 20 Nov: monthly data: core sector output (electricity, coal) · 01 Dec: monthly data: monthly power demand and peak load · awaited: Ministry of Power: Revised Draft Electricity (Rights of Consumers) Amendment Rules
+  - build: Legal: Slashing Maharashtra power project cost by 99% and forest dues · Rating: Long-term credit ratings upgraded by ICRA · Q2 FY27 concall positive
+  - industry: Data center thermal demand (scaling, spreading: 2 of 4 peers → 4 of 6) · Pumped hydro storage shift (scaling, spreading: 2 of 4 peers → 4 of 6)
+  - flags: the breakout came with the news - a reaction, not anticipation
+  - news_after: 2026-11-25 pivot: Order: Maharashtra awards power supply contract - May boost long-term contracted earnings · 2026-11-24 pivot: Rating: CRISIL upgrades Adani Power's rating to AA+/Stable - strengthens financial standing and lowers borrowi · 2026-11-17 deck: Investor deck: Adani Power is India's largest private thermal IPP, delivering robust H1 FY27 financial growth 
+- **Krishna Institute of Medical Sciences Ltd** (KIMS.NS) 2026-11-16 launch: 763.35 → 785.5 (+2.9%, best +5.8%, worst -1.7%) – target day 6
+  - coming: awaited: NHA: Expand AB-PMJAY packages for public hospitals from 23 to 112
+  - build: Q2 FY27 concall positive, delivered on last quarter's promises · Results Q2 FY27:  · Investor deck: KIMS delivered robust revenue and volume growth in Q2 FY27, supported by expanding bed capacity and stron
+  - industry: Senior Care Expansion (from another industry) · Format rationalization towards larger EBOs (from another industry)
+- **TVS Supply Chain Solutions Ltd** (TVSSCS.NS) 2026-11-16 launch: 137.2 → 126.42 (-7.9%, best +9.3%, worst -8.5%) – stopped day 6
+  - coming: 05 Dec: monthly data: port cargo and rail freight volumes · awaited: CBIC: Faceless and centralised CGST assessment framework to reduce jurisdiction-based interactions
+  - build: Investor deck: TVS SCS delivered a record Q2 FY27 with robust 38.5% YoY revenue growth and a 50.2% jump in EBITDA, drive · M&A: Integrated Swamy & Sons acquisition contributing margin-accretive inorganic growth. · Results Q2 FY27: net profit Rs 36 cr (+100%)
+  - industry: Inorganic regional cable consolidation (from another industry) · Defense & Aerospace Indigenization (from another industry)
+  - news_after: 2026-11-20 pivot: M&A: Signed strategic MoU with Japan's Sankyu Inc. for a 0.5% equity stake. - Strengthens global logistics par
+- **Varun Beverages Ltd** (VBL.NS) 2026-11-16 breakout: 437.0 → 424.9 (-2.8%, best +0.5%, worst -5.0%) – stopped day 2
+  - coming: awaited: Supreme Court: Ruling on salt, sugar, fat warnings on food · awaited: Commerce Ministry: Urges DRI to release confiscated Scotch whisky
+  - build: Q2 FY27 concall positive · M&A: Merger of Twizza with BevCo completed and incorporated KIVA Spirits for alcoholic beverages. · Capacity: India capex for CY27 projected at Rs. 1,000 crore including greenfield plant at Suratgarh.
+  - industry: Backward Integration & Sourcing (from another industry)
+- **One Mobikwik Systems Ltd** (MOBIKWIK.NS) 2026-11-17 breakout: 229.55 → 210.38 (-8.4%, best +1.3%, worst -10.3%) – stopped day 2
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Proposed digital payments fraud safeguards to increase customer control · awaited: RBI: Proposed "stop switch" to block digital banking debits
+  - build: Q2 FY27 concall positive
+- **Bandhan Bank Ltd** (BANDHANBNK.NS) 2026-11-17 breakout: 174.62 → 166.66 (-4.6%, best +2.0%, worst -5.2%) – stopped day 7
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive · Strategy: Launched four credit card variants to target diverse customer segments
+  - news_after: 2026-11-18 result: Results Q2 FY27: net profit Rs 622 cr (+456%) - strong
+- **Rubicon Research Ltd** (RUBICON.NS) 2026-11-17 breakout: 1683.9 → 1869.3 (+11.0%, best +11.6%, worst -2.6%) – target day 6
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Q2 FY27 concall positive, guidance raised · M&A: Arinna Lifesciences acquisition consolidated, contributing Rs 19.4 crore to revenue in Q2. · Results Q2 FY27: net profit Rs 90 cr (+68%)
+  - industry: Formulation CDMO integration (scaling, 23 of 34 peers)
+- **CSB Bank Ltd** (CSBBANK.NS) 2026-11-17 breakout: 330.6 → 296.7 (-10.3%, best +2.3%, worst -11.1%) – stopped day 3
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive
+  - industry: AI Opex Optimization (from another industry)
+- **Yatharth Hospital & Trauma Care Services Ltd** (YATHARTH.NS) 2026-11-17 breakout: 1109.55 → 1076.85 (-2.9%, best +2.6%, worst -4.9%) – stopped day 6
+  - coming: awaited: NHA: Expand AB-PMJAY packages for public hospitals from 23 to 112
+  - build: Q2 FY27 concall positive · Funding: Raised Rs 3,150 crore from Advent International via preferential issue to fund acquisitions and expansion
+  - industry: Senior Care Expansion (from another industry)
+- **Max Healthcare Institute Ltd** (MAXHEALTH.NS) 2026-11-17 breakout: 1030.9 → 1071.3 (+3.9%, best +7.4%, worst -2.0%) – target day 7
+  - coming: awaited: NHA: Expand AB-PMJAY packages for public hospitals from 23 to 112
+  - build: Investor deck: Max Healthcare is aggressively scaling its bed capacity by ~4,600 beds over the next 3-4 years, backed by · M&A: Acquired a 66% stake in Kalinga Hospital Ltd, adding 250 beds for Eastern India entry. · Q2 FY27 concall positive
+  - news_after: 2026-11-23 pivot: Management: Director resigns effective November 23, 2026 - Leadership change · 2026-11-20 pivot: Rating: Macquarie double upgrade - leads Nifty 50 gainers · 2026-11-20 broker: Macquarie: Buy (raise target)
+- **ASK Automotive Ltd** (ASKAUTOLTD.NS) 2026-11-17 breakout: 639.85 → 625.55 (-2.2%, best +2.0%, worst -4.7%) – stopped day 5
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: US Govt: Proposed 25% tariff on Indian goods
+  - build: Q2 FY27 concall positive · Capacity: Commissioned 19th plant; 20th plant (Bangalore) to be commissioned in January 2027 · Strategy: Commenced HPDC alloy wheel supplies to Japanese customer via technical collaboration
+  - industry: Captive solar adoption (from another industry)
+  - news_after: 2026-11-19 result: Results Q2 FY27: revenue Rs 1,561 cr (+48%) - strong
+- **Centum Electronics Ltd** (CENTUM.NS) 2026-11-17 breakout: 4377.2 → 3991.5 (-8.8%, best +4.5%, worst -12.9%) – stopped day 4
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Q2 FY27 concall positive, delivered on last quarter's promises · Capacity: Planning a new dedicated facility for BTS business to build system-level and AIT capabilities. · Investor deck: Centum Electronics delivered strong H1-FY27 performance with 32% YoY revenue growth and a record Rs 1,952
+  - industry: Strategic diversification into Defence & Aerospace (from another industry) · Electronic and semiconductor chemicals (from another industry)
+  - news_after: 2026-11-24 broker: Choice Institutional Equities: Buy (maintain) · 2026-11-18 deck: Investor deck: Centum Electronics delivered a resilient H1 FY27 performance, underpinned by a record ~Rs 2,000
+- **KSH International Ltd** (KSHINTL.NS) 2026-11-17 breakout: 1066.9 → 1018.6 (-4.5%, best +2.3%, worst -7.7%) – stopped day 3
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Q2 FY27 concall positive · Investor deck: KSH International is aggressively scaling capacity to meet rising demand for specialized magnet winding w · Capacity: Phase 3 expansion at Supa targeting 72,200 MT by Q1 FY2029 with Rs 1,850 million capex
+  - industry: Grid transmission curtailment (from another industry) · Captive solar adoption (from another industry)
+  - news_after: 2026-11-21 result: Results Q2 FY27: net profit Rs 48 cr
+- **Sharda Motor Industries Ltd** (SHARDAMOTR.NS) 2026-11-17 breakout: 967.7 → 1000.9 (+3.4%, best +5.7%, worst -3.9%) – open
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Investor deck: Sharda Motor is a leading automotive component manufacturer expanding its market presence in emission con · Strategy: Increasing lightweighting content per vehicle from Rs 2,000-8,000 to Rs 6,000-18,000
+  - news_after: 2026-11-20 result: Results Q2 FY27: net profit Rs 99 cr (+33%) - strong · 2026-11-20 pivot: Order: Secured new control arm order from an emerging Indian PV manufacturer; SOP Q4 FY28. - Diversifies custo
+- **Sudeep Pharma Ltd** (SUDEEPPHRM.NS) 2026-11-17 breakout: 1217.5 → 1293.4 (+6.2%, best +9.6%, worst -8.6%) – stopped day 2
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Q2 FY27 concall positive · Approval: Nandesari greenfield facility received US FDA approval with 51,000 tonnes annual capacity
+  - industry: De-risking Chinese sourcing (scaling, 12 of 34 peers)
+- **Lodha Developers Ltd** (LODHA.NS) 2026-11-17 breakout: 1203.1 → 1251.8 (+4.0%, best +7.9%, worst -2.4%) – target day 7
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Q2 FY27 concall positive · Strategy: Launched first residential real estate project in Gurugram NCR market. · Capacity: Increased data center power approval capacity to 5 GW.
+  - news_after: 2026-11-27 broker: Lodha Developers: Buy, target Rs 1,360
+- **Godrej Properties Ltd** (GODREJPROP.NS) 2026-11-17 breakout: 1892.4 → 1943.0 (+2.7%, best +8.1%, worst -2.3%) – target day 6
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Capacity: Added 31 acres in Indore for plotted homes development · Strategy: Launching 32000 crore worth homes in H2 FY27 · Q2 FY27 concall positive
+  - news_after: 2026-11-18 pivot: Legal: Haryana pollution board orders closure of Gurugram project - execution and regulatory risks could de-ra
+- **Signatureglobal (India) Ltd** (SIGNATURE.NS) 2026-11-17 launch: 835.6 → 846.25 (+1.3%, best +4.5%, worst -5.1%) – open
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Order: Acquired 475 acres in Raigad for Rs 194 crore · Q2 FY27 concall positive · Results Q2 FY27: revenue Rs 817 cr (+141%), net profit Rs 67 cr
+  - industry: Geographic & Portfolio M&A (from another industry)
+  - news_after: 2026-11-19 pivot: Strategy: Acquired two land parcels spanning 10 acres in Sohna, Gurugram - expands land bank for real estate d
+- **Wonderla Holidays Ltd** (WONDERLA.NS) 2026-11-17 breakout: 516.05 → 484.7 (-6.1%, best +0.5%, worst -7.9%) – stopped day 2
+  - coming: 18 Nov: monthly data: domestic air traffic (DGCA)
+  - build: Q2 FY27 concall positive · Capacity: Planning 1 big park project in next 1-2 years; evaluating Bombay and Tier-2 cities
+  - industry: Captive solar adoption (from another industry)
+- **Fedbank Financial Services Ltd** (FEDFINA.NS) 2026-11-17 breakout: 155.66 → 138.6 (-11.0%, best -0.0%, worst -13.1%) – stopped day 1
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Clarification on selling stressed gold loans to ARCs · awaited: RBI: consider new restrictions preventing PE firms from controlling multiple NBFCs
+  - build: Q2 FY27 concall positive · Capacity: Added 74 branches in Q2, planning at least 150 more in H2
+- **Sportking India Ltd** (SPORTKING.NS) 2026-11-17 breakout: 220.34 → 249.03 (+13.0%, best +13.9%, worst -1.9%) – target day 7
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Q2 FY27 concall positive · Capacity: Commissioned 150,000 spindle Greenfield project in Odisha, starting commercial production by March 2027.
+- **Indian Railway Finance Corporation Ltd** (IRFC.NS) 2026-11-17 breakout: 82.65 → 82.25 (-0.5%, best +3.0%, worst -2.6%) – open
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: National Housing Bank: Reclassify affordable housing loans for smaller cities · awaited: Finance Ministry: FICCI seeks manufacturing credit push, tax exemption
+  - build: Q2 FY27 concall positive · Strategy: Diversified lending into metros, ports, renewable energy, and thermal power
+- **GHCL Textiles Ltd** (GHCLTEXTIL.NS) 2026-11-17 breakout: 136.22 → 150.86 (+10.7%, best +11.6%, worst -1.6%) – target day 2
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: Q2 FY27 concall positive · Investor deck: GHCL Textiles posted robust Q2 & H1 FY27 financial growth, underpinned by high capacity utilization, a gr · Capacity: Adding 58k spindles and 5 MW rooftop solar (Rs 410 crore project)
+  - industry: Captive solar adoption (from another industry) · Green energy integration (from another industry)
+- **Tamilnad Mercantile Bank Ltd** (TMB.NS) 2026-11-17 breakout: 896.55 → 848.4 (-5.4%, best +0.9%, worst -5.6%) – stopped day 3
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive, guidance raised
+- **Mangalore Refinery and Petrochemicals Ltd** (MRPL.NS) 2026-11-18 breakout: 175.97 → 165.65 (-5.9%, best +1.0%, worst -6.9%) – stopped day 4
+  - coming: 20 Nov: monthly data: core sector output (crude, natural gas, refinery products) · awaited: Oil Ministry: increase dealer margins for pump operators · awaited: Oil Ministry: Petrol dealers meeting to revise margins
+  - build: Q2 FY27 concall positive · Strategy: Formed joint venture OPML with ONGC and OPaL for petrochemical marketing. · Approval: Received authorization for petroleum/ATF pipeline from Devanagonthi to Bengaluru airport costing Rs 200 crore+
+  - industry: Long-term Gas Sourcing Hedging (from another industry)
+- **Cohance Lifesciences Ltd** (COHANCE.NS) 2026-11-18 breakout: 456.4 → 497.55 (+9.0%, best +13.9%, worst -1.2%) – target day 4
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Q2 FY27 concall mixed · Goldman Sachs: Buy, target Rs 525 (maintain) · Investor deck: Cohance Lifesciences delivered a sequential operational recovery in Q2 FY27, backed by integrated capabil
+  - industry: Peptides Oligos ADCs expansion (scaling, 11 of 34 peers) · Formulation CDMO integration (scaling, 23 of 34 peers)
+- **Deepak Fertilisers & Petrochemicals Corporation Ltd** (DEEPAKFERT.NS) 2026-11-18 breakout: 1480.5 → 1446.9 (-2.3%, best +0.2%, worst -7.6%) – stopped day 3
+  - coming: awaited: Finance Ministry: FY27 fertiliser subsidy estimated at Rs 250000 crore · awaited: Centre: fertiliser subsidy sharing model considered amid rising costs
+  - build: Legal: ITAT dismissed department appeals in 215 crore tax case · Investor deck: Deepak Fertilisers posted robust Q2 FY27 financial results, registering a consolidated net profit of Rs 3 · Results Q2 FY27: revenue Rs 11 cr (+11%), net profit Rs 394 cr (+85%)
+  - industry: Diversification into industrial chemicals (scaling, spreading: 2 of 3 peers → 5 of 6) · In-House Sourcing and Co-Lending Wind-Down (from another industry)
+  - news_after: 2026-11-20 pivot: Capacity: Dahej nitric acid and Gopalpur TAN projects ~98% complete, commercial production in Q4 FY27. - Subst · 2026-11-20 pivot: M&A: Chardham Chemicals acquisition undergoing revamping, bottom-line contributions expected in H2 FY28. - Add
+- **Rubicon Research Ltd** (RUBICON.NS) 2026-11-19 breakout: 1722.3 → 1869.3 (+8.5%, best +9.1%, worst -3.9%) – target day 5
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Q2 FY27 concall positive, guidance raised · M&A: Arinna Lifesciences acquisition consolidated, contributing Rs 19.4 crore to revenue in Q2. · Results Q2 FY27: net profit Rs 90 cr (+68%)
+  - industry: Formulation CDMO integration (scaling, 23 of 34 peers)
+- **Privi Speciality Chemicals Ltd** (PRIVISCL.NS) 2026-11-19 breakout: 3535.0 → 3666.0 (+3.7%, best +4.8%, worst -1.0%) – open
+  - coming: awaited: Finance Ministry: proposes antidumping tariffs on PVC suspension from China · awaited: Coal Ministry: Rs 37,500-crore coal gasification initiative to boost synthetic natural gas and methanol
+  - build: Results Q2 FY27: net profit Rs 117 cr (+25%) · Q2 FY27 concall positive · Capacity: Phase 2 and 3 capex planned at ~1000 crore for INR1700-1800 crore revenue.
+  - industry: Electronic and semiconductor chemicals (early, 34 of 35 peers)
+- **Hindustan Unilever Ltd** (HINDUNILVR.NS) 2026-11-19 launch: 2074.2 → 2117.2 (+2.1%, best +4.7%, worst -2.8%) – open
+  - coming: awaited: Supreme Court: Ruling on salt, sugar, fat warnings on food · awaited: Finance Ministry: review 40 percent GST on beverages to provide relief to low-priced products
+  - build: Q2 FY27 concall positive · Investor deck: HUL is sustaining volume-led revenue growth through undisputed market leadership, targeted multi-year por · Strategy: Unveiled ‘Winning In New India’ strategy focusing on consumption, premiumisation, and new spaces
+  - industry: Quick commerce channel adoption for innerwear/essentials (from another industry)
+- **Voltas Ltd** (VOLTAS.NS) 2026-11-19 launch: 1237.0 → 1186.8 (-4.1%, best +2.1%, worst -5.2%) – stopped day 5
+  - build: M&A: Signed JV to acquire 50 percent stake in Atomberg Airtech · Q2 FY27 concall mixed · Legal: Court of Cassation dismissed appeal, upholding cancellation of QAR 167m (~Rs 438 cr) Sidra guarantees
+  - industry: Quick commerce channel adoption for innerwear/essentials (from another industry) · Deep Backward Integration into Foundries & Mining (from another industry)
+  - news_after: 2026-11-21 pivot: M&A: Joint venture for room air-conditioner compressors - Expands product manufacturing footprint
+- **UCO Bank** (UCOBANK.NS) 2026-11-19 breakout: 25.08 → 24.26 (-3.3%, best +4.0%, worst -3.7%) – stopped day 4
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Funding: Established a 1-billion medium-term note programme · Results Q2 FY27:  · Q2 FY27 concall positive
+  - flags: the breakout came with the news - a reaction, not anticipation
+  - news_after: 2026-11-22 result: Results Q4 FY26: net profit Rs 801 cr (+22%) - strong
+- **Gufic Biosciences Ltd** (GUFICBIO.NS) 2026-11-19 breakout: 431.9 → 422.1 (-2.3%, best +0.0%, worst -5.2%) – open
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Investor deck: Gufic Biosciences advanced its Indore facility toward global regulatory readiness in Q2 FY27 while scalin · Capacity: Indore facility achieved 50m lyophilized vials, 30m liquid vials, and 72m ampoules capacity. · Approval: Completed US FDA pre-approval inspection at Indore and submitted EU GMP compliance report.
+- **IDFC First Bank Ltd** (IDFCFIRSTB.NS) 2026-11-19 launch: 86.05 → 86.8 (+0.9%, best +3.4%, worst -1.4%) – open
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Results Q2 FY27: net profit Rs 1,075 cr · Q2 FY27 concall positive · Funding: Raised USD 3.6 billion under RBI FCNR scheme and USD 950 million debut offshore bonds
+  - news_after: 2026-11-22 broker: Sumeet Bagadia: Buy (initiate)
+- **Sharda Motor Industries Ltd** (SHARDAMOTR.NS) 2026-11-19 breakout: 969.45 → 1000.9 (+3.2%, best +4.1%, worst -1.0%) – open
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Investor deck: Sharda Motor is a leading automotive component manufacturer expanding its market presence in emission con · Strategy: Increasing lightweighting content per vehicle from Rs 2,000-8,000 to Rs 6,000-18,000
+  - news_after: 2026-11-20 result: Results Q2 FY27: net profit Rs 99 cr (+33%) - strong · 2026-11-20 pivot: Order: Secured new control arm order from an emerging Indian PV manufacturer; SOP Q4 FY28. - Diversifies custo
+- **PG Electroplast Ltd** (PGEL.NS) 2026-11-19 breakout: 578.25 → 571.0 (-1.3%, best +3.9%, worst -3.5%) – open
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: US Government: Proposed 25% or 17% tariff on Indian goods
+  - build: -: Buy, target Rs 547 · Q2 FY27 concall positive · Capacity: Refrigerator facility at Sri City with 1.2M units capacity on track for Q4 FY27.
+  - industry: De-risking Chinese sourcing (from another industry) · Electronic and semiconductor chemicals (from another industry)
+- **ICICI Lombard General Insurance Company Ltd** (ICICIGI.NS) 2026-11-19 retest: 1688.0 → 1738.5 (+3.0%, best +5.1%, worst -0.6%) – open
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · 10 Dec: monthly data: monthly premium data (life and general insurers) · awaited: IRDAI: Expert committee set up on distribution reforms
+  - build: M&A: Acquisition of Axis Bank stake · Q2 FY27 concall positive
+  - industry: Digital D2C and GenAI Scaling (scaling, spreading: 1 of 3 peers → 3 of 6) · Ind AS Accounting Transition (mainstream, 6 of 6 peers)
+- **Cyient Ltd** (CYIENT.NS) 2026-11-19 breakout: 1111.0 → 1156.9 (+4.1%, best +6.8%, worst -0.1%) – open
+  - coming: 18 Dec: monthly data: domestic air traffic (DGCA)
+  - build: Q2 FY27 concall positive · M&A: Completed TAO Digital acquisition, integrating ~3,000 employees and platform capabilities
+  - industry: Agentic & Full-Stack AI Integration (scaling, 22 of 53 peers) · Electronic and semiconductor chemicals (from another industry)
+- **Samvardhana Motherson International Ltd** (MOTHERSON.NS) 2026-11-19 breakout: 165.44 → 161.5 (-2.4%, best +1.9%, worst -2.7%) – open
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Geojit: Buy, target Rs 190 (maintain) · Geojit Retail Equity Research: Buy (maintain) · Q2 FY27 concall positive
+  - industry: De-risking Chinese sourcing (from another industry) · Backward Integration and Tech (from another industry)
+  - news_after: 2026-11-21 broker: Choice Broking: Buy, target Rs 180 (initiate)
+- **Mufin Green Finance Ltd** (MUFIN.NS) 2026-11-19 retest: 137.83 → 133.38 (-3.2%, best +0.2%, worst -4.0%) – stopped day 2
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: National Housing Bank: Reclassify affordable housing loans for smaller cities · awaited: Finance Ministry: FICCI seeks manufacturing credit push, tax exemption
+  - build: Q2 FY27 concall positive, delivered on last quarter's promises · Investor deck: Mufin Green Finance delivered robust Q2 FY27 performance, rapidly scaling its digital lending portfolio i
+  - industry: Digital-First Sourcing and AI Underwriting (scaling, spreading: 0 of 3 peers → 4 of 6) · Portfolio Diversification Beyond Core Wheels (scaling, 3 of 6 peers)
+  - flags: the retest came with the news - a reaction, not anticipation
+- **Hero MotoCorp Ltd** (HEROMOTOCO.NS) 2026-11-19 launch: 5556.0 → 5701.0 (+2.6%, best +5.3%, worst -1.4%) – open
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers)
+  - build: Q2 FY27 concall positive · Capacity: Greenfield Global Parts Center 2.0 at Tirupati with over Rs 700 crore capex · Capacity: Doubled VIDA EV manufacturing capacity to 30,000 units/month; targeting over 80,000 units/month by Q2 FY28
+  - industry: EV scaling and profitability (scaling, 4 of 5 peers) · Aggressive premiumization (mainstream, 3 of 5 peers)
+  - news_after: 2026-11-21 pivot: Legal: ITAT reduced tax demand to Rs 27 crore across six assessment years - Lowers contingent tax liability
+- **Wockhardt Ltd** (WOCKPHARMA.NS) 2026-11-19 launch: 2187.0 → 2244.4 (+2.6%, best +4.2%, worst -6.2%) – stopped day 3
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Q4 FY26 concall positive
+  - news_after: 2026-11-20 broker: Geojit Investments: Buy (initiate)
+- **SMS Pharmaceuticals Ltd** (SMSPHARMA.NS) 2026-11-19 retest: 481.35 → 480.5 (-0.2%, best +1.8%, worst -4.1%) – open
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Q2 FY27 concall positive, guidance raised, delivered on last quarter's promises · Investor deck: SMS Pharmaceuticals is delivering strong growth through a high-value product mix and backward integration · Strategy: Peptides R&D facility operational, with pilot-scale production in Q4FY27 and CRO revenue in Q2FY28
+  - industry: Peptides Oligos ADCs expansion (scaling, 11 of 34 peers) · Formulation CDMO integration (scaling, 23 of 34 peers)
+- **JK Cement Ltd** (JKCEMENT.NS) 2026-11-19 breakout: 5320.4 → 5470.3 (+2.8%, best +5.2%, worst -1.1%) – open
+  - coming: 20 Nov: monthly data: core sector output (cement)
+  - build: Q2 FY27 concall positive · Capacity: Commissioned 0.6 million tonne wall putty plant at Nathdwara, taking capacity to 3.65 million tonnes · Strategy: Board approved JK Maxx paint plant of 75,000 KL costing Rs 130 crore
+- **Indian Railway Finance Corporation Ltd** (IRFC.NS) 2026-11-19 breakout: 84.26 → 82.25 (-2.4%, best +1.0%, worst -4.5%) – stopped day 2
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: National Housing Bank: Reclassify affordable housing loans for smaller cities · awaited: Finance Ministry: FICCI seeks manufacturing credit push, tax exemption
+  - build: Q2 FY27 concall positive · Strategy: Diversified lending into metros, ports, renewable energy, and thermal power
+- **Orient Cement Ltd** (ORIENTCEM.NS) 2026-11-19 breakout: 129.23 → 125.12 (-3.2%, best +2.1%, worst -3.4%) – open
+  - coming: 20 Nov: monthly data: core sector output (cement)
+  - build: Q2 FY27 concall positive · M&A: Proposed mergers of ACC and Orient Cement with Ambuja Cements proceeding to NCLT
+  - industry: Inorganic regional cable consolidation (from another industry) · Long term supply agreements (from another industry)
+- **Tata Motors Ltd** (TMCV.NS) 2026-11-19 breakout: 445.85 → 424.95 (-4.7%, best +4.1%, worst -5.6%) – stopped day 4
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers)
+  - build: Ministry of Road Transport and Highways: new PUC validity rules based on emission standards and age (Automotive +) · Strategy: Entered Syria for CV distribution · Jefferies: Reduce (cut target)
+  - flags: the breakout came with the news - a reaction, not anticipation
+  - news_after: 2026-11-26 pivot: Rating: S&P downgraded JLR to BB+ from BBB- - Weaker cash flow and rising debt could de-rate stock · 2026-11-20 policy: Government: launched payment security portal for over 38000 e-buses under PM-eBus Sewa (Electric buses +, Auto
+- **NHPC Ltd** (NHPC.NS) 2026-11-20 breakout: 76.61 → 75.65 (-1.3%, best +0.7%, worst -2.3%) – open
+  - coming: 01 Dec: monthly data: monthly power demand and peak load · 20 Dec: monthly data: core sector output (electricity, coal) · awaited: Ministry of Power: Revised Draft Electricity (Rights of Consumers) Amendment Rules
+  - build: Approval: CERC approves NHPC 1.05 GW FDRE Greenshoe Option · Q2 FY27 concall positive · Capacity: Commissioned 250 MW Subansiri unit; targeting 1,744 MW total capacity addition in FY27
+  - industry: Pumped hydro storage shift (scaling, spreading: 2 of 4 peers → 4 of 6) · Grid transmission curtailment (scaling, spreading: 1 of 4 peers → 5 of 6)
+- **Tech Mahindra Ltd** (TECHM.NS) 2026-11-20 retest: 1746.2 → 1813.9 (+3.9%, best +7.1%, worst +0.6%) – target day 4
+  - build: M&A: Increasing stake in Pininfarina to 92.59% · Q2 FY27 concall positive · Funding: Recommended a bonus share issue in the ratio of 1:1
+  - industry: Agentic & Full-Stack AI Integration (scaling, 22 of 53 peers) · Outcome-Based & Value-Engineering Pricing Models (scaling, 17 of 53 peers)
+  - news_after: 2026-11-23 pivot: Management: 1:1 bonus issue record date fixed - Boost retail liquidity
+- **Smartworks Coworking Spaces Ltd** (SMARTWORKS.NS) 2026-11-20 breakout: 520.3 → 511.85 (-1.6%, best +2.1%, worst -2.5%) – open
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Q2 FY27 concall positive, guidance raised
+- **Gokaldas Exports Ltd** (GOKEX.NS) 2026-11-20 breakout: 757.6 → 793.65 (+4.8%, best +8.1%, worst -3.3%) – open
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: Finance Ministry: Potential fresh US tariffs on Indian goods
+  - build: Q2 FY27 concall positive · Legal: BTPL merger process nearing completion with NCLT judgment reserved and expected within 10 days · Capacity: Plans ₹450–500 crore capex next year as demand outlook improves
+  - industry: De-risking Chinese sourcing (from another industry)
+- **Jammu & Kashmir Bank Ltd** (J&KBANK.NS) 2026-11-20 breakout: 149.73 → 166.39 (+11.1%, best +12.2%, worst -3.0%) – target day 3
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Q2 FY27 concall positive, guidance raised · Funding: Raising Rs 1,000 crore equity and Rs 500 crore debt for capital adequacy
+  - news_after: 2026-11-27 pivot: Legal: Seeks quashing of Rs 8330 crore GST demands - Could eliminate major contingent liability risks · 2026-11-21 broker: Anand Rathi: Buy, target Rs 200 (initiate)
+- **Nelcast Ltd** (NELCAST.NS) 2026-11-20 retest: 146.3 → 147.85 (+1.1%, best +5.7%, worst -2.9%) – open
+  - coming: 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: Finance Ministry: Link motor insurance premiums to traffic violations · awaited: Transport Ministry: Safety standards for e-rickshaws like Bharat NCAP
+  - build: Q2 FY27 concall neutral
+- **Punjab & Sind Bank** (PSB.NS) 2026-11-20 breakout: 22.42 → 21.13 (-5.8%, best +2.3%, worst -6.6%) – stopped day 2
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Results Q2 FY27: net profit Rs 412 cr (+40%) · Q2 FY27 concall positive, guidance raised
+- **TVS Supply Chain Solutions Ltd** (TVSSCS.NS) 2026-11-20 retest: 133.88 → 126.42 (-5.6%, best +0.4%, worst -6.3%) – stopped day 2
+  - coming: 05 Dec: monthly data: port cargo and rail freight volumes · awaited: CBIC: Faceless and centralised CGST assessment framework to reduce jurisdiction-based interactions
+  - build: Q2 FY27 concall positive, delivered on last quarter's promises · M&A: Signed strategic MoU with Japan's Sankyu Inc. for a 0.5% equity stake. · Investor deck: TVS SCS delivered a record Q2 FY27 with robust 38.5% YoY revenue growth and a 50.2% jump in EBITDA, drive
+  - industry: Inorganic regional cable consolidation (from another industry) · Defense & Aerospace Indigenization (from another industry)
+- **Varun Beverages Ltd** (VBL.NS) 2026-11-20 breakout: 427.5 → 424.9 (-0.6%, best +2.7%, worst -1.3%) – open
+  - coming: awaited: Supreme Court: Ruling on salt, sugar, fat warnings on food · awaited: Commerce Ministry: Urges DRI to release confiscated Scotch whisky
+  - build: Q2 FY27 concall positive · M&A: Merger of Twizza with BevCo completed and incorporated KIVA Spirits for alcoholic beverages. · Capacity: India capex for CY27 projected at Rs. 1,000 crore including greenfield plant at Suratgarh.
+  - industry: Backward Integration & Sourcing (from another industry)
+- **Life Insurance Corporation of India** (LICI.NS) 2026-11-20 breakout: 410.7 → 405.4 (-1.3%, best +1.2%, worst -1.6%) – open
+  - coming: 10 Dec: monthly data: monthly premium data (life and general insurers) · awaited: IRDAI: Expert committee set up on distribution reforms · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Q2 FY27 concall positive · Results Q2 FY27: net profit Rs 12,076 cr (+20%) · Emkay: Buy, target Rs 550 (maintain)
+  - industry: Pivot to non-par and protection (scaling, 4 of 4 peers)
+- **Oriental Aromatics Ltd** (OAL.NS) 2026-11-23 breakout: 528.6 → 487.65 (-7.7%, best +1.2%, worst -8.1%) – stopped day 3
+  - coming: awaited: Finance Ministry: proposes antidumping tariffs on PVC suspension from China · awaited: Coal Ministry: Rs 37,500-crore coal gasification initiative to boost synthetic natural gas and methanol
+  - build: Q2 FY27 concall positive · Strategy: Entered into a technical, strategic, and manufacturing arrangement with Unilever Industries Private Limited · Investor deck: Oriental Aromatics posted its highest-ever quarterly revenue in Q2 FY27, supported by broad-based volume 
+  - industry: Electronic and semiconductor chemicals (early, 34 of 35 peers) · Multi-year CRAMS CDMO contracts (mainstream, 6 of 35 peers)
+- **JSW Infrastructure Ltd** (JSWINFRA.NS) 2026-11-23 breakout: 353.55 → 355.5 (+0.6%, best +4.1%, worst -1.0%) – open
+  - coming: awaited: Road Transport Ministry: Higher toll for tampered number plates
+  - build: Strategy: Launching a new SUV with 1100 km range in December · Investor deck: JSW Infrastructure delivered steady H1/Q2 financial growth driven by strong Indian port and logistics vol · Capacity: Rs 9,000 crore capex plan to reach 400 mtpa ports capacity by 2030
+  - news_after: 2026-11-27 broker: HSBC: Reduce (maintain)
+- **Engineers India Ltd** (ENGINERSIN.NS) 2026-11-23 retest: 298.4 → 300.75 (+0.8%, best +1.2%, worst -3.8%) – stopped day 1
+  - build: Q2 FY27 concall positive · Capacity: Implementing a Compressed Biogas (CBG) plant with own investment and entering nuclear energy
+  - industry: CBG and LNG Infrastructure Expansion (from another industry)
+- **Can Fin Homes Ltd** (CANFINHOME.NS) 2026-11-23 breakout: 796.4 → 795.3 (-0.1%, best +0.9%, worst -3.8%) – stopped day 1
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: National Housing Bank: Reclassify affordable housing loans for smaller cities · awaited: Finance Ministry: FICCI seeks manufacturing credit push, tax exemption
+  - build: Investor deck: Can Fin Homes reported strong Q2 FY27 PAT growth of 10% YoY to Rs 275 crore despite temporary disbursemen · Strategy: Completed IT transformation Project Tejas, shifting towards 60% direct sourcing and digital channels by 2028. · Q2 FY27 concall mixed
+- **Dabur India Ltd** (DABUR.NS) 2026-11-23 breakout: 399.0 → 412.75 (+3.4%, best +8.7%, worst +0.6%) – target day 1
+  - coming: awaited: Supreme Court: Ruling on salt, sugar, fat warnings on food · awaited: Finance Ministry: review 40 percent GST on beverages to provide relief to low-priced products
+  - build: Q2 FY27 concall mixed · M&A: Sesa integration starts Dec 1, 2026, retrospective from April 1 · Results Q2 FY27: net profit Rs 499 cr (+12%)
+  - industry: Quick commerce channel adoption for innerwear/essentials (from another industry) · Inorganic regional cable consolidation (from another industry)
+- **Hi-Tech Pipes Ltd** (HITECH.NS) 2026-11-23 launch: 85.63 → 82.96 (-3.1%, best +2.8%, worst -5.4%) – open
+  - coming: 01 Dec: monthly data: monthly production / sales updates (Coal India, NMDC, steel makers) · 20 Dec: monthly data: core sector output (steel, coal) · awaited: Rajasthan govt: Fast-track operationalising auctioned mines
+  - build: Q2 FY27 concall positive · Capacity: Targeting 2 million tons capacity by FY29 with INR150-200 crore annual capex · Investor deck: Hi-Tech Pipes delivered strong H1 FY27 growth, achieving a 1 million-ton capacity milestone while aggress
+- **Chalet Hotels Ltd** (CHALET.NS) 2026-11-23 launch: 869.25 → 859.55 (-1.1%, best +3.1%, worst -2.2%) – open
+  - coming: 18 Dec: monthly data: domestic air traffic (DGCA)
+  - build: Capacity: Scaling up hospitality portfolio to 5425 keys in five years · Axis Securities: Buy (maintain) · Investor deck: Chalet Hotels is transitioning into a hybrid hospitality platform, scaling its portfolio to ~5,500 keys b
+- **Aster DM Quality Care Ltd** (ASTERDM.NS) 2026-11-23 breakout: 790.35 → 756.85 (-4.2%, best +1.6%, worst -4.8%) – stopped day 2
+  - coming: awaited: NHA: Expand AB-PMJAY packages for public hospitals from 23 to 112
+  - build: M&A: In talks to acquire rival hospitals · Q2 FY27 concall positive · Capacity: Expanding total bed capacity from 10,840 to over 15,000 beds via 4,230-bed pipeline
+  - industry: Senior Care Expansion (from another industry)
+- **Tata Capital Ltd** (TATACAP.NS) 2026-11-25 breakout: 351.6 → 340.1 (-3.3%, best +0.5%, worst -3.5%) – stopped day 2
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: Clarification on selling stressed gold loans to ARCs · awaited: RBI: consider new restrictions preventing PE firms from controlling multiple NBFCs
+  - build: Ambit Capital: Buy, target Rs 463 (maintain) · Q2 FY27 concall positive · Funding: Planned a capital raise for the second half of FY28 based on growth trajectories.
+- **Rubicon Research Ltd** (RUBICON.NS) 2026-11-25 breakout: 1711.6 → 1869.3 (+9.2%, best +9.8%, worst -0.8%) – target day 1
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Q2 FY27 concall positive, guidance raised · M&A: Arinna Lifesciences acquisition consolidated, contributing Rs 19.4 crore to revenue in Q2. · Results Q2 FY27: net profit Rs 90 cr (+68%)
+  - industry: Formulation CDMO integration (scaling, 23 of 34 peers)
+- **Action Construction Equipment Ltd** (ACE.NS) 2026-11-25 breakout: 1190.35 → 1325.7 (+11.4%, best +11.7%, worst -0.9%) – target day 1
+  - coming: awaited: Tamil Nadu govt: New Industrial Policy under preparation, expected ready by January 2027
+  - build: Q2 FY27 concall positive, guidance initiated, delivered on last quarter's promises · Order: Secured large order for backhoe loaders from Border Roads Organisation, boosting defense portfolio.
+  - industry: Defense & Aerospace Indigenization (scaling, 14 of 39 peers)
+- **Aditya Infotech Ltd** (CPPLUS.NS) 2026-11-25 breakout: 4204.7 → 4307.2 (+2.4%, best +2.7%, worst -0.5%) – open
+  - coming: awaited: US Govt: Proposed 25% tariff on Indian goods · awaited: Finance Ministry: Dedicated financing framework for manufacturing
+  - build: Q2 FY27 concall positive, guidance raised, delivered on last quarter's promises · Capacity: Plans to more than double manufacturing capacity via Kadapa Phase III and Greater Noida plants · M&A: Acquired 30% stake in BLUE to integrate proprietary video-compression IP
+  - industry: De-risking Chinese sourcing (from another industry) · Electronic and semiconductor chemicals (from another industry)
+- **Corona Remedies Ltd** (CORONA.NS) 2026-11-25 retest: 2394.7 → 2283.7 (-4.6%, best +0.0%, worst -5.2%) – open
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Q2 FY27 concall positive
+  - industry: Backward Integration & Sourcing (from another industry)
+- **Bajaj Finserv Ltd** (BAJAJFINSV.NS) 2026-11-25 launch: 1925.0 → 1849.0 (-3.9%, best +0.6%, worst -4.3%) – stopped day 1
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI)
+  - build: Strategy: Invested ₹2,500 crore in healthcare venture Nivara across formats · Funding: Invests 37.2 crore in AI startup Soket AI · Q2 FY27 concall positive
+  - industry: AI Opex Optimization (mainstream, 1 of 6 peers) · Format rationalization towards larger EBOs (from another industry)
+- **Bosch Ltd** (BOSCHLTD.NS) 2026-11-25 retest: 49130.0 → 49170.0 (+0.1%, best +0.4%, worst -1.1%) – open
+  - coming: 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: Finance Ministry: Link motor insurance premiums to traffic violations · awaited: Transport Ministry: Safety standards for e-rickshaws like Bharat NCAP
+  - build: Q2 FY27 concall mixed · Investor deck: Bosch Limited reported strong Q2 FY27 growth driven by robust automotive demand, particularly in Power So · Results Q2 FY27: 
+  - industry: Long term supply agreements (from another industry)
+- **Jammu & Kashmir Bank Ltd** (J&KBANK.NS) 2026-11-25 launch: 155.32 → 166.39 (+7.1%, best +8.2%, worst -0.0%) – open
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: RBI: expand bank negligence definition in digital frauds · awaited: RBI: trusted person sign-off for electronic transfers
+  - build: Anand Rathi: Buy, target Rs 200 (initiate) · Q2 FY27 concall positive, guidance raised · Funding: Raising Rs 1,000 crore equity and Rs 500 crore debt for capital adequacy
+  - news_after: 2026-11-27 pivot: Legal: Seeks quashing of Rs 8330 crore GST demands - Could eliminate major contingent liability risks
+- **Grasim Industries Ltd** (GRASIM.NS) 2026-11-25 breakout: 3162.0 → 3124.2 (-1.2%, best +1.9%, worst -1.6%) – open
+  - build: Q2 FY27 concall mixed, delivered on last quarter's promises · Capacity: Commissioned 50,000 TPA Epichlorohydrin plant in Gujarat · Results Q2 FY27: net profit Rs 2,306 cr (+186%)
+  - industry: De-risking Chinese sourcing (from another industry) · B2B EV Charging Pivot (from another industry)
+- **Max Financial Services Ltd** (MFSL.NS) 2026-11-25 breakout: 1444.0 → 1425.0 (-1.3%, best +2.6%, worst -1.9%) – open
+  - coming: 10 Dec: monthly data: monthly premium data (life and general insurers) · awaited: IRDAI: Expert committee set up on distribution reforms · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Q2 FY27 concall positive
+  - industry: Pivot to non-par and protection (scaling, 4 of 4 peers) · AI Opex Optimization (from another industry)
+- **Star Health and Allied Insurance Company Ltd** (STARHEALTH.NS) 2026-11-25 breakout: 568.95 → 570.45 (+0.3%, best +1.1%, worst -1.2%) – open
+  - coming: 10 Dec: monthly data: monthly premium data (life and general insurers) · awaited: IRDAI: Expert committee set up on distribution reforms · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Legal: IRDAI imposed Rs 2 crore penalty · Strategy: Targeting 24000 gross written premium by FY27 · Q2 FY27 concall positive
+  - industry: Digital D2C and GenAI Scaling (scaling, spreading: 1 of 3 peers → 3 of 6) · Ind AS Accounting Transition (mainstream, 6 of 6 peers)
+- **Hubtown Ltd** (HUBTOWN.NS) 2026-11-25 breakout: 194.2 → 214.54 (+10.5%, best +15.1%, worst -1.3%) – open
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Investor deck: Hubtown Ltd. reported strong revenue growth for Q2 and H1 FY2027 alongside progressing corporate restruct · Strategy: Advancing three Schemes of Arrangement to merge entities and consolidate promoter residential assets. · Q1 FY27 concall positive
+- **Tilaknagar Industries Ltd** (TI.NS) 2026-11-25 breakout: 558.3 → 536.85 (-3.8%, best +0.7%, worst -4.0%) – stopped day 2
+  - coming: awaited: Supreme Court: Ruling on salt, sugar, fat warnings on food · awaited: Commerce Ministry: Urges DRI to release confiscated Scotch whisky
+  - build: Q2 FY27 concall positive · M&A: Invested Rs 22 crore for 30% stake in Black Tiger Distilleries (Tequila maker)
+  - news_after: 2026-11-26 pivot: Rating: Crisil rating upgraded to A from A- with positive outlook - Reflects stronger credit profile following
+- **Unimech Aerospace and Manufacturing Ltd** (UNIMECH.NS) 2026-11-26 breakout: 1759.4 → 1848.9 (+5.1%, best +6.3%, worst +0.0%) – open
+  - coming: awaited: Defence Ministry: Plans to buy 76 military helicopters · awaited: PMO: Deepen R&D collaboration with private players
+  - build: Choice Institutional Equities: Buy (maintain) · Results Q2 FY27: net profit Rs 32 cr (+102%) · Q2 FY27 concall positive
+  - industry: Long term supply agreements (scaling, 5 of 5 peers) · Multi industry precision platforms (scaling, 4 of 5 peers)
+  - flags: the breakout came with the news - a reaction, not anticipation
+- **Jyoti CNC Automation Ltd** (JYOTICNC.NS) 2026-11-26 breakout: 1050.35 → 1058.65 (+0.8%, best +3.1%, worst -0.3%) – open
+  - coming: awaited: Tamil Nadu govt: New Industrial Policy under preparation, expected ready by January 2027
+  - build: Q2 FY27 concall positive · Approval: Received PLI (ECMS) approval for Rs 1,020 crore investment with ~Rs 255 crore subsidy · Capacity: Scaling foundry capacity from 1,500 to 5,000 tonnes per month using new vacuum casting
+  - industry: Defense & Aerospace Indigenization (scaling, 14 of 39 peers) · Deep Backward Integration into Foundries & Mining (scaling, 10 of 39 peers)
+- **IIFL Capital Services Ltd** (IIFLCAPS.NS) 2026-11-26 breakout: 346.15 → 346.8 (+0.2%, best +0.5%, worst -1.2%) – open
+  - coming: 30 Nov: company said due: M&A: Received approvals for Fairfax 51% acquisition, closure expected in November 2026. · 10 Dec: monthly data: mutual fund flows and SIP inflows (AMFI) · awaited: RBI: Allow online brokerages to offer retail investors access to trade government securities
+  - build: M&A: Fairfax India completes acquisition of additional equity interest · M&A: Fairfax-backed FIH Mauritius buys 11.8% stake for Rs 1,540 crore · Q2 FY27 concall positive
+- **Smartworks Coworking Spaces Ltd** (SMARTWORKS.NS) 2026-11-26 breakout: 518.85 → 511.85 (-1.3%, best +2.4%, worst -2.3%) – open
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Q2 FY27 concall positive, guidance raised
+- **Ceigall India Ltd** (CEIGALL.NS) 2026-11-26 breakout: 381.5 → 377.95 (-0.9%, best +0.4%, worst -2.2%) – open
+  - coming: 01 Dec: monthly data: monthly power demand and peak load
+  - build: Q2 FY27 concall positive · Results Q2 FY27:  · Investor deck: Ceigall India Ltd delivered strong financial growth in Q2 and H1 FY27, bolstered by robust execution in i
+  - industry: Diversification to New Verticals (from another industry) · Renewable & BESS Expansion (from another industry)
+- **Jupiter Wagons Ltd** (JWL.NS) 2026-11-26 launch: 238.69 → 224.84 (-5.8%, best -3.0%, worst -7.7%) – stopped day 1
+  - build: Capacity: Targeting ₹8,000-10,000 crore revenue by FY30 with expanded passenger rail and propulsion · Strategy: Joint venture to manufacture metro coaches and propulsion systems · Order Rs 129 cr from JSW Rail Logistics
+  - industry: Backward Integration and Tech (scaling, 5 of 7 peers) · Green Energy and Passenger Rail (scaling, 6 of 7 peers)
+  - flags: the breakout came with the news - a reaction, not anticipation
+- **Sobha Ltd** (SOBHA.NS) 2026-11-26 breakout: 1289.8 → 1286.3 (-0.3%, best +1.8%, worst -1.3%) – open
+  - coming: awaited: SEBI: Reduce REIT and InvIT listing timelines to three days · awaited: Odisha govt: Allow more commercial use in residential areas
+  - build: Capacity: Prepares new launches with Rs 13,000 crore inventory · Rating: Credit rating upgraded to IND AA by India Ratings · Q1 FY27 concall positive
+- **Can Fin Homes Ltd** (CANFINHOME.NS) 2026-11-26 breakout: 786.2 → 795.3 (+1.2%, best +1.8%, worst -1.2%) – open
+  - coming: 28 Nov: monthly data: sector-wise bank credit (RBI) · awaited: National Housing Bank: Reclassify affordable housing loans for smaller cities · awaited: Finance Ministry: FICCI seeks manufacturing credit push, tax exemption
+  - build: Investor deck: Can Fin Homes reported strong Q2 FY27 PAT growth of 10% YoY to Rs 275 crore despite temporary disbursemen · Strategy: Completed IT transformation Project Tejas, shifting towards 60% direct sourcing and digital channels by 2028. · Q2 FY27 concall mixed
+- **Wockhardt Ltd** (WOCKPHARMA.NS) 2026-11-26 launch: 2233.7 → 2244.4 (+0.5%, best +2.0%, worst -1.2%) – open
+  - coming: awaited: Health Ministry: Proposes Good Distribution Practice rules for drug licensees · awaited: Health Ministry: Include antimicrobials in new drug definition
+  - build: Geojit Investments: Buy (initiate) · Q4 FY26 concall positive
+- **Kajaria Ceramics Ltd** (KAJARIACER.NS) 2026-11-26 breakout: 1223.4 → 1205.3 (-1.5%, best +1.8%, worst -2.0%) – open
+  - coming: 20 Dec: monthly data: core sector output (cement)
+  - build: Nuvama:  (raise target) · Q2 FY27 concall positive · Capacity: Srikalahasti capacity expansion increased to 12.5 million square meters with INR 240 crores capex.
+  - industry: Long-term Gas Sourcing Hedging (from another industry)
+- **Computer Age Management Services Ltd** (CAMS.NS) 2026-11-26 breakout: 745.9 → 740.0 (-0.8%, best +1.8%, worst -1.4%) – open
+  - coming: 10 Dec: monthly data: mutual fund flows and SIP inflows (AMFI) · awaited: RBI: Allow online brokerages to offer retail investors access to trade government securities · awaited: SEBI: remove additional disclosure framework for foreign portfolio investors
+  - build: -: Buy, target Rs 810 (raise target) · Q2 FY27 concall positive
+- **Menon Bearings Ltd** (MENONBE.NS) 2026-11-26 breakout: 300.6 → 302.8 (+0.7%, best +5.1%, worst -0.9%) – open
+  - coming: 01 Dec: monthly data: monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) · 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Q2 FY27 concall positive · Capacity: Planned ~INR 9 crores total capex in Alkop and Bearings for automation and AI
+- **Shaily Engineering Plastics Ltd** (SHAILY.NS) 2026-11-26 launch: 3379.6 → 3350.5 (-0.9%, best +1.2%, worst -4.0%) – open
+  - build: Q2 FY27 concall positive · Product: Launched "Toby Reusable" 2-step auto-injector for next-gen GLP-1 therapies · Capacity: Abu Dhabi facility construction on track for completion by end of FY28
+  - industry: Electronic and semiconductor chemicals (from another industry)
+- **Aether Industries Ltd** (AETHER.NS) 2026-11-26 breakout: 1700.8 → 1761.4 (+3.6%, best +4.1%, worst -1.2%) – open
+  - coming: awaited: Finance Ministry: proposes antidumping tariffs on PVC suspension from China · awaited: Coal Ministry: Rs 37,500-crore coal gasification initiative to boost synthetic natural gas and methanol
+  - build: Capacity: Aether Industries will build a gearbox plant in India · Q2 FY27 concall positive · Capacity: Capitalizing INR400 crore of CWIP and executing INR350-370 crore FY27 capex
+  - industry: Electronic and semiconductor chemicals (early, 34 of 35 peers) · Multi-year CRAMS CDMO contracts (mainstream, 6 of 35 peers)
+- **Gala Precision Engineering Ltd** (GALAPREC.NS) 2026-11-26 breakout: 1127.5 → 1164.1 (+3.2%, best +4.7%, worst +0.0%) – open
+  - coming: 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · 01 Dec: monthly data: monthly power demand and peak load · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Investor deck: Gala Precision reported strong H1 FY27 performance, underpinned by its diversified precision engineering  · Q2 FY27 concall positive · Capacity: Commissioned a >1.2 MW open-access solar power plant at Nanded, Maharashtra
+  - flags: the breakout came with the news - a reaction, not anticipation
+- **Power Grid Corporation of India Ltd** (POWERGRID.NS) 2026-11-27 breakout: 268.2 → 268.2 (+0.0%, best +0.0%, worst +0.0%) – open
+  - coming: 01 Dec: monthly data: monthly power demand and peak load · 20 Dec: monthly data: core sector output (electricity, coal) · awaited: Ministry of Power: Revised Draft Electricity (Rights of Consumers) Amendment Rules
+  - build: Results Q2 FY27: net profit Rs 3,866 cr (+8%) · Order Rs 100 cr · Capacity: Reconductoring 400 kV transmission line using HTLS conductors
+  - industry: Expansion into Battery Energy Storage Systems (from another industry) · Renewable & BESS Expansion (from another industry)
+  - flags: the breakout came with the news - a reaction, not anticipation
+- **Deepak Fertilisers & Petrochemicals Corporation Ltd** (DEEPAKFERT.NS) 2026-11-27 breakout: 1446.9 → 1446.9 (+0.0%, best +0.0%, worst +0.0%) – open
+  - coming: awaited: Finance Ministry: FY27 fertiliser subsidy estimated at Rs 250000 crore · awaited: Centre: fertiliser subsidy sharing model considered amid rising costs
+  - build: Q2 FY27 concall positive, missed on last quarter's promises · Capacity: Dahej nitric acid and Gopalpur TAN projects ~98% complete, commercial production in Q4 FY27. · M&A: Chardham Chemicals acquisition undergoing revamping, bottom-line contributions expected in H2 FY28.
+  - industry: Diversification into industrial chemicals (scaling, spreading: 2 of 3 peers → 5 of 6) · In-House Sourcing and Co-Lending Wind-Down (from another industry)
+- **Texmaco Rail & Engineering Ltd** (TEXRAIL.NS) 2026-11-27 breakout: 124.85 → 124.85 (+0.0%, best +0.0%, worst +0.0%) – open
+  - build: Order: Secured ₹56 crore order for 108 wagons · Order Rs 56 cr from Utkal Alumina International · Order Rs 3 cr from Eastern Railway
+  - industry: Private and Export Pivot (scaling, 2 of 7 peers) · Green Energy and Passenger Rail (scaling, 6 of 7 peers)
+  - flags: the breakout came with the news - a reaction, not anticipation
+- **MM Forgings Ltd** (MMFL.NS) 2026-11-27 breakout: 631.65 → 631.65 (+0.0%, best +0.0%, worst +0.0%) – open
+  - coming: 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · awaited: Finance Ministry: Link motor insurance premiums to traffic violations · awaited: Transport Ministry: Safety standards for e-rickshaws like Bharat NCAP
+  - build: Q2 FY27 concall positive, guidance raised, missed on last quarter's promises · M&A: DVS Industries merged into MM Forgings, consolidating operations and results · Capacity: Total capacity increased to 130,000 tonnes following the addition of a 4,000-ton press
+- **Gala Precision Engineering Ltd** (GALAPREC.NS) 2026-11-27 retest: 1164.1 → 1164.1 (+0.0%, best +0.0%, worst +0.0%) – open
+  - coming: 01 Dec: monthly data: vehicle makers' monthly sales (demand read-through for suppliers) · 01 Dec: monthly data: monthly power demand and peak load · awaited: Finance Ministry: Link motor insurance premiums to traffic violations
+  - build: Investor deck: Gala Precision reported strong H1 FY27 performance, underpinned by its diversified precision engineering  · Q2 FY27 concall positive · Capacity: Commissioned a >1.2 MW open-access solar power plant at Nanded, Maharashtra
+  - flags: the retest came with the news - a reaction, not anticipation
