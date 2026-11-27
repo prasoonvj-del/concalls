@@ -5,9 +5,15 @@ name: Setup research (by hand)
 on:
   workflow_dispatch:
     inputs:
-      start:
-        description: "First signal day (YYYY-MM-DD)"
-        default: "2026-11-03"
+      side:
+        description: "long or short"
+        default: "long"
+      universe:
+        description: "all (Market Desk) or fno"
+        default: "all"
+      period:
+        description: "Price history (Yahoo period: 2y, 5y)"
+        default: "2y"
 
 permissions:
   contents: write
@@ -30,7 +36,9 @@ jobs:
       - run: pip install -r requirements.txt yfinance
       - name: Back-test
         env:
-          START: ${{ inputs.start || '2026-11-03' }}
+          SIDE: ${{ inputs.side || 'long' }}
+          UNIVERSE: ${{ inputs.universe || 'all' }}
+          PERIOD: ${{ inputs.period || '2y' }}
           PYTHONUNBUFFERED: "1"
         run: python tools/research_setups.py
       - name: Keep the results on the 'research' branch

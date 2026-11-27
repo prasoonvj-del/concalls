@@ -38,10 +38,33 @@ def weekly(rows):
     return w
 
 
+def mirror(rows):
+    """Prices turned upside down (10,000 / price): a fall becomes a rise of about the same %, so the long-side rules
+    (cloud breakout, launch, retest, relative strength) read the short side unchanged. Volume and dates stay."""
+    return [[r[0], 1e4 / r[1], 1e4 / r[3], 1e4 / r[2], 1e4 / r[4], r[5]] for r in rows if min(r[1:5]) > 0]
+
+
+def fno_symbols():
+    import csv
+    import io
+    import requests
+    t = requests.get("https://public.fyers.in/sym_details/NSE_FO.csv", timeout=60).text
+    return {c[13].strip() for c in csv.reader(io.StringIO(t)) if len(c) > 13 and c[13].strip()}
+
+
 def main():
+    import os
+    side = os.getenv("SIDE", "long")
     cos = BT.why()
     ymap = BT.tickers(set(cos))
+    if os.getenv("UNIVERSE") == "fno":
+        fo = fno_symbols()
+        ymap = {k: v for k, v in ymap.items() if v.endswith(".NS") and v[:-3] in fo}
+        cos = {k: v for k, v in cos.items() if k in ymap}
+        print("F&O companies:", len(ymap), flush=True)
     px = BT.prices(list(ymap.values()) + ["^NSEI"])
+    if side == "short":
+        px = {k: mirror(v) for k, v in px.items()}
     nifty = px.get("^NSEI") or []
     nI = scanner.indicators(nifty)
     n_date = {datetime.fromtimestamp(r[0], IST).date(): k for k, r in enumerate(nifty)}
@@ -148,7 +171,8 @@ def main():
             }
             sigs.append(f)
     OUT.mkdir(exist_ok=True)
-    (OUT / "signals.json").write_text(json.dumps({"at": datetime.now(IST).isoformat(), "signals": sigs}))
+    (OUT / f"signals{'_' + side if side != 'long' else ''}{'_fno' if os.getenv('UNIVERSE') == 'fno' else ''}.json").write_text(
+        json.dumps({"at": datetime.now(IST).isoformat(), "side": side, "signals": sigs}))
     print("signals:", len(sigs))
 
 

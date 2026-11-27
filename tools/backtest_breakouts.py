@@ -64,7 +64,7 @@ def prices(symbols):
     syms = list(dict.fromkeys(symbols))
     for k in range(0, len(syms), 150):
         part = syms[k:k + 150]
-        df = yf.download(part, period="2y", interval="1d", auto_adjust=False, group_by="ticker", progress=False, threads=True)
+        df = yf.download(part, period=os.getenv("PERIOD", "2y"), interval="1d", auto_adjust=False, group_by="ticker", progress=False, threads=True)
         for s in part:
             try:
                 d = df[s] if len(part) > 1 else df
