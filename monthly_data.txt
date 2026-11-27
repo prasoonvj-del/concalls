@@ -2,7 +2,7 @@
 # One per line:  Sector | day of month (approximate) | what comes out | (optional) words: also for any company whose
 # own concall / news talks about them, whatever its sector (e.g. an engine maker that also sells electric scooters)
 # Sector names as on Market Desk. Days are typical release days; the alert says "around".
-Automobiles | 1 | monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) | two-wheeler, two wheeler, e-scooter, electric scooter, electric vehicle, tractor, passenger vehicle, commercial vehicle
+Automobiles | 1 | monthly vehicle sales from the makers, and Vahan registrations (incl. EV two-wheelers) | two-wheeler, two wheeler, e-scooter, electric scooter, electric vehicle, ev, evs, e-2w, e-3w, 2w, 3w, electric mobility, tractor, passenger vehicle, commercial vehicle
 Auto Components | 1 | vehicle makers' monthly sales (demand read-through for suppliers)
 Metals & Mining | 1 | monthly production / sales updates (Coal India, NMDC, steel makers)
 Metals & Mining | 20 | core sector output (steel, coal)

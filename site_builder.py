@@ -202,7 +202,7 @@ def why_file(tl, stories):
         seen_ = set()
         for sec_, rows_ in monthly.items():  # its sector's monthly data, or another sector's it clearly talks about
             for d, t, kws in rows_:
-                if (sec_ == sector or any(k in text for k in kws)) and t not in seen_:
+                if (sec_ == sector or sum(len(re.findall(r"(?<![a-z0-9])" + re.escape(k) + r"(?![a-z0-9])", text)) for k in kws) >= 3) and t not in seen_:
                     seen_.add(t)
                     out_.append([d.isoformat(), "data", "around this date: " + t])
         words = {w for w in re.findall(r"[a-z]{4,}", (sector + " " + industry).lower())} - GENERIC
