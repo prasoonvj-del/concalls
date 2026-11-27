@@ -28,12 +28,39 @@ IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 STORE = C.DATA / "backstories.json"
 FAILS = C.DATA / "backstory_fails.json"  # companies whose answer came back incomplete today
 REFRESH_DAYS = 45
-ALLOWANCE = {"full": (6, 12), "news": (2, 6), "request": (5, 10),  # (companies, minutes) per update
-             "build-full": (16, 18), "build-news": (8, 10)}  # build season (season.py): the rest, several times faster
+ALLOWANCE = {"full": (6, 20), "news": (2, 10), "request": (5, 15),  # (companies, minutes) per update
+             "build-full": (12, 30), "build-news": (5, 15)}  # (two stages: research, then the best writer - slower)  # build season (season.py): the rest, several times faster
 
-PROMPT = """Research the Indian listed company {company} (BSE {code}{sym}, sector: {sector}) using web search: its annual
-reports and investor presentations, results, management commentary, capacity / order / product / legal /
-regulatory news, competition and analyst views from {start} to today. Write two parts.
+# Two stages since 27 Nov 2026 (v6): a web-searching model only GATHERS sourced facts (it is good at finding, weak at
+# judgement), then the best writer we have (Pool(quality=True): Nemotron 3 Ultra, Gemini full) writes from that evidence
+# plus our own records. If no full-quality writer is free, the company waits for the next update - never a weaker story.
+RESEARCH = """Research the Indian listed company {company} (BSE {code}{sym}, sector: {sector}) on the web: annual reports,
+investor presentations, results, management commentary, credible news (business papers, exchange filings, rating
+agencies) and analyst views, from {start} to today. Do NOT write a story - gather facts only.
+
+Return a FACT SHEET in Markdown bullets, every bullet with its month/year and source site in brackets, e.g.
+"- Mar 2025: commissioned 5,000 tpa plant at Dahej, taking capacity to 12,000 tpa [company deck]".
+Sections:
+### Business
+segments and their share of revenue, products, key customers / end markets, export share, latest annual revenue and
+profit, capacity and plants / network, order book if any
+### Industry and position
+how the industry works, market share or rank, the main listed competitors, what is hard to copy (cost, approvals,
+technology, brand, contracts, distribution)
+### What happened, {start} to today (time order)
+capacity coming on stream, approvals, big orders won or lost, new products, competition (imports, dumping, new
+entrants), raw-material or price cycles, demand shifts, regulation and government schemes, management or governance
+changes, capex / M&A / fund-raising, guidance changes, results that surprised
+### Risks and views
+specific risks; what analysts / rating agencies said
+Only facts you found, with numbers where available. Leave out anything you are not sure of. 30-60 bullets."""
+
+PROMPT = """Write about the Indian listed company {company} (BSE {code}{sym}, sector: {sector}) for an investor, from {start}
+to today, using ONLY the material below - research notes gathered from the web (with their sources), the real share
+price, our concall notes and our own dated record. Do not add facts that are not in this material. Write two parts.
+
+Research notes from the web:
+{facts}
 
 The REAL weekly share price (use these numbers for price moves, not numbers from the web):
 {price}
@@ -79,7 +106,7 @@ mechanism, effect on the numbers (stock move))
 ### News that moves this stock
 (2-3 bullets: the kind of announcement to watch for next, e.g. "large defence orders", "USFDA clearances")
 
-End with one line: Sources: <3-5 site names you used>
+End with one line: Sources: <3-5 site names from the research notes that you relied on>
 """
 
 
@@ -424,7 +451,7 @@ def step(mode="full"):
             return True
         if not s1 or s1.get("v", 1) < 4:  # v4 = written with web search
             return True
-        if s1.get("v", 4) < 5 and s1.get("status") == "ok":  # v5 = business profile + business-led story
+        if s1.get("v", 4) < 6 and s1.get("status") == "ok":  # v6 = researched facts, written by the best writer
             return True
         if s1.get("status") == "no-price":
             return (today - dt.date.fromisoformat(s1["at"])).days > 20
@@ -443,7 +470,7 @@ def step(mode="full"):
     if not todo:
         say("  story so far: nothing waiting")
         return
-    say(f"\nWriting 'the story so far' (web-searched): {len(todo)} waiting, up to {n_max} this update ...")
+    say(f"\nWriting 'the story so far' (web research, then the best writer): {len(todo)} waiting, up to {n_max} this update ...")
     from trackers import _session
     sess = _session()
     deadline = time.time() + minutes * 60
@@ -469,26 +496,50 @@ def step(mode="full"):
             continue
         moves = big_moves(pts)
         notes = concall_notes(lib, code)
-        body = PROMPT.format(company=c["company"], code=code, sym=f", {sym}" if not sym[0].isdigit() else "",
-                             sector=lib["sectors"].get(code, "") or "-", start=start, price=price_text(pts, moves),
-                             concalls="\n".join(notes[-4:]) or "(none)", record=_record(code, c["company"]))
-        src, text = "", None
+        latest_md = ""
+        if c.get("summary"):
+            try:
+                latest_md = C.here(c["summary"]).read_text(encoding="utf-8").split("\n---\n")[0][:7000]
+            except OSError:
+                pass
+        args = dict(company=c["company"], code=code, sym=f", {sym}" if not sym[0].isdigit() else "",
+                    sector=lib["sectors"].get(code, "") or "-", start=start)
+        # stage 1: sourced facts from the web
+        research = RESEARCH.format(**args)
+        src, facts = "", None
         if not _working.get("gemini_off"):
             try:
-                text, src, used = ask_gemini_search(body)
+                facts, src, used = ask_gemini_search(research)
             except C.AIError as e:
                 say(f"  Gemini search: {str(e)[:160]} - using Groq's web search")
-        if text is None:
+        if facts is None:
             if ai is None:
                 break
             try:
-                text, used = ask_compound(ai, body), COMPOUND
+                facts, used = ask_compound(ai, research), COMPOUND
             except C.QuotaOver as e2:
                 say(f"  {e2}")
                 break
             except C.AIError as e2:
                 say(f"  {c['company']}: {str(e2)[:140]}")
                 continue
+        facts = re.sub(r"【[^】]*】", "", facts)
+        if len(facts) < 600:
+            say(f"  {c['company']}: too little found on the web - trying again tomorrow")
+            fails[code] = today.isoformat()
+            FAILS.write_text(json.dumps(fails), encoding="utf-8")
+            continue
+        # stage 2: the best writer, from the evidence only
+        concalls = ("Latest concall summary (" + (c.get("quarter") or "") + "):\n" + latest_md + "\n\nEarlier quarters:\n"
+                    if latest_md else "") + ("\n".join(notes[-4:]) or "(none)")
+        body = PROMPT.format(**args, facts=facts[:14000], price=price_text(pts, moves), concalls=concalls,
+                             record=_record(code, c["company"]))
+        try:
+            text, wai = C.Pool(quality=True).ask(body, label="story so far")
+            used = f"{used} (research) + {wai.model}"
+        except C.AIError as e2:
+            say(f"  {c['company']}: no full-quality writer free ({str(e2)[:100]}) - the rest wait for the next update")
+            break
         text = re.sub(r"【[^】]*】", "", text)  # inline citation markers from the search tool
         text = re.sub(r"\[\d+(?:†[^\]]*)?\]", "", text)
         m = re.search(r"(?im)^\**sources?:?\**\s*(.+)$", text)
@@ -517,7 +568,7 @@ def step(mode="full"):
             text = text.replace(m.group(0), "")
         store[code] = {"status": "ok", "at": today.isoformat(), "call_date": c["date"], "company": c["company"], "sym": sym,
                        "one": one, "html": C.md(text), "biz": C.md(biz) if biz else "", "pts": pts, "moves": moves,
-                       "sources": src[:300], "v": 5,
+                       "sources": src[:300], "v": 6,
                        "model": used}
         made += 1
         STORE.write_text(json.dumps(store, ensure_ascii=False), encoding="utf-8")
