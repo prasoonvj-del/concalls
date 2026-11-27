@@ -61,6 +61,15 @@ def unit_fix(text, transcript):
 
     def sub(m):
         num = m.group(2)
+        # only distinctive figures: a round "Rs 25 crore" can match an unrelated "25 lakh" elsewhere in the call
+        sig = num.replace(",", "").replace(".", "").lstrip("0")
+        if len(sig) < 3:
+            return m.group(0)
+        # the line already gives the other unit ("Rs 49.69 crore (Rs 4,968.76 lakh)"): the model converted it itself
+        ls = body.rfind("\n", 0, m.start()) + 1
+        le = body.find("\n", m.end())
+        if re.search(r"\blakhs?\b|\blacs?\b|\bmillions?\b|\bmn\b|\bbillions?\b", body[ls:le if le >= 0 else None], re.I):
+            return m.group(0)
         units = units_in_transcript(num, transcript)
         if not units or any(u.startswith("cr") or u == "foreign" for u in units):
             return m.group(0)

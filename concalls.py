@@ -488,6 +488,11 @@ class AI:
 
 
 BUILD = False  # build season (season.py): the allowance goes to completing the site, not to keeping up
+# Free models that matched Gemini's full model on the same concalls (tools/compare_models.py, 27 Nov 2026), used only
+# in build season once Gemini's full models are used up for the day. NVIDIA direct first (it was the more exact and has
+# no daily cap), then the same model through OpenRouter (50 a day). Kimi, GLM and Mistral Large timed out: not listed.
+QUALITY_BACKUPS = [("nvidia", "nvidia/nemotron-3-ultra-550b-a55b"),
+                   ("openrouter", "nvidia/nemotron-3-ultra-550b-a55b:free")]
 
 
 class Pool:
@@ -503,15 +508,16 @@ class Pool:
             self.chain, self.down, self.pause = [self.primary], {}, self.primary.pause
             self.mistral = self.backup = self.sambanova = None
             self.primary.patient = True
-            if BUILD:  # build season: when Gemini's full models are used up, Mistral's large model carries on
-                try:
-                    m = AI("mistral")
-                    m.backups = [x for x in ("mistral-medium-latest",) if x != m.model]  # never the small one
-                    self.mistral = m
-                    self.chain = [self.primary, m]
-                    self.primary.patient, m.patient = False, True
-                except AIError:
-                    pass
+            if BUILD:  # build season: when Gemini's full models are used up, the quality-tested backups carry on
+                for sec, model in QUALITY_BACKUPS:
+                    try:
+                        m = AI(sec)
+                    except AIError:
+                        continue  # no key for it
+                    m.model, m.backups, m.patient, m.max_wait = model, [], False, 420
+                    self.chain.append(m)
+                if len(self.chain) > 1:
+                    self.primary.patient = False
             return
         if bulk:  # Google's free Flash allowance is only a few dozen requests a day: keep it for concall summaries,
             self.primary.lite_first = True  # the big picture and overviews; routine jobs start on Flash-Lite
