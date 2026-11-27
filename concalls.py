@@ -488,15 +488,16 @@ class AI:
 
 
 BUILD = False  # build season (season.py): the allowance goes to completing the site, not to keeping up
-# Free models that matched Gemini's full model on the same concalls (tools/compare_models.py, 27 Nov 2026), used only
-# in build season once Gemini's full models are used up for the day. NVIDIA direct first (it was the more exact and has
-# no daily cap), then the same model through OpenRouter (50 a day). Kimi, GLM and Mistral Large timed out: not listed.
+# Free models that matched or beat Gemini's full model on the same concalls (tools/compare_models.py, 27 Nov 2026).
+# Full-quality work (Pool(quality=True)): NVIDIA direct first (the more exact route, no daily cap), Gemini's full models
+# next, the same model through OpenRouter last (50 a day). Kimi, GLM and Mistral Large timed out: not listed.
 QUALITY_BACKUPS = [("nvidia", "nvidia/nemotron-3-ultra-550b-a55b"),
                    ("openrouter", "nvidia/nemotron-3-ultra-550b-a55b:free")]
 
 
 class Pool:
-    dead = set()  # providers that asked for payment this run
+    dead = set()  # providers that asked for payment this run, or failed twice (NVIDIA / OpenRouter)
+    fails = {}
     """Gemini, Mistral and Groq (whichever have keys). Normal work goes Gemini -> Mistral -> Groq;
     bulk side jobs (pivots, decks, tab write-ups, sorting) go Mistral first to keep Gemini free for
     summaries and the big picture. A provider that fails is skipped for 15 minutes."""
@@ -508,16 +509,21 @@ class Pool:
             self.chain, self.down, self.pause = [self.primary], {}, self.primary.pause
             self.mistral = self.backup = self.sambanova = None
             self.primary.patient = True
-            if BUILD:  # build season: when Gemini's full models are used up, the quality-tested backups carry on
-                for sec, model in QUALITY_BACKUPS:
-                    try:
-                        m = AI(sec)
-                    except AIError:
-                        continue  # no key for it
-                    m.model, m.backups, m.patient, m.max_wait = model, [], False, 420
-                    self.chain.append(m)
-                if len(self.chain) > 1:
-                    self.primary.patient = False
+            # Nemotron 3 Ultra first (fuller, as exact in the 27 Nov test), Gemini's full models next, then Ultra
+            # through OpenRouter. A slow or refusing NVIDIA just hands over to Gemini; quality never drops below today's.
+            first, last = [], []
+            for i, (sec, model) in enumerate(QUALITY_BACKUPS):
+                if sec in {d.lower() for d in Pool.dead}:
+                    continue
+                try:
+                    m = AI(sec)
+                except AIError:
+                    continue  # no key for it
+                m.model, m.backups, m.patient, m.max_wait = model, [], False, 420
+                (first if i == 0 else last).append(m)
+            self.chain = first + [self.primary] + last
+            if len(self.chain) > 1:
+                self.primary.patient = False
             return
         if bulk:  # Google's free Flash allowance is only a few dozen requests a day: keep it for concall summaries,
             self.primary.lite_first = True  # the big picture and overviews; routine jobs start on Flash-Lite
@@ -556,6 +562,10 @@ class Pool:
                 last = e
                 if re.search(r"\b402\b|payment method", str(e), re.I):  # wants a card: leave it out for the whole run
                     Pool.dead.add(ai.provider)
+                    self.chain = [a for a in self.chain if a is not ai] or self.chain
+                Pool.fails[ai.provider] = Pool.fails.get(ai.provider, 0) + 1
+                if Pool.fails[ai.provider] >= 2 and ai.provider in ("NVIDIA", "OpenRouter"):
+                    Pool.dead.add(ai.provider.lower())  # slow or refusing twice: not again this run
                     self.chain = [a for a in self.chain if a is not ai] or self.chain
                 if i + 1 < len(tried):
                     nxt = tried[i + 1]
