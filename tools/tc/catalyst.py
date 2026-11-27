@@ -179,7 +179,14 @@ def message(sym: str, name: str, g: dict, r: dict, link: str, when: str) -> str:
     if E.get("rs3m") is not None:
         chart.append(f"beating Nifty by {E['rs3m']:+g} pts in 3 months, {E.get('rs1m') or 0:+g} in 1 · ATR {E.get('atr_pct')}% · ADX {E.get('adx')}")
     kind = "cloud retest" if g.get("setup") == "retest" else "cloud breakout"
-    lines = [f"{'🟢 A' if g['grade'] == 'A' else '🟡 B'} · {'INDEX ' if g.get('kind') == 'index' else ''}{name} ({sym}) · {kind} · {when}",
+    if g.get("side") == "short":
+        kind = "failed pullback to the cloud" if g.get("setup") == "retest" else "cloud breakdown"
+        chart[:] = [kind + (f" ({(L.get('why') or [''])[0]})" if g.get("setup") == "retest" and L.get("why") else "")]
+        if E.get("lag3m") is not None:
+            chart.append(f"lagging Nifty by {E['lag3m']:g} pts in 3 months · ATR {E.get('atr_pct')}% · below 200-day average"
+                         + (" · Nifty below its cloud" if E.get("nifty_weak") else ""))
+    icon = ("🔴" if g.get("side") == "short" else "🟢") if g["grade"] == "A" else ("🟠" if g.get("side") == "short" else "🟡")
+    lines = [f"{icon} {'SHORT ' if g.get('side') == 'short' else ''}{g['grade']} · {'INDEX ' if g.get('kind') == 'index' else ''}{name} ({sym}) · {kind} · {when}",
              "Chart: " + ", ".join(chart)]
     if g["build"]:
         lines.append("Building: " + " · ".join(g["build"][:3]))
@@ -189,7 +196,9 @@ def message(sym: str, name: str, g: dict, r: dict, link: str, when: str) -> str:
         lines.append("Industry: " + " · ".join(g["industry"]))
     if g.get("breadth"):
         lines.append("Breadth: " + g["breadth"])
-    if p.get("entry") and p.get("t2"):
+    if p.get("entry") and p.get("t2") and g.get("side") == "short":
+        lines.append(f"Plan (short, futures): sell ~{p['entry']:g} · stop {p['stop']:g} · book half at {p['target']:g} (1R), then stop to entry · rest to {p['t2']:g} (2.5R)")
+    elif p.get("entry") and p.get("t2"):
         lines.append(f"Plan: entry ~{p['entry']:g} · stop {p['stop']:g} · book half at {p['target']:g} (+1R), then stop to entry · rest to {p['t2']:g} (2.5R)")
     elif p.get("entry"):
         lines.append(f"Plan: entry ~{p['entry']:g} · stop {p['stop']:g} · target {p['target']:g}" + (f" · reward:risk {g['rr']}" if g["rr"] else ""))
@@ -200,19 +209,21 @@ def message(sym: str, name: str, g: dict, r: dict, link: str, when: str) -> str:
 
 
 def outcome(rows: list, entry: float, stop: float, target: float, since_ts: int) -> dict:
-    """What happened after an alert: target or stop first (daily bars after the alert), and the return so far."""
+    """What happened after an alert: target or stop first (daily bars after the alert), and the return so far.
+    A short has its stop above the entry; its return is the fall."""
     after = [r for r in rows if r[0] > since_ts]
     res = {"bars": len(after), "status": "open", "ret": None}
+    short = stop > entry
     for i, r in enumerate(after):
         lo, hi = r[3], r[2]
-        if lo <= stop:
+        if (hi >= stop) if short else (lo <= stop):
             res.update(status="stopped", day=i + 1)
             break
-        if hi >= target:
+        if (lo <= target) if short else (hi >= target):
             res.update(status="target", day=i + 1)
             break
     if after:
-        res["ret"] = round((after[-1][4] / entry - 1) * 100, 1)
+        res["ret"] = round((after[-1][4] / entry - 1) * (-100 if short else 100), 1)
     if res["status"] == "open" and len(after) >= 40:
         res["status"] = "expired"
     return res
@@ -221,8 +232,9 @@ def outcome(rows: list, entry: float, stop: float, target: float, since_ts: int)
 def stats(log_rows: list, days: int = 60) -> dict:
     cut = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
     out = {}
-    for g in ("A", "B"):
-        rows = [x for x in log_rows if x.get("grade") == g and x.get("date", "") >= cut]
+    for g in ("A", "B", "SA", "SB"):
+        rows = [x for x in log_rows if x.get("date", "") >= cut and
+                (x.get("grade") == g[-1]) and ((x.get("side") == "short") == g.startswith("S"))]
         won = sum(1 for x in rows if (x.get("out") or {}).get("status") == "target")
         lost = sum(1 for x in rows if (x.get("out") or {}).get("status") == "stopped")
         out[g] = {"n": len(rows), "won": won, "lost": lost, "open": len(rows) - won - lost}
@@ -403,3 +415,58 @@ def final_grade(e: dict, g: dict) -> str | None:
     if any("reaction" in f for f in g.get("flags") or []):
         return None
     return e["tier"]
+
+
+# --------------------------------------------------------------------------- the short side (F&O stocks)
+# Same study, prices turned upside down (10,000 / price, so a fall reads like a rise) on F&O stocks, Sep 2022 -
+# Nov 2026, split at Jan 2025. Mirroring the long edge did NOT work (too few, no better). What held in both halves:
+#   a breakdown below the cloud (or a pullback up to it that fails) by a stock that has lagged the Nifty by 8+ points
+#   over 3 months, moves enough (ATR 2.1%+ of price) and is below its 200-day average:
+#   ~59-63% reached -1R before a 1.5-ATR stop (40 sessions), ~55-65% within 5 sessions; ~1 in 3 reached -2R.
+#   When the Nifty itself was below its cloud too: ~63-67%, but rarer.
+SHORT_EDGE = {"lag3m": 8.0, "atr_pct": 2.1}
+
+
+def mirror(rows: list) -> list:
+    """Prices upside down (10,000 / price): the long-side rules then read breakdowns and failed pullbacks."""
+    return [[r[0], 1e4 / r[1], 1e4 / r[3], 1e4 / r[2], 1e4 / r[4], r[5]] for r in rows if min(r[1:5]) > 0]
+
+
+def short_edge(rows: list, nifty: list, nifty_below_cloud: bool | None) -> dict:
+    import scanner
+    I = scanner.indicators(rows)
+    atr = scanner._atr(I)[-1]
+    c = rows[-1][4]
+    out = {"atr_pct": round(atr / c * 100, 2) if atr and c else None, "below200": bool(I["ema200"][-1] and c < I["ema200"][-1])}
+    nmap = {r[0] // 86400: r[4] for r in nifty or []}
+    if len(rows) > 61:
+        a = nmap.get(rows[-1][0] // 86400) or (nifty[-1][4] if nifty else None)
+        b = nmap.get(rows[-61][0] // 86400)
+        if a and b:
+            out["lag3m"] = round((a / b - 1) * 100 - (c / rows[-61][4] - 1) * 100, 1)
+    ok = (out.get("lag3m") or -99) > SHORT_EDGE["lag3m"] and (out["atr_pct"] or 0) > SHORT_EDGE["atr_pct"] and out["below200"]
+    out["nifty_weak"] = bool(nifty_below_cloud)
+    out["tier"] = ("A" if nifty_below_cloud else "B") if ok else None
+    if atr and c:
+        R = 1.5 * atr
+        out["plan"] = {"entry": round(c, 2), "stop": round(c + R, 2), "target": round(c - R, 2), "t2": round(c - 2.5 * R, 2)}
+    return out
+
+
+def short_view(md: dict | None, today: date) -> dict:
+    """Market Desk's reading for a short: a strong positive reading is a reason not to short (veto); events ahead are
+    risks either way. Not tested as an edge (the news history is too short) - only used to stay out."""
+    if not md:
+        return {"veto": False, "notes": [], "coming": []}
+    g = grade(md, {}, today)
+    call = md.get("call") or {}
+    notes = []
+    if call.get("tone") in ("Cautious", "Negative"):
+        notes.append(f"{call.get('q', '')} concall {call['tone'].lower()}")
+    if call.get("guid") == "cut":
+        notes.append("guidance cut")
+    if call.get("did") == "missed":
+        notes.append("missed last quarter's promises")
+    strong = g["pts"]["evidence"] >= 5 and call.get("tone") == "Positive"
+    return {"veto": strong, "notes": notes, "coming": g["coming"][:3], "build": g["build"][:2] if strong else [],
+            "backing": g["grade"]}
