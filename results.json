@@ -1,0 +1,238 @@
+[
+ {
+  "company": "Bansal Roofing Products Ltd",
+  "quarter": "Q2 FY27",
+  "chars": 58763,
+  "gemini": {
+   "words": 1347,
+   "sections": 12,
+   "unverified": 17,
+   "unit_slips": 0,
+   "bad": [
+    "11",
+    "49.69",
+    "34.09",
+    "95.58",
+    "4.23",
+    "2.56",
+    "8.35",
+    "2.62",
+    "1.46",
+    "5.28",
+    "1.21",
+    "44.83"
+   ],
+   "model": "gemini-3.6-flash"
+  },
+  "nvidia/nemotron-3-ultra-550b-a55b:free": {
+   "words": 1472,
+   "sections": 11,
+   "unverified": 13,
+   "unit_slips": 1,
+   "bad": [
+    "1.21",
+    "49.69",
+    "4.23",
+    "2.62",
+    "95.58",
+    "5.28",
+    "44.83",
+    "1.63",
+    "19.88",
+    "19.46",
+    "42.20",
+    "0.2"
+   ],
+   "secs": 144,
+   "ok": true
+  },
+  "nvidia/nemotron-3-ultra-550b-a55b": {
+   "words": 1487,
+   "sections": 11,
+   "unverified": 7,
+   "unit_slips": 2,
+   "bad": [
+    "96",
+    "65",
+    "0.2",
+    "1.21",
+    "46",
+    "49.6876",
+    "2.6182"
+   ],
+   "secs": 202,
+   "ok": true
+  },
+  "moonshotai/kimi-k3.1-pro": {
+   "ok": false,
+   "err": "FAILED: The AI service is overloaded right now (overloaded (504)). Try again in a while, or switch to Groq (see README).",
+   "secs": 302
+  },
+  "z-ai/glm-5.3-flash": {
+   "ok": false,
+   "err": "FAILED: The AI service is overloaded right now (overloaded (504)). Try again in a while, or switch to Groq (see README).",
+   "secs": 302
+  },
+  "mistralai/mistral-large-4-1t-a52b": {
+   "ok": false,
+   "err": "FAILED: The AI service is overloaded right now (no reply in 420s). Try again in a while, or switch to Groq (see README).",
+   "secs": 420
+  }
+ },
+ {
+  "company": "MV Electrosystems Ltd",
+  "quarter": "Q2 FY27",
+  "chars": 40939,
+  "gemini": {
+   "words": 1104,
+   "sections": 12,
+   "unverified": 3,
+   "unit_slips": 0,
+   "bad": [
+    "325",
+    "411",
+    "975.6"
+   ],
+   "model": "gemini-3.5-flash"
+  },
+  "nvidia/nemotron-3-ultra-550b-a55b:free": {
+   "words": 1217,
+   "sections": 11,
+   "unverified": 0,
+   "unit_slips": 0,
+   "bad": [],
+   "secs": 101,
+   "ok": true
+  },
+  "nvidia/nemotron-3-ultra-550b-a55b": {
+   "words": 1253,
+   "sections": 11,
+   "unverified": 0,
+   "unit_slips": 0,
+   "bad": [],
+   "secs": 113,
+   "ok": true
+  },
+  "moonshotai/kimi-k3.1-pro": {
+   "ok": false,
+   "err": "FAILED: The AI service is overloaded right now (overloaded (504)). Try again in a while, or switch to Groq (see README).",
+   "secs": 302
+  },
+  "z-ai/glm-5.3-flash": {
+   "ok": false,
+   "err": "FAILED: The AI service is overloaded right now (overloaded (504)). Try again in a while, or switch to Groq (see README).",
+   "secs": 302
+  },
+  "mistralai/mistral-large-4-1t-a52b": {
+   "ok": false,
+   "err": "FAILED: The AI service is overloaded right now (no reply in 420s). Try again in a while, or switch to Groq (see README).",
+   "secs": 420
+  }
+ },
+ {
+  "company": "Health X Platform Ltd",
+  "quarter": "Q2 FY27",
+  "chars": 58378,
+  "gemini": {
+   "words": 1085,
+   "sections": 12,
+   "unverified": 3,
+   "unit_slips": 0,
+   "bad": [
+    "5,95,000",
+    "1,20,000",
+    "1,40,000"
+   ],
+   "model": "gemini-3.6-flash"
+  },
+  "nvidia/nemotron-3-ultra-550b-a55b:free": {
+   "words": 1981,
+   "sections": 11,
+   "unverified": 0,
+   "unit_slips": 0,
+   "bad": [],
+   "secs": 234,
+   "ok": true
+  },
+  "nvidia/nemotron-3-ultra-550b-a55b": {
+   "words": 1656,
+   "sections": 11,
+   "unverified": 2,
+   "unit_slips": 0,
+   "bad": [
+    "0.79",
+    "3.3"
+   ],
+   "secs": 237,
+   "ok": true
+  },
+  "moonshotai/kimi-k3.1-pro": {
+   "ok": false,
+   "err": "FAILED: The AI service is overloaded right now (overloaded (504)). Try again in a while, or switch to Groq (see README).",
+   "secs": 302
+  },
+  "z-ai/glm-5.3-flash": {
+   "ok": false,
+   "err": "FAILED: The AI service is overloaded right now (overloaded (504)). Try again in a while, or switch to Groq (see README).",
+   "secs": 302
+  },
+  "mistralai/mistral-large-4-1t-a52b": {
+   "ok": false,
+   "err": "FAILED: The AI service is overloaded right now (no reply in 340s). Try again in a while, or switch to Groq (see README).",
+   "secs": 340
+  }
+ },
+ {
+  "company": "EIH Ltd",
+  "quarter": "Q2 FY27",
+  "chars": 34775,
+  "gemini": {
+   "words": 1072,
+   "sections": 12,
+   "unverified": 4,
+   "unit_slips": 0,
+   "bad": [
+    "32",
+    "2,992",
+    "3,000",
+    "777"
+   ],
+   "model": "gemini-3.5-flash"
+  },
+  "nvidia/nemotron-3-ultra-550b-a55b:free": {
+   "words": 1295,
+   "sections": 11,
+   "unverified": 0,
+   "unit_slips": 0,
+   "bad": [],
+   "secs": 133,
+   "ok": true
+  },
+  "nvidia/nemotron-3-ultra-550b-a55b": {
+   "words": 1114,
+   "sections": 11,
+   "unverified": 1,
+   "unit_slips": 0,
+   "bad": [
+    "3,000"
+   ],
+   "secs": 116,
+   "ok": true
+  },
+  "moonshotai/kimi-k3.1-pro": {
+   "ok": false,
+   "err": "FAILED: The AI service is overloaded right now (overloaded (504)). Try again in a while, or switch to Groq (see README).",
+   "secs": 302
+  },
+  "z-ai/glm-5.3-flash": {
+   "ok": false,
+   "err": "FAILED: The AI service is overloaded right now (overloaded (504)). Try again in a while, or switch to Groq (see README).",
+   "secs": 302
+  },
+  "mistralai/mistral-large-4-1t-a52b": {
+   "ok": false,
+   "err": "FAILED: The AI service is overloaded right now (no reply in 340s). Try again in a while, or switch to Groq (see README).",
+   "secs": 340
+  }
+ }
+]
