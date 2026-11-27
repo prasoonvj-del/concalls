@@ -3,8 +3,6 @@ name: Model comparison (one-off test)
 # Started by hand. Summarises a few recent concalls with free OpenRouter / NVIDIA models using the site's own prompt,
 # next to what Gemini's full model already wrote. Changes nothing on the site; results are a downloadable artifact.
 on:
-  schedule:  # one early-morning IST rerun (quiet hours on the free endpoints); removed after the test
-    - cron: "30 0 27 11 *"
   workflow_dispatch:
     inputs:
       calls:
