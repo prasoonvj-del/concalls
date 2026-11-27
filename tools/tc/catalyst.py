@@ -175,6 +175,9 @@ def message(sym: str, name: str, g: dict, r: dict, link: str, when: str) -> str:
     if vx:
         chart.append(vx)
     p = g["plan"]
+    E = g.get("edge") or {}
+    if E.get("rs3m") is not None:
+        chart.append(f"beating Nifty by {E['rs3m']:+g} pts in 3 months, {E.get('rs1m') or 0:+g} in 1 · ATR {E.get('atr_pct')}% · ADX {E.get('adx')}")
     kind = "cloud retest" if g.get("setup") == "retest" else "cloud breakout"
     lines = [f"{'🟢 A' if g['grade'] == 'A' else '🟡 B'} · {'INDEX ' if g.get('kind') == 'index' else ''}{name} ({sym}) · {kind} · {when}",
              "Chart: " + ", ".join(chart)]
@@ -186,7 +189,9 @@ def message(sym: str, name: str, g: dict, r: dict, link: str, when: str) -> str:
         lines.append("Industry: " + " · ".join(g["industry"]))
     if g.get("breadth"):
         lines.append("Breadth: " + g["breadth"])
-    if p.get("entry"):
+    if p.get("entry") and p.get("t2"):
+        lines.append(f"Plan: entry ~{p['entry']:g} · stop {p['stop']:g} · book half at {p['target']:g} (+1R), then stop to entry · rest to {p['t2']:g} (2.5R)")
+    elif p.get("entry"):
         lines.append(f"Plan: entry ~{p['entry']:g} · stop {p['stop']:g} · target {p['target']:g}" + (f" · reward:risk {g['rr']}" if g["rr"] else ""))
     for f in g["flags"]:
         lines.append("⚠ " + f)
@@ -345,3 +350,56 @@ def grade_index(label: str, members: list, r: dict, today: date | None = None) -
             "industry": inds, "flags": flags[:3], "launch": launch, "rr": rr,
             "breadth": f"{above * 100:.0f}% of it (by weight) above the cloud" + (f"; fresh breakouts: {', '.join(fresh[:5])}" if fresh else "") if sw else "",
             "covered": round(covered * 100), "plan": {k: pick.get(k) for k in ("entry", "stop", "target")} if pick else {}}
+
+
+# --------------------------------------------------------------------------- the tested edge (chart side)
+# From a study of ~6,500 cloud breakouts / launches / retests among Market Desk's companies, Sep 2025 - Nov 2026
+# (concalls repo, tools/research_setups.py), checked on a later period than the one it was found on:
+#   - a cloud breakout on its own has no edge (about 31% reach 2R before a 1.5-ATR stop; 46-50% reach 1R)
+#   - what helps: beating the Nifty over 3 months (by 8+ points) and over 1 month (6+), a stock that moves (daily
+#     range, ATR, 3.7%+ of price) and a trend that is young, not stretched (ADX under 21)
+#   - all four: ~70% reach +1R before the stop (both periods), ~44-56% reach 1.5-2R; about 20 signals a month, in bursts
+#   - the first three without the 1-month RS: ~61% reach +1R, ~44% reach 2R
+# So the plan is: stop 1.5 ATR under the entry, book half at +1R and move the stop to the entry, let the rest run to 2.5R.
+EDGE = {"rs3m": 8.0, "rs1m": 6.0, "atr_pct": 3.7, "adx": 21}
+
+
+def edge(rows: list, nifty: list, I: dict | None = None) -> dict:
+    """Where a stock stands on the tested conditions. tier 'A' = all four, 'B' = all but the 1-month RS."""
+    import scanner
+    I = I or scanner.indicators(rows)
+    atr = (I.get("atr") or scanner._atr(I))[-1]
+    c = rows[-1][4]
+    nmap = {r[0] // 86400: r[4] for r in nifty or []}
+
+    def nret(k):
+        a, b = nmap.get(rows[-1][0] // 86400), nmap.get(rows[-1 - k][0] // 86400)
+        if a is None:  # Nifty's last bar may be a day apart from the stock's
+            a = nifty[-1][4] if nifty else None
+        return (a / b - 1) * 100 if a and b else None
+    out = {"atr_pct": round(atr / c * 100, 2) if atr and c else None, "adx": round(I["adx"][-1] or 0)}
+    if len(rows) > 61:
+        n3, n1 = nret(60), nret(20)
+        out["rs3m"] = round((c / rows[-61][4] - 1) * 100 - n3, 1) if n3 is not None else None
+        out["rs1m"] = round((c / rows[-21][4] - 1) * 100 - n1, 1) if n1 is not None else None
+    ok3 = out.get("rs3m") is not None and out["rs3m"] > EDGE["rs3m"]
+    vol = (out["atr_pct"] or 0) > EDGE["atr_pct"]
+    young = out["adx"] < EDGE["adx"]
+    ok1 = out.get("rs1m") is not None and out["rs1m"] > EDGE["rs1m"]
+    out["tier"] = "A" if ok3 and vol and young and ok1 else "B" if ok3 and vol and young else None
+    out["miss"] = [t for t, ok in (("beating the Nifty over 3 months", ok3), ("over 1 month", ok1),
+                                   ("moves enough (ATR 3.7%+)", vol), ("young trend (ADX < 21)", young)) if not ok]
+    if atr and c:
+        R = 1.5 * atr
+        out["plan"] = {"entry": round(c, 2), "stop": round(c - R, 2), "target": round(c + R, 2), "t2": round(c + 2.5 * R, 2)}
+    return out
+
+
+def final_grade(e: dict, g: dict) -> str | None:
+    """The alert grade: the tested chart edge, kept only when Market Desk's reading isn't against it.
+    A breakout that came on the day of the news (reaction) is dropped: in November those won half as often."""
+    if not e.get("tier") or g["grade"] == "C":
+        return None
+    if any("reaction" in f for f in g.get("flags") or []):
+        return None
+    return e["tier"]
