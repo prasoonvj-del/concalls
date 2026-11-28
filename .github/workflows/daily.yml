@@ -64,11 +64,14 @@ jobs:
             # only the owner's requests run (anyone can open an issue on a public repo)
             if [ "${{ github.event.issue.user.login }}" != "${{ github.repository_owner }}" ]; then GO=false; fi
           elif [ "${{ inputs.force }}" != "true" ]; then
-            LAST=$(gh api repos/${{ github.repository }}/commits/data --jq .commit.committer.date 2>/dev/null || echo "")
+            # when did the last update that wrote news START? (a website-only rebuild, or a long run that finished
+            # late, mustn't push the next news update back - that is how 07:10 was skipped on 28 Nov)
+            LAST=$(gh api "repos/${{ github.repository }}/contents/data/last_ai.txt?ref=data" --jq .content 2>/dev/null | base64 -d 2>/dev/null | tr -d '[:space:]' || echo "")
+            if [ -z "$LAST" ]; then LAST=$(gh api repos/${{ github.repository }}/commits/data --jq .commit.committer.date 2>/dev/null || echo ""); fi
             if [ -n "$LAST" ]; then
               AGE=$(( ($(date -u +%s) - $(date -u -d "$LAST" +%s)) / 60 ))
-              echo "Site data last updated $AGE minutes ago"
-              if [ "$AGE" -lt 60 ]; then MODE=site-only; echo "Updated recently - only rebuilding the website (no AI)"; fi
+              echo "Last news update started $AGE minutes ago"
+              if [ "$AGE" -lt 50 ]; then MODE=site-only; echo "Updated recently - only rebuilding the website (no AI)"; fi
             fi
           fi
           echo "Event=$EVENT mode=$MODE go=$GO"
@@ -117,6 +120,9 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           mkdir -p data
+          if [ "${{ needs.gate.outputs.mode }}" != "site-only" ] && [ "${{ needs.gate.outputs.mode }}" != "story-only" ]; then
+            date -u +%FT%TZ > data/last_ai.txt  # this run writes the news: when it started
+          fi
           MODE=
           if [ "${{ needs.gate.outputs.mode }}" = "news-only" ]; then MODE=--news-only; fi
           if [ "${{ needs.gate.outputs.mode }}" = "site-only" ]; then MODE=--site-only; fi
