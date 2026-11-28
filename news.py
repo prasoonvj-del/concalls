@@ -65,15 +65,24 @@ news stories across Indian and global financial media over the last {hours} hour
 
 Write the top of the morning brief in Markdown, using only these briefs. Keep the [ids] after each point.
 
+How to write it - this is read by an investor over morning tea, not skimmed as a ticker:
+- Full, plain-English sentences that connect the facts: what happened, why, and what it means for Indian stocks.
+  Not telegraphic notes - no strings of fragments joined by semicolons, no "X +7%; Y -2%; but Z" lists.
+- Spell out abbreviations the first time (Supreme Court, not SC; passenger vehicles, not PV; cash reserve ratio
+  (CRR)). Numbers stay exactly as given.
+- Each bullet: a short **bold headline**, then 2-3 sentences. Better 5 bullets that explain than 8 that list.
+- Plain Markdown only: no code blocks, emojis or horizontal rules.
+
 ## The big picture
-(5-7 bullets: the themes that matter most today for an Indian equity investor)
+(5-7 bullets: the themes that matter most today for an Indian equity investor - **headline**, then 2-3 sentences)
 ## Market mood
-(2-3 lines)
+(2-3 sentences)
 ## Stocks in focus
-(table: Company | What happened | Read - Positive / Negative / Mixed)
+(table: Company | What happened (one full sentence) | Read - Positive / Negative / Mixed)
 ## Sectors to watch
-(bullets: sector - why)
+(bullets: **sector** - 1-2 sentences on why, naming the companies involved)
 ## What to watch next
+(bullets: **the event and its date** - one or two sentences on what to look for and why it matters)
 
 SECTION BRIEFS:
 """
