@@ -507,6 +507,32 @@ def _record(code, name):
         return "(nothing yet)"
 
 
+def _fame(latest):
+    """code -> how well known the company is: market cap (the big, most-traded names), plus how often it was in
+    Market Desk's news over the last month. Famous companies get their story first; small unknown ones later."""
+    import math
+    try:
+        import fundamentals
+        F = fundamentals.load()
+    except Exception:
+        F = {}
+    hits = {}
+    try:
+        for f in sorted((C.DATA / "news").glob("*.json"))[-30:]:
+            for st in json.loads(f.read_text(encoding="utf-8")).get("stories", []):
+                for n in set(C.norm(x) for x in st.get("companies", []) if x):
+                    hits[n] = hits.get(n, 0) + 1
+    except Exception:
+        pass
+    out = {}
+    for code, c in latest.items():
+        cap = (F.get(str(code)) or {}).get("mcap") or 0  # Rs crore
+        nm = C.norm(c.get("company", ""))
+        n = sum(v for k, v in hits.items() if len(k) > 3 and (k.startswith(nm) or nm.startswith(k))) if nm else 0
+        out[code] = (math.log10(cap) if cap > 0 else 0) + min(n, 10) * 0.15
+    return out
+
+
 def step(mode="full", hard_stop=None):
     """hard_stop: a time (epoch) this must end by - the daily run's own limit."""
     try:
@@ -553,8 +579,9 @@ def step(mode="full", hard_stop=None):
     except ValueError:
         fails = {}
     todo = [c for code, c in latest.items() if due(code, c) and fails.get(code) != today.isoformat()]
+    fame = _fame(latest)
     todo.sort(key=lambda c: (c["code"] in asked, any(w in c["company"].lower() for w in watch),
-                             c["code"] not in store, c["date"]), reverse=True)
+                             fame.get(c["code"], 0) + (0.5 if c["code"] not in store else 0), c["date"]), reverse=True)
     if mode == "request":
         todo = [c for c in todo if c["code"] in asked]
     write_meta(store, latest, todo, n_max)
