@@ -424,7 +424,7 @@ def step_concalls(conf):
     hard = RUN_START + 56 * 60  # the website and the timeline still need their minutes
     left = list(due)
     for sector in due:
-        if time.time() > hard:
+        if time.time() + 5 * 60 > hard:  # one overview can take several minutes with the full-quality writer
             say(f"    overviews: out of time - {len(left)} wait for the next run")
             break
         try:
@@ -626,7 +626,7 @@ def main():
                 raise RuntimeError("out of time this run")
             import season
             backstory.step(("build-full" if conf["concalls"] else "build-news") if season.build()
-                           else ("full" if conf["concalls"] else "news"))
+                           else ("full" if conf["concalls"] else "news"), hard_stop=RUN_START + 66 * 60)  # the step itself stops at 75
         except Exception:
             say(f"\n!! 'Story so far' failed:\n{traceback.format_exc()}")
         if not conf["concalls"]:

@@ -440,7 +440,8 @@ def _record(code, name):
         return "(nothing yet)"
 
 
-def step(mode="full"):
+def step(mode="full", hard_stop=None):
+    """hard_stop: a time (epoch) this must end by - the daily run's own limit."""
     try:
         ai = C.AI("backup")
     except C.AIError:
@@ -497,11 +498,13 @@ def step(mode="full"):
     from trackers import _session
     sess = _session()
     deadline = time.time() + minutes * 60
-    made = 0
+    if hard_stop:
+        deadline = min(deadline, hard_stop)
+    made, search_fails = 0, 0
     start = (today - dt.timedelta(days=730)).strftime("%b %Y")
     for c in todo:
-        if made >= n_max or time.time() > deadline:
-            break
+        if made >= n_max or time.time() > deadline or (hard_stop and time.time() + 7 * 60 > hard_stop):
+            break  # (one company: web research + the full-quality writer can take several minutes)
         code = c["code"]
         sym = (store.get(code) or {}).get("sym") or find_symbol(sess, c["company"], code)
         try:
@@ -545,7 +548,12 @@ def step(mode="full"):
                 break
             except C.AIError as e2:
                 say(f"  {c['company']}: {str(e2)[:140]}")
+                search_fails += 1
+                if search_fails >= 3 or not [m for m in SEARCHERS if m[0] not in _working.get("groq_off", set())]:
+                    say("  web search isn't answering - the rest wait for the next update")
+                    break
                 continue
+        search_fails = 0
         facts = re.sub(r"【[^】]*】", "", facts)
         if len(facts) < 600:
             say(f"  {c['company']}: too little found on the web - trying again tomorrow")
