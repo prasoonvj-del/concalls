@@ -1,0 +1,33 @@
+name: Transcript reading check (by hand)
+on:
+  workflow_dispatch:
+    inputs:
+      names:
+        description: "Company name starts (comma-separated); empty = a default set"
+        default: ""
+permissions:
+  contents: read
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore saved data (read-only copy)
+        run: |
+          git fetch --depth 1 origin data
+          rm -rf data summaries
+          git archive FETCH_HEAD | tar -x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: |
+          pip install -r requirements.txt
+          sudo apt-get install -y -qq tesseract-ocr poppler-utils >/dev/null 2>&1
+      - env:
+          NAMES: ${{ inputs.names }}
+          PYTHONUNBUFFERED: "1"
+        run: |
+          IFS=',' read -ra A <<< "$NAMES"
+          python tools/diag_text.py "${A[@]}"

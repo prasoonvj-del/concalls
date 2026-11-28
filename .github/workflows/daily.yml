@@ -103,7 +103,10 @@ jobs:
           cache: pip
 
       - name: Install
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          # OCR for transcripts filed as scanned images (free; ~20 s)
+          sudo apt-get install -y -qq tesseract-ocr poppler-utils >/dev/null 2>&1 || echo "OCR tools not installed - scanned transcripts will wait"
 
       - name: Build news brief, concall summaries and website
         timeout-minutes: 75

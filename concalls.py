@@ -900,15 +900,109 @@ def get_text(call):
         else:
             return None, "couldn't download the PDF from BSE"
     try:
-        text = "\n".join((p.extract_text() or "") for p in PdfReader(str(pdf)).pages)
+        text = pdf_text(pdf.read_bytes())
     except Exception as e:
         return None, f"couldn't read the PDF ({str(e)[:80]})"
-    text = re.sub(r"[ \t]+", " ", text)
-    text = re.sub(r"\n{3,}", "\n\n", text).strip()
+    if len(text) < 3000:
+        # Big companies often file a one-page letter that only links to the transcript on their website: follow it.
+        linked = linked_transcript(pdf.read_bytes(), text)
+        if linked:
+            text = linked
+        else:  # a real scan: read it with OCR (free, on the runner)
+            ocr = ocr_text(pdf)
+            if len(ocr) >= 3000:
+                text = ocr
     if len(text) < 3000:
         return None, "PDF is a scanned image (no text) - open it on BSE"
     txt.write_text(text, encoding="utf-8")
     return text, None
+
+
+def pdf_text(data):
+    import io
+    text = "\n".join((p.extract_text() or "") for p in PdfReader(io.BytesIO(data)).pages)
+    text = re.sub(r"[ \t]+", " ", text)
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
+TRANSCRIPT_WORDS = re.compile(r"moderator|ladies and gentlemen|question[- ]and[- ]answer|conference call|participants", re.I)
+
+
+def linked_transcript(data, text):
+    """Links in a short filing (in its text or as clickable links) that lead to the call transcript."""
+    import io
+    urls = re.findall(r"https?://[^\s<>\"')\]]+", text.replace("\n", " "))
+    try:
+        for page in PdfReader(io.BytesIO(data)).pages:
+            for a in page.get("/Annots") or []:
+                o = a.get_object()
+                uri = (o.get("/A") or {}).get("/URI") if hasattr(o.get("/A") or {}, "get") else None
+                if uri:
+                    urls.append(str(uri))
+    except Exception:
+        pass
+    seen, tried = set(), 0
+    for u in sorted(dict.fromkeys(u.rstrip(".,;") for u in urls),
+                    key=lambda u: (not re.search(r"transcript|concall|earnings.?call|conference", u, re.I), not u.lower().endswith(".pdf"))):
+        if u in seen or re.search(r"bseindia|nseindia|youtube|zoom\.|webex|teams\.|mailto|linkedin|twitter", u, re.I):
+            continue
+        seen.add(u)
+        tried += 1
+        if tried > 4:
+            break
+        try:
+            r = requests.get(u, timeout=45, headers={"User-Agent": "Mozilla/5.0"}, allow_redirects=True)
+        except Exception:
+            continue
+        if r.status_code != 200:
+            continue
+        body = ""
+        if r.content[:4] == b"%PDF":
+            try:
+                body = pdf_text(r.content)
+            except Exception:
+                body = ""
+        elif "html" in r.headers.get("content-type", ""):
+            # a page listing documents: take a transcript PDF linked from it
+            for m in re.finditer(r'href=["\']([^"\']+\.pdf)["\']', r.text, re.I):
+                link = requests.compat.urljoin(r.url, m.group(1))
+                if re.search(r"transcript|concall|earnings", link, re.I):
+                    try:
+                        r2 = requests.get(link, timeout=45, headers={"User-Agent": "Mozilla/5.0"})
+                        if r2.content[:4] == b"%PDF":
+                            body = pdf_text(r2.content)
+                            break
+                    except Exception:
+                        continue
+        if len(body) >= 3000 and TRANSCRIPT_WORDS.search(body[:20000]):
+            say(f"    (the filing only linked to the transcript - read it from {u[:70]})")
+            return body
+    return ""
+
+
+def ocr_text(pdf, max_pages=40):
+    """Text from a scanned PDF with Tesseract OCR (installed on the GitHub runner); '' if unavailable."""
+    import shutil
+    import subprocess
+    import tempfile
+    if not shutil.which("tesseract") or not shutil.which("pdftoppm"):
+        return ""
+    out = []
+    with tempfile.TemporaryDirectory() as d:
+        try:
+            subprocess.run(["pdftoppm", "-r", "200", "-gray", "-l", str(max_pages), "-png", str(pdf), f"{d}/p"],
+                           check=True, timeout=300, capture_output=True)
+            for img in sorted(Path(d).glob("p*.png")):
+                r = subprocess.run(["tesseract", str(img), "-", "--psm", "6"], capture_output=True, text=True, timeout=120)
+                out.append(r.stdout)
+        except Exception as e:
+            say(f"    (OCR failed: {str(e)[:80]})")
+            return ""
+    text = re.sub(r"[ \t]+", " ", "\n".join(out))
+    text = re.sub(r"\n{3,}", "\n\n", text).strip()
+    if text:
+        say(f"    (scanned PDF - read with OCR, {len(text):,} characters)")
+    return text
 
 
 # ============================================================================ sectors
@@ -1137,6 +1231,8 @@ def summarise_one(call, lib, pool, prev=None):
     text, problem = get_text(call)
     if problem:
         say(f"    skipped: {problem}")
+        if call.get("skip"):
+            call["retried"] = True  # tried again with link-following and OCR: don't keep retrying
         call["skip"] = problem
         save_lib(lib)
         return False

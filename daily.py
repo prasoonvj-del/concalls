@@ -80,11 +80,14 @@ def plan_concalls(lib, conf):
     then sectors take turns (round-robin) so no single sector uses up the run."""
     watch = watchlist()
     is_watch = lambda c: any(w in c["company"].lower() for w in watch)
+    retry = lambda c: str(c.get("skip", "")).startswith("PDF is a scanned") and not c.get("retried")  # noqa: E731
     latest = [c for c in C.latest_call_each(list(lib["calls"].values()))
-              if not c.get("summary") and not c.get("skip")]
+              if not c.get("summary") and (not c.get("skip") or retry(c))]
     if conf["sectors"] is not None:
         latest = [c for c in latest if C.sector_of(lib, c) in conf["sectors"] or is_watch(c)]
     first = sorted([c for c in latest if is_watch(c)], key=lambda c: c["date"], reverse=True)
+    first += [c for c in latest if retry(c) and not is_watch(c)]  # transcripts skipped as 'scanned': try again first
+    latest = [c for c in latest if c not in first]
     queues = {}
     for c in sorted((c for c in latest if not is_watch(c)), key=lambda c: c["date"], reverse=True):
         queues.setdefault(C.sector_of(lib, c), []).append(c)  # newest calls first within a sector

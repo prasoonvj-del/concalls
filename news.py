@@ -782,6 +782,8 @@ def build(conf=None, log_failed=True):
         keys = [s["key"] for s in by_cat[c]]
         prev = cache["sections"].get(c)
         new = len(set(keys) - set(prev["keys"])) if prev else len(keys)
+        if prev and not usable_brief(prev.get("text")):
+            prev = None  # an earlier poor answer (no takeaway / too thin) is never kept
         if prev and new < max(2, 0.2 * len(keys)):
             sections[c] = prev["text"]  # little has changed - keep the earlier write-up
             say(f"[{i}/{len(todo)}] {c}: {new} new stor{'y' if new == 1 else 'ies'} - keeping the earlier write-up")
