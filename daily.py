@@ -625,6 +625,13 @@ def main():
             decks.step(C.Pool(bulk=True), "full" if conf["concalls"] else "news")
         except Exception:
             say(f"\n!! Deck summaries failed:\n{traceback.format_exc()}")
+        try:  # how each company's revenue splits, and per industry why margins differ (Lite, ~2 s each)
+            import segments
+            if _t.time() < RUN_START + 50 * 60:
+                segments.step(C.load_lib(), C.Pool(bulk=True), limit=80 if conf["concalls"] else 40,
+                              deadline=RUN_START + 56 * 60)
+        except Exception:
+            say(f"\n!! Business mix failed:\n{traceback.format_exc()}")
         try:
             import backstory
             if _t.time() > RUN_START + 60 * 60:

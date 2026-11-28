@@ -481,3 +481,11 @@ table.cpeer th[data-k]{cursor:pointer}
 .gws{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}.gw{font-size:12px;padding:1px 7px;border-radius:999px;background:var(--surface-2)}
 .gw.up{color:var(--pos);background:color-mix(in srgb,var(--pos) 12%,transparent)}.gw.down{color:var(--neg);background:color-mix(in srgb,var(--neg) 12%,transparent)}
 .rdv{font-weight:700;font-size:13px}.rdv.positive{color:var(--pos)}.rdv.negative{color:var(--neg)}.rdv.mixed,.rdv.neutral{color:var(--muted)}
+
+/* business mix vs peers */
+.mx-t{width:100%;border-collapse:collapse;font-size:13px}.mx-t th{text-align:left;font-weight:600;font-size:12px;padding:6px 8px;border-bottom:1px solid var(--line)}
+.mx-t td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}.mx-t tr.me td{background:color-mix(in srgb,var(--accent,#2d8f7b) 8%,transparent)}
+.mx-t td.mx-c{min-width:240px;width:34%}.mx-t td.mx-o{font-size:12px;max-width:260px}.mx-mod{font-size:11.5px;max-width:260px;margin-top:2px}
+.mx-bar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--line);margin:3px 0 4px}.mx-bar span{height:100%}
+.mx-lab{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:11.5px}.mx-lab i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:3px}.mx-lab em{font-style:normal;color:var(--muted)}
+.mx-read{font-size:13.5px;margin-bottom:8px}.mx-read ul{margin:4px 0 4px 18px}

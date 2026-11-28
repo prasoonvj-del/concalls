@@ -1511,7 +1511,7 @@
       ${notesCard}`;
     // the wide peer table sits below the concall, right above the timeline, both full width
     body.innerHTML = call || decks.length
-      ? `${bizCard}${shiftLine}<div class="cogrid"><div>${concallCard}${deckCard}</div><div>${sideCards}</div></div>${await peerCard(call)}${tlCard}`
+      ? `${bizCard}${shiftLine}<div class="cogrid"><div>${concallCard}${deckCard}</div><div>${sideCards}</div></div>${await peerCard(call)}${await companyMix(call)}${tlCard}`
       : `<div class="grid g2" style="align-items:start"><div>${bizCard}${askCard}${tlCard}</div><div>${sideCards}</div></div>`;
     clampBlock($("#tlb"), 520, "timeline");
     if ($("#conote")) $("#conote").onclick = () => openNote({ company: key });
@@ -1663,6 +1663,50 @@
     if (!window.DESK_FUND) { try { await loadScript("data/fund.js" + CCV, 8000); } catch (e) { window.DESK_FUND = {}; } }
     return window.DESK_FUND || {};
   }
+  /* ------------------------------------------------------------ business mix: how peers' revenue splits */
+  async function getSeg() {
+    if (!window.DESK_SEG) { try { await loadScript("data/segments.js"); } catch (e) { window.DESK_SEG = { cos: {}, reads: {} }; } }
+    return window.DESK_SEG;
+  }
+  const MIXPAL = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6"];
+  const DIMN = { segment: "Segments", product: "Products", customer: "Customers", channel: "Channels", geography: "Geography" };
+  // rows: latest calls (with .code, .company, .metrics); me: the company to highlight; scope: "sector|industry"
+  function mixCard(rows, S, F, me, scope, title) {
+    const have = rows.filter((c) => (S.cos[c.code] || {}).dims && S.cos[c.code].dims.length);
+    if (have.length < 2 && !(me && have.length)) return "";
+    const main = (v) => v.dims.find((d) => d.dim === "segment") || v.dims.find((d) => d.dim === "product") || v.dims[0];
+    const color = {}; let ci = 0;
+    const col = (n) => { const k = n.toLowerCase().replace(/[^a-z]/g, "").slice(0, 12); if (!(k in color)) color[k] = MIXPAL[ci++ % MIXPAL.length]; return cssv(color[k]); };
+    const bar = (d) => `<div class="mx-bar">${d.parts.map((p) => `<span style="width:${p.pct}%;background:${col(p.n)}" title="${esc(p.n)} ${p.pct}%${p.calc ? " (worked out)" : ""}${p.m != null ? " · margin " + p.m + "%" : ""}"></span>`).join("")}</div>
+      <div class="mx-lab">${d.parts.map((p) => `<span><i style="background:${col(p.n)}"></i>${esc(p.n)} <b>${p.pct}%</b>${p.m != null ? ` <em>margin ${p.m}%</em>` : ""}</span>`).join("")}</div>`;
+    const F_ = (c, k) => ((F[c.code] || {})[k] ?? null);
+    const num = (v, u) => (v == null ? "–" : `${Math.round(v * 10) / 10}${u}`);
+    const order = have.slice().sort((a, b) => ((F[b.code] || {}).mcap || 0) - ((F[a.code] || {}).mcap || 0)).slice(0, 12);
+    if (me && !order.some((c) => c.code === me.code) && (S.cos[me.code] || {}).dims) order.push(me);
+    const read = S.reads[scope];
+    return `<div class="card mx"><h2>${esc(title || "Business mix vs peers")} <span class="m">how revenue splits, from each company's own call · why margins and returns differ</span></h2>
+      ${read ? `<div class="mx-read">${read.html}</div>` : ""}
+      <div style="overflow-x:auto"><table class="mx-t"><tr><th>Company</th><th>Revenue mix</th><th>Also</th><th>EBITDA margin<br><span class="m">% latest qtr</span></th><th>Operating margin<br><span class="m">% last FY</span></th><th>ROE<br><span class="m">%</span></th></tr>
+      ${order.map((c) => { const v = S.cos[c.code], d = main(v), others = v.dims.filter((x) => x !== d);
+        return `<tr class="${me && c.code === me.code ? "me" : ""}"><td><a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a>${v.model ? `<div class="m mx-mod">${esc(v.model)}</div>` : ""}</td>
+          <td class="mx-c"><div class="m" style="font-size:11px">${esc(DIMN[d.dim] || d.dim)}${v.basis ? " · " + esc(v.basis) : ""}</div>${bar(d)}</td>
+          <td class="mx-o">${others.map((o) => `<div><span class="m">${esc(DIMN[o.dim] || o.dim)}:</span> ${o.parts.map((p) => `${esc(p.n)} ${p.pct}%`).join(", ")}</div>`).join("") || "–"}</td>
+          <td>${num((c.metrics || {}).ebitda_margin_pct, "%")}</td><td>${num(F_(c, "opm_fy"), "%")}</td><td>${num(F_(c, "roe"), "%")}</td></tr>`; }).join("")}
+      </table></div>
+      <div class="m" style="font-size:11.5px;margin-top:6px">Shares are what each company said on its latest call (a remainder worked out from them is marked on hover). Companies that gave no split aren't shown.</div></div>`;
+  }
+
+  async function companyMix(call) {
+    if (!call) return "";
+    const [cc, F, S] = await Promise.all([getConcalls(), getFund(), getSeg()]);
+    if (!(S.cos[call.code] || {}).dims) return "";
+    const byCo = {};
+    cc.calls.forEach((c) => { const k = norm(c.company); if (!byCo[k] || c.date > byCo[k].date) byCo[k] = c; });
+    const latest = Object.values(byCo);
+    let set = call.ind ? latest.filter((c) => c.ind === call.ind) : [], scope = call.sector + "|" + (call.ind || "");
+    if (set.filter((c) => (S.cos[c.code] || {}).dims).length < 3) { set = latest.filter((c) => c.sector === call.sector); scope = call.sector + "|" + (call.ind || ""); }
+    return mixCard(set, S, F, call, scope, "Business mix vs peers" + (call.ind ? " in " + call.ind : ""));
+  }
   async function peerCard(call) {
     if (!call) return "";
     const [cc, F] = await Promise.all([getConcalls(), getFund()]);
@@ -1769,6 +1813,7 @@
         ${indList.length > 1 ? `<select id="pi"><option value="">All industries in ${esc(sector)}</option>${indList.map((i) => `<option ${i === pind ? "selected" : ""}>${esc(i)}</option>`).join("")}</select>` : ""}</div>
       <div class="card"><h2>${esc(pind || sector)} <span class="m">${plural(rows.length, "company")}${pind ? " · like-for-like within " + esc(sector) : indList.length > 1 ? " · pick an industry to compare like with like" : ""}</span></h2>
         <div style="overflow-x:auto"><table class="peer" id="pt"></table></div></div>
+      <div id="mixslot"></div>
       <div class="grid g2">
         <div class="card"><h2>${esc(MET[xKey][0])} vs ${esc(MET[yKey][0])} <span class="m">dashed lines = sector median</span></h2><div id="c-sc"></div></div>
         <div class="card"><h2>Rank by <select id="rk">${cols.map((k) => `<option value="${k}" ${k === yKey ? "selected" : ""}>${esc(MET[k][0])}</option>`).join("")}</select></h2><div id="c-rk"></div><div id="t-rk"></div></div>
@@ -1800,6 +1845,11 @@
       $("#pt").querySelectorAll("th").forEach((t) => t.onclick = () => { const k = t.dataset.k; dir = sortKey === k ? -dir : -1; sortKey = k; drawTable(); });
     };
     drawTable();
+    Promise.all([getSeg(), getFund()]).then(([S, F]) => {
+      const el = $("#mixslot"); if (!el) return;
+      el.innerHTML = mixCard(rows, S, F, null, sector + "|" + (pind || ""), "Business mix" + (pind ? " in " + pind : " in " + sector));
+      tidyText(el);
+    });
 
     const pts = rows.filter((c) => typeof c.metrics[xKey] === "number" && typeof c.metrics[yKey] === "number")
       .map((c) => ({ label: c.company, x: c.metrics[xKey], y: c.metrics[yKey], onclick: () => go("#companies/" + encodeURIComponent(c.company)) }));

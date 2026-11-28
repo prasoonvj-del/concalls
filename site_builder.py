@@ -383,6 +383,16 @@ def build(quiet=False):
     (data / "cctext.js").write_text(_js("DESK_CCTEXT", None, text), encoding="utf-8")
     nfix = canon(pres)
     (data / "presentations.js").write_text(_js("DESK_PRES", None, pres), encoding="utf-8")
+    try:  # business mix per company (by BSE code) and per-industry reads on why margins differ
+        import segments
+        S = segments.load()
+        (data / "segments.js").write_text(_js("DESK_SEG", None, {
+            "cos": {k: {kk: v[kk] for kk in ("q", "basis", "model", "dims") if v.get(kk)} for k, v in S.get("cos", {}).items()
+                    if v.get("dims") or v.get("model")},
+            "reads": {k: {"html": v["html"], "n": v["n"], "at": v.get("at", "")} for k, v in S.get("reads", {}).items()}}),
+            encoding="utf-8")
+    except Exception as e:
+        C.say(f"  (business mix not added: {e})")
     try:  # top 10 developments: one small file per day, and the list of days
         import highlights as HL
         H = HL.load()
@@ -529,7 +539,7 @@ def build(quiet=False):
     js = js.replace('const BUILD = ""', 'const BUILD = "' + stamp + '"')
     (data / "build.js").write_text(f'window.DESK_BUILD_NOW = "{stamp}";', encoding="utf-8")
     for f in ("concalls", "readacross", "newsarchive", "directory", "search", "tlindex", "bsindex", "conews",
-              "trackers", "presentations"):
+              "trackers", "presentations", "segments"):
         js = js.replace(f'loadScript("data/{f}.js")', f'loadScript("data/{f}.js?v={vh("data/" + f + ".js")}")')
     for f in ("cctext", "reads", "global", "hlindex"):
         js = js.replace(f'"data/{f}.js" + CCV', f'"data/{f}.js?v={vh("data/" + f + ".js")}"')

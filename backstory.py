@@ -28,8 +28,8 @@ IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 STORE = C.DATA / "backstories.json"
 FAILS = C.DATA / "backstory_fails.json"  # companies whose answer came back incomplete today
 REFRESH_DAYS = 45
-ALLOWANCE = {"full": (6, 20), "news": (2, 10), "request": (5, 15),  # (companies, minutes) per update
-             "build-full": (12, 30), "build-news": (5, 15)}  # (two stages: research, then the best writer - slower)  # build season (season.py): the rest, several times faster
+ALLOWANCE = {"full": (4, 14), "news": (4, 14), "request": (5, 15),  # (companies, minutes) per update - results season
+             "build-full": (12, 30), "build-news": (6, 18)}  # (two stages: research, then the best writer - slower)  # build season (season.py): the rest, several times faster
 
 # Two stages since 27 Nov 2026 (v6): a web-searching model only GATHERS sourced facts (it is good at finding, weak at
 # judgement), then the best writer we have (Pool(quality=True): Nemotron 3 Ultra, Gemini full) writes from that evidence
