@@ -231,6 +231,11 @@ def why_file(tl, stories):
                              "own": x in own})
         return [r for r in rows if r["me"]][:3] + [r for r in rows if not r["me"]][:max(0, 3 - sum(r["me"] for r in rows))]
 
+    try:
+        import segments
+        seg = segments.load().get("cos", {})
+    except Exception:
+        seg = {}
     out = {}
     for code in set(latest) | {k for k in tl.get("companies", {}) if not k.startswith("n:")}:
         c = latest.get(code)
@@ -248,6 +253,11 @@ def why_file(tl, stories):
                      + {"delivered": 2, "partly": 1, "missed": 0}.get(dl, 1) + {"raised": 1, "cut": -1, "initiated": 0.5}.get(g, 0))
             row["call"] = {"q": c.get("quarter", ""), "d": c["date"], "tone": tone, "rate": round(score, 1),
                            "vs": ex or "", "did": dl or "", "guid": g or "", "draft": "lite" in (c.get("model") or "lite")}
+        mv = (seg.get(code) or {}).get("shift") or []
+        if c and mv and abs(mv[0]["pp"]) >= 3:  # the business mix is moving - a possible re-rating story
+            x = mv[0]
+            ev = [[c["date"], "pivot", f"Mix shift: {x['n']} {x['then']:g}% -> {x['now']:g}% of revenue since {x['since']}"]] + ev
+            row["mix"] = mv[:3]
         if ev:
             row["ev"] = ev
         if code in top:
@@ -387,7 +397,7 @@ def build(quiet=False):
         import segments
         S = segments.load()
         (data / "segments.js").write_text(_js("DESK_SEG", None, {
-            "cos": {k: {kk: v[kk] for kk in ("q", "basis", "model", "dims") if v.get(kk)} for k, v in S.get("cos", {}).items()
+            "cos": {k: {kk: v[kk] for kk in ("q", "basis", "model", "dims", "shift") if v.get(kk)} for k, v in S.get("cos", {}).items()
                     if v.get("dims") or v.get("model")},
             "reads": {k: {"html": v["html"], "n": v["n"], "at": v.get("at", "")} for k, v in S.get("reads", {}).items()}}),
             encoding="utf-8")

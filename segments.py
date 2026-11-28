@@ -28,7 +28,10 @@ Return JSON only:
     {{"dim": "segment" | "product" | "customer" | "channel" | "geography",
       "parts": [{{"n": "<short name>", "pct": <share of revenue % if stated, else null>,
                  "rev": <its revenue in Rs crore if stated, else null>, "growth": <YoY growth % or null>,
-                 "margin": <segment EBIT/EBITDA margin % or null>}}]}}
+                 "margin": <segment EBIT/EBITDA margin % or null>,
+                 "was": <its share % in an EARLIER period if the material states one, else null>,
+                 "was_rev": <its revenue in that earlier period, Rs crore, if stated, else null>}}],
+      "was_period": "<that earlier period, e.g. 'Q2 FY26' or 'FY24', or null>"}}
   ],
   "model": "<one sentence: how this company makes money, e.g. 'B2B pathology via ~X franchisees, low capex per test'>"}}
 
@@ -40,10 +43,12 @@ parts. Revenue figures of different periods must not be mixed in one dimension. 
 MATERIAL:
 {material}"""
 
-READ_PROMPT = """These are listed Indian peers in {sector} / {industry}: their revenue mix (from their own calls), and their
-margins and returns. In 3-5 short bullets, explain what the MIX explains about why some earn higher margins or returns
-than others (customer type, product mix, geography, capital intensity, scale). Name the companies and use the numbers
-given; say so where the mix does NOT explain a gap. No investment advice. Plain Markdown bullets only.
+READ_PROMPT = """These are listed Indian peers in {sector} / {industry}: their revenue mix (from their own calls and decks),
+how it is moving, and their margins and returns. In 3-5 short bullets, explain what the MIX explains about why some earn
+higher margins or returns than others (customer type, product mix, geography, capital intensity, scale), and which
+companies' mix is shifting toward higher- or lower-margin business (a shift like that can change how the market values
+a stock). Name the companies and use the numbers given; say so where the mix does NOT explain a gap. No investment
+advice. Plain Markdown bullets only.
 
 {table}"""
 
@@ -55,14 +60,21 @@ def load():
         return {"cos": {}, "reads": {}}
 
 
-def _material(c, lib, stories):
+def _decks(code, decks):
+    """The company's latest investor-deck summaries (they usually carry the revenue split, often for several years)."""
+    mine = sorted((k for k in decks if k.split("_")[0] == str(code) and (decks[k] or {}).get("html")), reverse=True)[:2]
+    return "\n\n".join("INVESTOR DECK SUMMARY:\n" + re.sub(r"<[^>]+>", " ", decks[k]["html"])[:3500] for k in mine)
+
+
+def _material(c, lib, stories, decks=None):
     try:
         t = C.here(c["summary"]).read_text(encoding="utf-8").split("\n---\n")[0]
     except OSError:
         return ""
     st = stories.get(c["code"]) or {}
     biz = re.sub(r"<[^>]+>", " ", st.get("biz") or "")
-    return (t[:9000] + ("\n\nBUSINESS PROFILE:\n" + biz[:4000] if biz.strip() else "")).strip()
+    dk = _decks(c["code"], decks or {}) if c.get("_with_decks", True) else ""
+    return (t[:9000] + ("\n\nBUSINESS PROFILE:\n" + biz[:4000] if biz.strip() else "") + ("\n\n" + dk if dk else "")).strip()
 
 
 def _digits(x):
@@ -79,8 +91,15 @@ def _clean(js, material):
         raw = []
         for p in d.get("parts") or []:
             pct, rev = num(p.get("pct")), num(p.get("rev"))
+            was, wrev = num(p.get("was")), num(p.get("was_rev"))
             raw.append({"n": str(p.get("n", ""))[:40], "pct": pct if pct and 0 < pct <= 100 and said(pct) else None,
-                        "rev": rev if rev and rev > 0 and said(rev) else None, "g": num(p.get("growth")), "m": num(p.get("margin"))})
+                        "rev": rev if rev and rev > 0 and said(rev) else None, "g": num(p.get("growth")), "m": num(p.get("margin")),
+                        "was": was if was and 0 < was <= 100 and said(was) else None,
+                        "wrev": wrev if wrev and wrev > 0 and said(wrev) else None})
+        if len(raw) >= 2 and all(r["wrev"] for r in raw) and not all(r["was"] for r in raw):
+            wt = sum(r["wrev"] for r in raw)  # earlier-period shares from that period's revenue
+            for r in raw:
+                r["was"] = round(r["wrev"] / wt * 100, 1)
         parts = []
         if len(raw) >= 2 and all(r["rev"] for r in raw) and sum(1 for r in raw if r["pct"]) < len(raw):
             tot = sum(r["rev"] for r in raw)  # every part's revenue given: shares worked out from them
@@ -103,16 +122,25 @@ def _clean(js, material):
                     q["m"] = p["m"]
                 if p.get("calc"):
                     q["calc"] = True
+                if p.get("was") is not None:
+                    q["was"] = p["was"]
                 out.append(q)
-            dims.append({"dim": str(d.get("dim", "segment"))[:12], "parts": out})
+            dd = {"dim": str(d.get("dim", "segment"))[:12], "parts": out}
+            if any("was" in q for q in out) and d.get("was_period"):
+                dd["was_period"] = str(d.get("was_period"))[:20]
+            elif any("was" in q for q in out) and js.get("was_period"):
+                dd["was_period"] = str(js.get("was_period"))[:20]
+            dims.append(dd)
     return dims
 
 
 def step(lib, pool, limit=60, deadline=None, reads=10):
     """Mixes for companies whose summary is new or changed (biggest first), then the industry reads."""
     import backstory
+    import decks as D
     data = load()
     cos, stories = data.setdefault("cos", {}), backstory.load()
+    decks = {k: v for k, v in D.load().items() if isinstance(v, dict)}
     try:
         import fundamentals
         F = fundamentals.load()
@@ -121,7 +149,8 @@ def step(lib, pool, limit=60, deadline=None, reads=10):
     latest = [c for c in C.latest_call_each(list(lib["calls"].values())) if c.get("summary") and c.get("code")]
     def key(c):
         st = stories.get(c["code"]) or {}
-        return hashlib.md5(f"v2|{c['summary']}|{c.get('model')}|{bool(st.get('biz'))}".encode()).hexdigest()[:10]
+        dk = sorted(k for k in decks if k.split("_")[0] == str(c["code"]))[-1:]
+        return hashlib.md5(f"v3|{c['summary']}|{c.get('model')}|{bool(st.get('biz'))}|{dk}".encode()).hexdigest()[:10]
     todo = [c for c in latest if (cos.get(c["code"]) or {}).get("k") != key(c)]
     todo.sort(key=lambda c: -((F.get(c["code"]) or {}).get("mcap") or 0))
     SAY(f"\nBusiness mix: {len(todo)} companies to read, up to {limit} this update ...")
@@ -129,33 +158,85 @@ def step(lib, pool, limit=60, deadline=None, reads=10):
     for c in todo[:limit]:
         if deadline and time.time() > deadline:
             break
-        mat = _material(c, lib, stories)
-        if len(mat) < 300:
-            continue
-        prompt = PROMPT.format(company=c["company"], sector=C.sector_of(lib, c),
-                               industry=(lib.get("industries") or {}).get(c["code"], "") or "-", material=mat)
         try:
-            out, _ = pool.ask(prompt, label="business mix")
+            js, mat = _extract(c, lib, stories, decks, pool)
         except C.QuotaOver as e:
             SAY(f"  {e}")
             break
         except C.AIError as e:
             SAY(f"  {c['company']}: {str(e)[:100]}")
             continue
-        m = re.search(r"\{.*\}", out or "", re.S)
-        try:
-            js = json.loads(m.group(0)) if m else {}
-        except json.JSONDecodeError:
-            js = {}
+        if js is None:
+            continue
+        old = cos.get(c["code"]) or {}
+        hist = old.get("hist") or {}
+        dims = _clean(js, mat)
+        if dims:
+            hist[c.get("quarter", "")] = dims
+        # last quarter's mix too, from its own call (once), so a shift shows even when this call gives no 'earlier' share
+        prev = C.find_prev(lib, c)
+        if dims and prev and prev.get("summary") and prev.get("quarter") not in hist and done < limit - 1:
+            try:
+                pjs, pmat = _extract(dict(prev, _with_decks=False), lib, {}, {}, pool)
+                pd_ = _clean(pjs or {}, pmat or "")
+                hist[prev["quarter"]] = pd_ or []
+                done += 1
+            except C.AIError:
+                pass
         cos[c["code"]] = {"k": key(c), "company": c["company"], "q": c.get("quarter", ""),
                           "basis": str(js.get("basis", ""))[:60], "model": str(js.get("model", ""))[:240],
-                          "dims": _clean(js, mat)}
+                          "dims": dims, "hist": dict(sorted(hist.items())[-8:])}
+        cos[c["code"]]["shift"] = shifts(cos[c["code"]])
         done += 1
         if done % 10 == 0:
             FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
     FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
     SAY(f"  business mix: {done} read, {sum(1 for v in cos.values() if v.get('dims'))} companies with a mix")
     _reads(lib, pool, data, F, limit=reads, deadline=deadline)
+
+
+def _extract(c, lib, stories, decks, pool):
+    mat = _material(c, lib, stories, decks)
+    if len(mat) < 300:
+        return None, mat
+    prompt = PROMPT.format(company=c["company"], sector=C.sector_of(lib, c),
+                           industry=(lib.get("industries") or {}).get(c["code"], "") or "-", material=mat)
+    out, _ = pool.ask(prompt, label="business mix")
+    m = re.search(r"\{.*\}", out or "", re.S)
+    try:
+        return (json.loads(m.group(0)) if m else {}), mat
+    except json.JSONDecodeError:
+        return {}, mat
+
+
+def _qkey(q):
+    m = re.match(r"Q(\d) FY(\d+)", q or "")
+    return (int(m.group(2)), int(m.group(1))) if m else (0, 0)
+
+
+def shifts(v, min_pp=2.0):
+    """How the mix moved: against an earlier share the company itself stated (deck / call), else against the share
+    read from an earlier quarter's call. Each: dimension, part, now, then, since, change in percentage points."""
+    out = []
+    norm = lambda n: re.sub(r"[^a-z]", "", n.lower())[:14]  # noqa: E731
+    hist = v.get("hist") or {}
+    qs = sorted((q for q in hist if q != v.get("q") and hist[q]), key=_qkey)
+    for d in v.get("dims") or []:
+        for p in d["parts"]:
+            then, since = None, ""
+            if p.get("was") is not None:
+                then, since = p["was"], d.get("was_period") or "earlier"
+            else:
+                for q in reversed(qs):  # the latest earlier quarter that gave this part
+                    od = next((x for x in hist[q] if x["dim"] == d["dim"]), None)
+                    op = next((x for x in (od or {}).get("parts", []) if norm(x["n"]) == norm(p["n"])), None)
+                    if op:
+                        then, since = op["pct"], q
+                        break
+            if then is not None and abs(p["pct"] - then) >= min_pp:
+                out.append({"dim": d["dim"], "n": p["n"], "now": p["pct"], "then": then, "since": since,
+                            "pp": round(p["pct"] - then, 1)})
+    return sorted(out, key=lambda x: -abs(x["pp"]))[:6]
 
 
 def _reads(lib, pool, data, F, limit, deadline):
@@ -176,6 +257,8 @@ def _reads(lib, pool, data, F, limit, deadline):
             v, f = data["cos"][code], F.get(code) or {}
             m = calls.get(code, {}).get("metrics") or {}
             mix = "; ".join(f"{d['dim']}: " + ", ".join(f"{p['n']} {p['pct']:g}%" for p in d["parts"]) for d in v["dims"])
+            if v.get("shift"):
+                mix += " | mix moving: " + ", ".join(f"{x['n']} {x['then']:g}% -> {x['now']:g}% since {x['since']}" for x in v["shift"][:3])
             rows.append(f"- {v['company']}: {mix} | model: {v.get('model', '')} | EBITDA margin (call) "
                         f"{m.get('ebitda_margin_pct', 'n/a')}% | OPM FY {f.get('opm_fy', 'n/a')} | ROE {f.get('roe', 'n/a')}"
                         f" | revenue growth {m.get('revenue_growth_yoy_pct', 'n/a')}%")

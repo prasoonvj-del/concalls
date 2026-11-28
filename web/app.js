@@ -1677,23 +1677,29 @@
     const main = (v) => v.dims.find((d) => d.dim === "segment") || v.dims.find((d) => d.dim === "product") || v.dims[0];
     const color = {}; let ci = 0;
     const col = (n) => { const k = n.toLowerCase().replace(/[^a-z]/g, "").slice(0, 12); if (!(k in color)) color[k] = MIXPAL[ci++ % MIXPAL.length]; return cssv(color[k]); };
-    const bar = (d) => `<div class="mx-bar">${d.parts.map((p) => `<span style="width:${p.pct}%;background:${col(p.n)}" title="${esc(p.n)} ${p.pct}%${p.calc ? " (worked out)" : ""}${p.m != null ? " · margin " + p.m + "%" : ""}"></span>`).join("")}</div>
-      <div class="mx-lab">${d.parts.map((p) => `<span><i style="background:${col(p.n)}"></i>${esc(p.n)} <b>${p.pct}%</b>${p.m != null ? ` <em>margin ${p.m}%</em>` : ""}</span>`).join("")}</div>`;
+    const shiftOf = (v, d, p) => (v.shift || []).find((x) => x.dim === d.dim && x.n === p.n);
+    const arrow = (x) => (x ? ` <span class="mx-sh ${x.pp > 0 ? "up" : "dn"}" title="${x.then}% → ${x.now}% since ${esc(x.since)}">${x.pp > 0 ? "▲" : "▼"}${Math.abs(x.pp)}pp</span>` : "");
+    const bar = (d, v) => `<div class="mx-bar">${d.parts.map((p) => `<span style="width:${p.pct}%;background:${col(p.n)}" title="${esc(p.n)} ${p.pct}%${p.calc ? " (worked out)" : ""}${p.m != null ? " · margin " + p.m + "%" : ""}"></span>`).join("")}</div>
+      <div class="mx-lab">${d.parts.map((p) => `<span><i style="background:${col(p.n)}"></i>${esc(p.n)} <b>${p.pct}%</b>${arrow(v && shiftOf(v, d, p))}${p.m != null ? ` <em>margin ${p.m}%</em>` : ""}</span>`).join("")}</div>`;
     const F_ = (c, k) => ((F[c.code] || {})[k] ?? null);
     const num = (v, u) => (v == null ? "–" : `${Math.round(v * 10) / 10}${u}`);
     const order = have.slice().sort((a, b) => ((F[b.code] || {}).mcap || 0) - ((F[a.code] || {}).mcap || 0)).slice(0, 12);
     if (me && !order.some((c) => c.code === me.code) && (S.cos[me.code] || {}).dims) order.push(me);
     const read = S.reads[scope];
-    return `<div class="card mx"><h2>${esc(title || "Business mix vs peers")} <span class="m">how revenue splits, from each company's own call · why margins and returns differ</span></h2>
+    // where the mix is moving: the biggest shifts in this peer set (a mix shift can change how the market values a stock)
+    const moves = order.flatMap((c) => (S.cos[c.code].shift || []).map((x) => ({ ...x, c })))
+      .sort((a, b) => Math.abs(b.pp) - Math.abs(a.pp)).filter((x, i, arr) => arr.findIndex((y) => y.c.code === x.c.code) === i).slice(0, 6);
+    return `<div class="card mx"><h2>${esc(title || "Business mix vs peers")} <span class="m">how revenue splits, from each company's own call and deck · why margins and returns differ</span></h2>
       ${read ? `<div class="mx-read">${read.html}</div>` : ""}
+      ${moves.length ? `<div class="mx-moves"><b>Where the mix is moving</b> ${moves.map((x) => `<span class="mx-mv"><a href="#companies/${encodeURIComponent(x.c.company)}">${esc(x.c.company.replace(/ (Ltd|Limited)\.?$/, ""))}</a>: ${esc(x.n)} ${x.then}% → <b>${x.now}%</b> <span class="mx-sh ${x.pp > 0 ? "up" : "dn"}">${x.pp > 0 ? "▲" : "▼"}${Math.abs(x.pp)}pp</span> <span class="m">since ${esc(x.since)}</span></span>`).join("")}</div>` : ""}
       <div style="overflow-x:auto"><table class="mx-t"><tr><th>Company</th><th>Revenue mix</th><th>Also</th><th>EBITDA margin<br><span class="m">% latest qtr</span></th><th>Operating margin<br><span class="m">% last FY</span></th><th>ROE<br><span class="m">%</span></th></tr>
       ${order.map((c) => { const v = S.cos[c.code], d = main(v), others = v.dims.filter((x) => x !== d);
         return `<tr class="${me && c.code === me.code ? "me" : ""}"><td><a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company)}</a>${v.model ? `<div class="m mx-mod">${esc(v.model)}</div>` : ""}</td>
-          <td class="mx-c"><div class="m" style="font-size:11px">${esc(DIMN[d.dim] || d.dim)}${v.basis ? " · " + esc(v.basis) : ""}</div>${bar(d)}</td>
-          <td class="mx-o">${others.map((o) => `<div><span class="m">${esc(DIMN[o.dim] || o.dim)}:</span> ${o.parts.map((p) => `${esc(p.n)} ${p.pct}%`).join(", ")}</div>`).join("") || "–"}</td>
+          <td class="mx-c"><div class="m" style="font-size:11px">${esc(DIMN[d.dim] || d.dim)}${v.basis ? " · " + esc(v.basis) : ""}</div>${bar(d, v)}</td>
+          <td class="mx-o">${others.map((o) => `<div><span class="m">${esc(DIMN[o.dim] || o.dim)}:</span> ${o.parts.map((p) => `${esc(p.n)} ${p.pct}%${arrow(shiftOf(v, o, p))}`).join(", ")}</div>`).join("") || "–"}</td>
           <td>${num((c.metrics || {}).ebitda_margin_pct, "%")}</td><td>${num(F_(c, "opm_fy"), "%")}</td><td>${num(F_(c, "roe"), "%")}</td></tr>`; }).join("")}
       </table></div>
-      <div class="m" style="font-size:11.5px;margin-top:6px">Shares are what each company said on its latest call (a remainder worked out from them is marked on hover). Companies that gave no split aren't shown.</div></div>`;
+      <div class="m" style="font-size:11.5px;margin-top:6px">Shares are what each company said on its latest call or deck (worked-out ones are marked on hover). ▲▼ = change in percentage points against an earlier share the company stated, or last quarter's call. Companies that gave no split aren't shown.</div></div>`;
   }
 
   async function companyMix(call) {

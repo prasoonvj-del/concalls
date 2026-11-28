@@ -34,7 +34,11 @@ DECK_PROMPT = """You are an equity analyst. Below is the text of an investor pre
 ### Key numbers
 (3-6 bullets: revenue, growth, margins, profit, volumes, order book, net debt - with the period)
 ### Business & segments
-(2-4 bullets: what drove the numbers, segment or geography mix)
+(2-4 bullets: what drove the numbers)
+### Revenue mix
+(bullets: each segment / product / customer type / geography's share of revenue or its revenue figure, for this period
+AND for an earlier period if the slides show one, e.g. "Radiology: 37% of revenue (Q2 FY27) vs 32% (FY24)". Skip if
+the slides give no split.)
 ### Targets & guidance
 (bullets: medium-term targets, capex plans, capacity additions, timelines. Skip if none.)
 {extra}
