@@ -723,12 +723,13 @@
   }
 
   const PIVOT_LBL = { capacity: "Capacity", order: "Big order", legal: "Legal / case", approval: "Approval", strategy: "Strategy shift",
-    "m&a": "M&A", funding: "Funding / debt", rating: "Rating", management: "Management" };
+    "m&a": "M&A", funding: "Funding / debt", rating: "Credit rating", management: "Management", "debt reduction & fund-raising": "Funding / debt",
+    "debt reduction": "Funding / debt", "m&a & consolidation": "M&A", "capacity expansion": "Capacity", product: "Strategy shift", ownership: "M&A" };
   const fixLink = (l) => (!l ? "" : /^(https?:|#)/.test(l) ? l : /\.pdf$/i.test(l) ? "https://www.bseindia.com/xml-data/corpfiling/AttachLive/" + l : "");
   const pivotLine = (r0, showCo = true) => { const r = Object.assign({}, r0, { link: fixLink(r0.link) }); return pivotLine0(r, showCo); };
   const pivotLine0 = (r, showCo = true) => `<div class="pv"><span class="kc" style="background:var(${r.sent === "-" ? "--neg" : "--s1"})">${esc(PIVOT_LBL[r.type] || r.type || "Pivot")}</span>
     ${showCo ? `<a href="#companies/${encodeURIComponent(r.company)}"><b>${esc(r.company)}</b></a> - ` : ""}${esc(r.what)}
-    ${r.theme ? ` <a class="thchip" href="#trackers/themes" onclick="localStorage.setItem('pivtheme', JSON.stringify(${esc(JSON.stringify(themeOf(r.theme)))}))">${esc(themeOf(r.theme))}</a>` : ""}${r.src ? ` <span class="m">(${esc(r.src)})</span>` : ""}
+    ${r.theme && !/^(capacity expansion|m&a|debt reduction|legal|other)/i.test(themeOf(r.theme)) ? ` <a class="thchip" href="#trackers/themes" onclick="localStorage.setItem('pivtheme', JSON.stringify(${esc(JSON.stringify(themeOf(r.theme)))}))">${esc(themeOf(r.theme))}</a>` : ""}${r.src ? ` <span class="m">(${esc(r.src)})</span>` : ""}
     ${r.why ? `<div class="m">→ ${esc(r.why)} · ${esc(r.date.slice(5))} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div>` : `<div class="m">${esc(r.date.slice(5))} · <a href="${esc(r.link)}" target="_blank" rel="noopener">source</a></div>`}</div>`;
   const median = (a) => { const b = a.slice().sort((p, q) => p - q), m = b.length >> 1; return b.length ? (b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2) : null; };
   const isWatch = (name) => watchlist().some((w) => sameCo(name, w) || String(name).toLowerCase().includes(w.toLowerCase()));
@@ -2248,20 +2249,30 @@
     const S = await getSearch();
     const groups = {};
     Object.entries(S.themes || {}).forEach(([t, list]) => { const k = themeOf(t); (groups[k] = groups[k] || []).push(...list); });
-    const rows = Object.entries(groups).map(([k, list]) => ({ k, list: list.sort((a, b) => (a.d < b.d ? 1 : -1)), cos: [...new Set(list.map((x) => x.c))] }))
-      .sort((a, b) => b.cos.length - a.cos.length);
-    if (!rows.length) { body.innerHTML = empty("No themes yet - they build up as pivots are recorded."); return; }
-    let sel = store.get("pivtheme", rows[0].k); if (!groups[sel]) sel = rows[0].k;
+    const GENERAL = /^(capacity expansion|m&a|debt reduction|legal|other)/i;  // the same as pivot kinds: not a theme of their own
+    const all = Object.entries(groups).map(([k, list]) => ({ k, list: list.sort((a, b) => (a.d < b.d ? 1 : -1)), cos: [...new Set(list.map((x) => x.c))] }));
+    const rows = all.filter((x) => x.cos.length >= 3 && !GENERAL.test(x.k)).sort((a, b) => b.cos.length - a.cos.length);
+    const gen = all.filter((x) => x.cos.length >= 3 && GENERAL.test(x.k)).sort((a, b) => b.cos.length - a.cos.length);
+    const small = all.filter((x) => x.cos.length < 3).length;
+    if (!rows.length && !gen.length) { body.innerHTML = empty("No themes yet - they build up as pivots are recorded."); return; }
+    let sel = store.get("pivtheme", (rows[0] || gen[0]).k); if (![...rows, ...gen].some((x) => x.k === sel)) sel = (rows[0] || gen[0]).k;
+    const tile = (x) => `<button class="th-t ${x.k === sel ? "on" : ""}" data-t="${esc(x.k)}"><span>${esc(x.k)}</span><span class="m">${x.cos.length}</span></button>`;
     const draw = () => {
-      const r = rows.find((x) => x.k === sel);
+      const r = [...rows, ...gen].find((x) => x.k === sel);
       const byCo = {}; r.list.forEach((x) => { (byCo[x.c] = byCo[x.c] || []).push(x); });
-      body.innerHTML = `<div class="card"><h2>Themes <span class="m">where companies are putting money - tap a theme · kept for good</span></h2>
-          <div class="sgrid">${rows.map((x) => `<button class="stile ${x.k === sel ? "on" : ""}" data-t="${esc(x.k)}"><span class="sn">${esc(x.k)}</span><span class="m">${x.cos.length}</span></button>`).join("")}</div></div>
-        <div class="card"><h2>${esc(sel)} <span class="m">${plural(r.cos.length, "company")} · newest first · <a href="#search" id="thsearch">search all mentions →</a></span></h2>
-          ${Object.entries(byCo).map(([co, xs]) => `<div class="thc"><a href="#companies/${encodeURIComponent(co)}"><b>${esc(co)}</b></a>
-            ${xs.map((x) => `<div class="m">${esc(x.d)} · ${esc(x.t.replace(/^\w[\w&]*:\s*/, ""))}${fixLink(x.l) ? ` <a href="${esc(fixLink(x.l))}" target="_blank" rel="noopener">source</a>` : ""}</div>`).join("")}</div>`).join("")}</div>`;
-      body.querySelectorAll("[data-t]").forEach((b) => b.onclick = () => { sel = b.dataset.t; store.set("pivtheme", sel); draw(); });
-      $("#thsearch").onclick = () => store.set("lastq", sel.split(/[ ,(&]/)[0]);
+      const line = (x) => `${esc(x.d)} · ${esc(x.t.replace(/^\w[\w&]*:\s*/, ""))}${fixLink(x.l) ? ` <a href="${esc(fixLink(x.l))}" target="_blank" rel="noopener">source</a>` : ""}`;
+      body.innerHTML = `<div class="th-wrap">
+        <div class="card th-list"><h2>Themes <span class="m">where companies are putting money</span></h2>
+          <select id="thsel" class="th-sel">${[...rows, ...gen].map((x) => `<option ${x.k === sel ? "selected" : ""}>${esc(x.k)}</option>`).join("")}</select>
+          <div class="th-tiles">${rows.map(tile).join("")}${gen.length ? `<div class="th-h m">General moves</div>${gen.map(tile).join("")}` : ""}
+          ${small ? `<div class="m th-note">${small} smaller themes (fewer than 3 companies) are in <a href="#search" id="thsearch">Search</a>.</div>` : ""}</div></div>
+        <div class="card th-body"><h2>${esc(sel)} <span class="m">${plural(r.cos.length, "company")} · latest move first</span></h2>
+          ${Object.entries(byCo).map(([co, xs]) => `<div class="th-co"><a href="#companies/${encodeURIComponent(co)}"><b>${esc(co)}</b></a>
+            <div class="th-ln">${line(xs[0])}</div>
+            ${xs.length > 1 ? `<details><summary class="m">${plural(xs.length - 1, "earlier move")}</summary>${xs.slice(1).map((x) => `<div class="th-ln m">${line(x)}</div>`).join("")}</details>` : ""}</div>`).join("")}</div></div>`;
+      body.querySelectorAll("[data-t]").forEach((b) => b.onclick = () => { sel = b.dataset.t; store.set("pivtheme", sel); draw(); if (window.innerWidth < 820) $(".th-body").scrollIntoView({ behavior: "smooth" }); });
+      $("#thsel").onchange = (e) => { sel = e.target.value; store.set("pivtheme", sel); draw(); };
+      if ($("#thsearch")) $("#thsearch").onclick = () => store.set("lastq", "");
     };
     draw();
   }
@@ -2381,12 +2392,11 @@
         const byType = {}, bySec = {};
         allRows.forEach((r) => { const t = PIVOT_LBL[r.type] || "Other"; byType[t] = (byType[t] || 0) + 1; });
         rows.forEach((r) => { const k = r.sector || "Other"; bySec[k] = (bySec[k] || 0) + 1; });
-        body.innerHTML = `<div class="grid g2" style="align-items:start"><div class="card"><h2>Pivots by kind <span class="m">tap to filter</span></h2><div id="kp1"></div></div>
-            <div class="card"><h2>Pivots by sector <span class="m">tap to filter</span></h2><div id="kp2"></div></div></div>
-          <div class="card"><h2>${plural(rows.length, "pivot")} ${st.kind || st.sec ? `<span class="chip link" id="kfil">${esc([st.kind, st.sec].filter(Boolean).join(" · "))} ✕</span>` : `<span class="m">strategy shifts, capacity, big orders, legal wins, approvals, M&A, funding, ratings</span>`}</h2>
-          <div class="pvg">${rows.slice(0, lim).map((r) => pivotLine(r)).join("")}</div>${full.length > lim ? `<button class="kmore">Show all ${full.length}</button>` : ""}</div>`;
-        barChart($("#kp1"), Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: k, value: v,
-          onclick: () => { st.kind = st.kind === k ? "" : k; draw(); } })), "pivot");
+        body.innerHTML = `<div class="tk-chips">${Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<button class="tk-chip ${st.kind === k ? "on" : ""}" data-k="${esc(k)}">${esc(k)} <span class="m">${v}</span></button>`).join("")}</div>
+          <div class="card"><h2>${plural(rows.length, "pivot")} ${st.kind || st.sec ? `<span class="chip link" id="kfil">${esc([st.kind, st.sec].filter(Boolean).join(" · "))} ✕</span>` : `<span class="m">checked for size: small cases, routine news and opinion pieces are left out</span>`}</h2>
+          <div class="pvg">${rows.slice(0, lim).map((r) => pivotLine(r)).join("")}</div>${full.length > lim ? `<button class="kmore">Show all ${full.length}</button>` : ""}</div>
+          <details class="card tk-ch"><summary><h2>Pivots by sector <span class="m">chart · tap a bar to filter</span></h2></summary><div id="kp2"></div></details>`;
+        body.querySelectorAll(".tk-chip").forEach((b) => b.onclick = () => { st.kind = st.kind === b.dataset.k ? "" : b.dataset.k; draw(); });
         if ($("#kfil")) $("#kfil").onclick = () => { st.kind = ""; $("#ks").value = ""; draw(); };
         barChart($("#kp2"), Object.entries(bySec).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => ({ label: k, value: v, onclick: () => { $("#ks").value = k; draw(); } })), "pivot");
       } else if (which === "results") {
@@ -2396,15 +2406,15 @@
         const bySec = {};
         rows.filter((r) => r.pat_yoy != null).forEach((r) => { (bySec[r.sector || "Other"] = bySec[r.sector || "Other"] || []).push(r.pat_yoy); });
         const secRows = Object.entries(bySec).filter(([, v]) => v.length >= 2).map(([k, v]) => ({ k, m: median(v), n: v.length })).sort((a, b) => b.m - a.m);
-        body.innerHTML = `${both.length >= 3 ? `<div class="card"><h2>Sales growth vs profit growth <span class="m">YoY %, one dot per company · dashed lines = medians</span></h2>
-            ${legend([["Strong", cssv("--pos")], ["Weak", cssv("--neg")], ["Mixed", cssv("--s4")], ["In line / not stated", cssv("--neu")]])}<div id="kr1"></div>
-            <div class="help">Top-right of the dashed lines: sales and profit both growing faster than the typical company. High sales growth with low profit growth points to margin pressure. Values beyond -100% / +300% are drawn at the edge. Tap a dot to open the company.</div></div>` : ""}
-          ${secRows.length ? `<div class="card"><h2>Median profit growth by sector <span class="m">YoY %, sectors with 2+ results</span></h2><div id="kr2"></div></div>` : ""}
-          <div class="card"><h2>${plural(rows.length, "result")}</h2><div class="tw"><table class="tt"><tr><th>Company</th><th>Qtr</th><th>Revenue Rs cr</th><th>YoY</th><th>Net profit Rs cr</th><th>YoY</th><th>Read</th><th>Date</th></tr>
+        body.innerHTML = `<div class="card"><h2>${plural(rows.length, "result")}</h2><div class="tw"><table class="tt"><tr><th>Company</th><th>Qtr</th><th>Revenue Rs cr</th><th>YoY</th><th>Net profit Rs cr</th><th>YoY</th><th>Read</th><th>Date</th></tr>
             ${rows.slice(0, lim).map((r) => `<tr><td>${isWatch(r.company) ? "★ " : ""}<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a><div class="m">${esc(r.sector || "")}</div></td>
               <td>${esc(r.quarter)}</td><td>${r.revenue == null ? "–" : fmtM(r.revenue)}</td><td class="${pctCls(r.rev_yoy)}">${pct(r.rev_yoy)}</td>
               <td>${r.profit == null ? "–" : fmtM(r.profit)}</td><td class="${pctCls(r.pat_yoy)}">${pct(r.pat_yoy)}</td>
-              <td>${r.read ? `<span class="rd ${esc(r.read.replace(/\W/g, ""))}">${esc(r.read)}</span>` : ""}</td><td>${esc(r.date.slice(5))} ${src(r)}</td></tr>`).join("")}</table>${full.length > lim ? `<button class="kmore">Show all ${full.length}</button>` : ""}</div></div>`;
+              <td>${r.read ? `<span class="rd ${esc(r.read.replace(/\W/g, ""))}">${esc(r.read)}</span>` : ""}</td><td>${esc(r.date.slice(5))} ${src(r)}</td></tr>`).join("")}</table>${full.length > lim ? `<button class="kmore">Show all ${full.length}</button>` : ""}</div></div>
+          ${both.length >= 3 ? `<details class="card tk-ch"><summary><h2>Sales growth vs profit growth <span class="m">YoY %, one dot per company · dashed lines = medians</span></h2></summary>
+            ${legend([["Strong", cssv("--pos")], ["Weak", cssv("--neg")], ["Mixed", cssv("--s4")], ["In line / not stated", cssv("--neu")]])}<div id="kr1"></div>
+            <div class="help">Top-right of the dashed lines: sales and profit both growing faster than the typical company. High sales growth with low profit growth points to margin pressure. Values beyond -100% / +300% are drawn at the edge. Tap a dot to open the company.</div></details>` : ""}
+          ${secRows.length ? `<details class="card tk-ch"><summary><h2>Median profit growth by sector <span class="m">YoY %, sectors with 2+ results</span></h2></summary><div id="kr2"></div></details>` : ""}`;
         if (both.length >= 3) scatterChart($("#kr1"), both.map((r) => ({ label: r.company + (r.quarter ? " · " + r.quarter : ""), x: clamp(r.rev_yoy), y: clamp(r.pat_yoy),
           color: cssv(RC[r.read] || "--neu"), note: r.read ? "Read: " + esc(r.read) : "", onclick: open(r.company) })), "Revenue growth YoY %", "Profit growth YoY %");
         if (secRows.length) rankChart($("#kr2"), secRows.map((x) => ({ label: x.k, value: Math.round(x.m * 10) / 10, color: cssv(x.m >= 0 ? "--pos" : "--neg"),
@@ -2413,11 +2423,11 @@
         const val = rows.filter((r) => r.value != null).sort((a, b) => b.value - a.value);
         const bySec = {};
         val.forEach((r) => { const k = r.sector || "Other"; bySec[k] = (bySec[k] || 0) + r.value; });
-        body.innerHTML = `${val.length ? `<div class="card"><h2>Biggest orders <span class="m">Rs crore</span></h2><div id="ko1"></div></div>
-          <div class="card"><h2>Order value by sector <span class="m">Rs crore, total in the period</span></h2><div id="ko2"></div></div>` : ""}
-          <div class="card"><h2>${plural(rows.length, "order")}</h2><div class="tw"><table class="tt"><tr><th>Company</th><th>Rs cr</th><th>Client</th><th>For</th><th>Date</th></tr>
+        body.innerHTML = `<div class="card"><h2>${plural(rows.length, "order")}</h2><div class="tw"><table class="tt"><tr><th>Company</th><th>Rs cr</th><th>Client</th><th>For</th><th>Date</th></tr>
           ${rows.slice(0, lim).map((r) => `<tr><td>${isWatch(r.company) ? "★ " : ""}<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a><div class="m">${esc(r.sector || "")}</div></td>
-            <td>${r.value == null ? "–" : fmtM(r.value)}</td><td>${esc(r.client)}</td><td>${esc(r.what)}</td><td>${esc(r.date.slice(5))} ${src(r)}</td></tr>`).join("")}</table>${full.length > lim ? `<button class="kmore">Show all ${full.length}</button>` : ""}</div></div>`;
+            <td>${r.value == null ? "–" : fmtM(r.value)}</td><td>${esc(r.client)}</td><td>${esc(r.what)}</td><td>${esc(r.date.slice(5))} ${src(r)}</td></tr>`).join("")}</table>${full.length > lim ? `<button class="kmore">Show all ${full.length}</button>` : ""}</div></div>
+          ${val.length ? `<details class="card tk-ch"><summary><h2>Biggest orders <span class="m">Rs crore</span></h2></summary><div id="ko1"></div></details>
+          <details class="card tk-ch"><summary><h2>Order value by sector <span class="m">Rs crore, total in the period</span></h2></summary><div id="ko2"></div></details>` : ""}`;
         if (val.length) {
           barChart($("#ko1"), val.slice(0, 15).map((r) => ({ label: r.company, value: Math.round(r.value), note: esc([r.client, r.what].filter(Boolean).join(" · ")), onclick: open(r.company) })), "Rs crore");
           barChart($("#ko2"), Object.entries(bySec).sort((a, b) => b[1] - a[1]).slice(0, 15).map(([k, v]) => ({ label: k, value: Math.round(v), onclick: () => { $("#ks").value = k; draw(); } })), "Rs crore");
@@ -2425,34 +2435,41 @@
       } else {
         const posA = (r) => /upgrade|initiate|raise/.test(r.action) && !/sell|reduce|underweight/i.test(r.rating) || (/buy|add|outperform|overweight/i.test(r.rating) && !/downgrade|cut/.test(r.action));
         const negA = (r) => /downgrade|cut/.test(r.action) || /sell|reduce|underperform|underweight/i.test(r.rating);
+        const KINDS = [["research", "Brokerage research"], ["technical", "Trading picks & technical calls"], ["quant", "Automated stock scores"]];
+        const kindOf = (r) => r.kind || "research";
+        const nK = {}; rows.forEach((r) => { nK[kindOf(r)] = (nK[kindOf(r)] || 0) + 1; });
+        let ck = store.get("trk-callkind", "research"); if (!nK[ck]) ck = "research";
+        const rk = rows.filter((r) => kindOf(r) === ck);
         const bySec = {};
-        rows.forEach((r) => { const k = r.sector || "Other"; const o = bySec[k] = bySec[k] || { pos: 0, neg: 0, neu: 0 }; if (negA(r)) o.neg++; else if (posA(r)) o.pos++; else o.neu++; });
+        rk.forEach((r) => { const k = r.sector || "Other"; const o = bySec[k] = bySec[k] || { pos: 0, neg: 0, neu: 0 }; if (negA(r)) o.neg++; else if (posA(r)) o.pos++; else o.neu++; });
         const cnt = {};
-        rows.forEach((r) => { cnt[r.company] = (cnt[r.company] || 0) + 1; });
-        const init = rows.filter((r) => /initiat/.test(r.action || "")).sort((a, b) => (a.date < b.date ? 1 : -1));
+        rk.forEach((r) => { cnt[r.company] = (cnt[r.company] || 0) + 1; });
         const icAll = ((window.DESK_TRACK || {}).ic || []).filter((r) => !$("#ks").value || r.sector === $("#ks").value)
           .slice().sort((a, b) => (b.init - a.init) || (a.date < b.date ? 1 : -1));
-        body.innerHTML = `${icAll.length ? `<div class="card"><h2>Broker research <span class="m">initiations first, then research notes · read from the articles · ${icAll.length}</span></h2>${icAll.slice(0, st.lim > 25 ? 1000 : 8).map((r) => icNote(r, true)).join("")}</div>` : ""}
-          ${!icAll.length && init.length ? `<div class="card"><h2>Initiating coverage <span class="m">new research coverage by brokerages · ${init.length} in the period</span></h2><ul class="list">
-          ${init.slice(0, st.lim > 25 ? 1000 : 12).map((r) => `<li><div class="t"><a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a> - ${esc(r.broker)}: <b class="${negA(r) ? "dn" : posA(r) ? "up" : ""}">${esc(r.rating || "rating n/a")}</b>${r.target ? ", target Rs " + fmt(Math.round(r.target)) : ""}</div>
-            ${r.why ? `<div class="m">${esc(r.why)}</div>` : ""}<div class="src">${esc(r.sector || "")} · ${esc(r.date)} ${src(r)}</div></li>`).join("")}</ul></div>` : ""}
-          <div class="card"><h2>Brokers' tilt by sector <span class="m">bullish calls → · ← bearish calls</span></h2><div id="kc1"></div></div>
-          <div class="card"><h2>Most-discussed stocks <span class="m">number of broker calls</span></h2><div id="kc2"></div></div>
-          <div class="card"><h2>${plural(rows.length, "call")}</h2><div class="tw"><table class="tt"><tr><th>Company</th><th>Broker</th><th>Rating</th><th>Target Rs</th><th>Action</th><th>Date</th></tr>
-          ${rows.slice(0, lim).map((r) => `<tr><td>${isWatch(r.company) ? "★ " : ""}<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a><div class="m">${esc(r.sector || "")}</div></td>
+        const HELP = { research: "rating and target price from a brokerage's research desk",
+          technical: "short-term trading ideas from TV / web analysts - with stop-losses, usually days to weeks",
+          quant: "scores from rating websites' formulas - no analyst behind them" };
+        body.innerHTML = `<div class="tk-chips">${KINDS.filter(([k]) => nK[k]).map(([k, n]) => `<button class="tk-chip ${k === ck ? "on" : ""}" data-ck="${k}">${n} <span class="m">${nK[k]}</span></button>`).join("")}</div>
+          <div class="card"><h2>${plural(rk.length, "call")} <span class="m">${HELP[ck]}</span></h2><div class="tw"><table class="tt"><tr><th>Company</th><th>${ck === "technical" ? "From" : "Broker"}</th><th>Rating</th><th>Target Rs</th><th>Action</th><th>Date</th></tr>
+          ${rk.slice(0, lim).map((r) => `<tr><td>${isWatch(r.company) ? "★ " : ""}<a href="#companies/${encodeURIComponent(r.company)}">${esc(r.company)}</a><div class="m">${esc(r.sector || "")}</div></td>
             <td>${esc(r.broker)}</td><td class="${negA(r) ? "dn" : posA(r) ? "up" : ""}">${esc(r.rating)}</td><td>${r.target == null ? "–" : fmt(Math.round(r.target))}</td>
-            <td>${esc(r.action)}${r.why ? `<div class="m">${esc(r.why)}</div>` : ""}</td><td>${esc(r.date.slice(5))} ${src(r)}</td></tr>`).join("")}</table>${full.length > lim ? `<button class="kmore">Show all ${full.length}</button>` : ""}</div></div>`;
+            <td>${esc(r.action === "initiate" ? "starts coverage" : r.action)}${r.why ? `<div class="m">${esc(r.why)}</div>` : ""}</td><td>${esc(r.date.slice(5))} ${src(r)}</td></tr>`).join("")}</table>${rk.length > lim ? `<button class="kmore">Show all ${rk.length}</button>` : ""}</div></div>
+          ${ck === "research" && icAll.length ? `<details class="card tk-ch"><summary><h2>Broker research notes <span class="m">starts of coverage first, then notes · read from the articles · ${icAll.length}</span></h2></summary>${icAll.slice(0, st.lim > 25 ? 1000 : 10).map((r) => icNote(r, true)).join("")}</details>` : ""}
+          <details class="card tk-ch"><summary><h2>Brokers' tilt by sector <span class="m">chart · bullish → · ← bearish</span></h2></summary><div id="kc1"></div></details>
+          <details class="card tk-ch"><summary><h2>Most-discussed stocks <span class="m">chart · number of calls</span></h2></summary><div id="kc2"></div></details>`;
+        body.querySelectorAll("[data-ck]").forEach((b) => b.onclick = () => { store.set("trk-callkind", b.dataset.ck); draw(); });
         divergingChart($("#kc1"), Object.entries(bySec).sort((a, b) => (b[1].pos + b[1].neg) - (a[1].pos + a[1].neg)).slice(0, 15).map(([k, o]) => ({
           label: k, pos: o.pos, neg: o.neg, neu: o.neu, total: o.pos + o.neg + o.neu,
           tip: `<b>${esc(k)}</b><br>${o.pos} bullish · ${o.neg} bearish · ${o.neu} neutral<br><span class="m">Tap to filter</span>`,
           onclick: () => { $("#ks").value = k; draw(); } })));
         barChart($("#kc2"), Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k, v]) => ({ label: k, value: v,
-          note: esc(rows.filter((r) => r.company === k).map((r) => r.broker + ": " + r.rating).slice(0, 5).join("<br>")), onclick: open(k) })), "call");
+          note: esc(rk.filter((r) => r.company === k).map((r) => r.broker + ": " + r.rating).slice(0, 5).join("<br>")), onclick: open(k) })), "call");
       }
     };
     ["kq", "ks", "kw", "kd"].forEach((id) => { $("#" + id).addEventListener(id === "kq" ? "input" : "change", () => { st.lim = 25; draw(); }); });
     $("#kclr").onclick = () => { $("#kq").value = ""; $("#ks").value = ""; $("#kw").checked = false; st.kind = ""; st.lim = 25; draw(); };
     $("#kbody").addEventListener("click", (e) => { if (e.target.closest(".kmore")) { st.lim = 100000; draw(); } });
+    $("#kbody").addEventListener("toggle", (e) => { if (e.target.open) redraws.forEach((f) => f()); }, true);
     draw();
   }
 

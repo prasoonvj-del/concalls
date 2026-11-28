@@ -63,6 +63,11 @@ Rules:
   likely, under consideration, on the agenda, or a draft (e.g. "Cabinet likely to approve fertiliser subsidy");
   decided = approved, notified or announced in this story. Subsidies, MSP / FRP, duties, PLI schemes, GST rates,
   bans and export curbs, tariff orders, RBI / SEBI rule changes. Not routine statements or speeches.
+- CALL only for a named brokerage or research analyst - never the company itself as the broker, never automated
+  stock scores (e.g. "upgraded to Strong Sell / Hold" by a rating website). "initiate" only if the story literally says
+  initiates / starts / begins coverage.
+- PIVOT must matter for a company of its size: no small lawsuits, consumer-court or minor tax cases, independent
+  director changes, stock splits / bonus / record dates, brokerage rating changes (those are CALL) or opinion pieces.
 - A story can give several lines (e.g. two brokerages). Stories with none of these facts: write nothing.
 - Output only the lines, nothing else.
 
@@ -283,13 +288,17 @@ def update(stories, pool, cache, now_utc):
                 uid = f"E|{d}|{re.sub(r'[^a-z0-9]', '', rec['what'].lower())[:40]}"
                 if not rec["what"]:
                     continue
-            if uid in idx[KINDS[kind]]:
+            if uid in idx[KINDS[kind]] or uid in cache.get("screened_out", {}):
                 continue
             rec["uid"] = uid
             idx[KINDS[kind]][uid] = rec
             added += 1
     check_listed(idx["pivots"], cache)
     tidy(idx, cache)
+    try:
+        screen(idx, cache)
+    except Exception as e:
+        say(f"  pivot / broker-call screening skipped: {str(e)[:150]}")
     cutoff = (now_utc.astimezone(IST) - dt.timedelta(days=KEEP_DAYS)).strftime("%Y-%m-%d")
     today = now_utc.astimezone(IST).strftime("%Y-%m-%d")
     for k in ("results", "orders", "calls", "pivots"):
@@ -311,6 +320,185 @@ def update(stories, pool, cache, now_utc):
     data["updated"] = now_utc.astimezone(IST).isoformat(timespec="minutes")
     C.DATA.mkdir(parents=True, exist_ok=True)
     TRACK_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+
+# ============================================================================ screening: noise out, sizes checked
+
+FIRM = re.compile(r"(?i)securities|capital|broking|brokers|financial|finance|equities|research|investments|advisors|"
+                  r"wealth|bank|partners|sachs|stanley|lynch|jefferies|citi|clsa|hsbc|ubs|nomura|macquarie|bernstein|"
+                  r"jp ?morgan|bofa|kotak|nuvama|emkay|ambit|elara|geojit|motilal|mofsl|icici|hdfc|axis|anand rathi|"
+                  r"choice|pl capital|\bjm\b|incred|ventura|dolat|prabhudas|systematix|antique|iifl|centrum|sharekhan|"
+                  r"\bsbi|\bbob\b|investec|mirae|goldman|barclays|deutsche|wedbush|mizuho|stifel|oddo|pareto|riley|"
+                  r"seaport|litchfield|lake street|bernstein|morningstar|crisil|asian markets|maybank|daiwa|smc|"
+                  r"religare|angel|5paisa|bajaj broking|lkp|arihant|sbicap|monarch|ashika|ventura|yes sec|hem sec|"
+                  r"edelweiss|phillip|keynote|bp wealth|reliance sec|ajcon|marwadi|stoxbox|mehta|samco|globe|hensex")
+TECH = re.compile(r"(?i)stop[- ]?loss|\bSL\b|intraday|near[- ]term|short[- ]term|technical|breakout|chart|momentum|"
+                  r"stocks? to buy (today|tomorrow|this week|now)|top \d+ stocks|futures|trading (idea|call|pick)|"
+                  r"buy or sell|\bF&O\b|options? strateg|swing")
+QUANT = re.compile(r"(?i)(upgraded|downgraded) to (strong )?(buy|sell|hold)|strong sell|mojo|"
+                   r"(technical|fundamental|valuation|financial)s? (improve|deteriorat|weak|trend)")
+INIT = re.compile(r"(?i)initiat|start(s|ed|ing)? (coverage|at|with)|begin(s|ning)? coverage|coverage (on|of)|new coverage")
+CREDIT = re.compile(r"(?i)crisil|icra|\bcare\b|india ratings|ind-?ra|moody|s&p|fitch|acuit|brickwork|infomerics|credit|bond|ncd|\bAA|\bA\+|\bBBB")
+TOP_JOB = re.compile(r"(?i)\b(ceo|md|managing director|cfo|coo|cto|chairman|chairperson|chief|promoter|founder|"
+                     r"whole[- ]time|president|head|vice chairman|executive director)\b")
+JUNK = re.compile(r"(?i)stock split|\b1:\d+ split|bonus (issue|shares?)|record date|\bdrhp\b|\bipo\b|anchor (book|investors)|"
+                  r"value trap|should you|what does .* mean|is it time|worth buying")
+
+
+def _crore(text):
+    """The largest money amount in a text, in Rs crore (None if none). Only amounts with a unit (crore, lakh, million,
+    billion) count - a share price or a per-unit figure isn't the size of the event."""
+    best = None
+    for m in re.finditer(r"(?i)([\d,]+(?:\.\d+)?)\s*(lakh crore|lakh cr|crores?|cr\b|lakhs?|million|mn\b|billion|bn\b)", text or ""):
+        try:
+            v = float(m.group(1).replace(",", ""))
+        except ValueError:
+            continue
+        u = m.group(2).lower()
+        before, after = (text or "")[max(0, m.start() - 8):m.start()], (text or "")[m.end():m.end() + 10]
+        money = re.search(r"(?i)(rs\.?|inr|₹|\$|usd|us\$)\s*$", before) or re.match(r"(?i)\s*(rupees|dollars|usd)", after)
+        if not u.startswith("cr") and not money:
+            continue  # "13 lakh units", "1.25 million tonnes" - not money
+        usd = bool(re.search(r"(?i)(\$|usd|us\$|dollar)\s*$", (text or "")[max(0, m.start() - 6):m.start()])) or \
+            bool(re.match(r"(?i)\s*(usd|dollars?)", (text or "")[m.end():m.end() + 9]))
+        fx = 85 if usd else 1
+        v = v * 1e5 if u.startswith("lakh c") else v if u.startswith("cr") else v / 100 if u.startswith("lakh") else \
+            v * fx / 10 if u in ("million", "mn") else v * fx * 100
+        best = v if best is None else max(best, v)
+    return best
+
+
+FOREIGN = re.compile(r"(?i)ad-hoc-news|investing\.com|nasdaq|nyse|\$\d|usd \d|€|\bAG\b|\bInc\b|-- rating set")
+_DIRN = None
+
+
+def _indian(name):
+    """Is this name a company in our directory of Indian listed companies?"""
+    global _DIRN
+    if _DIRN is None:
+        try:
+            import directory as DIR
+            _DIRN = {C.norm(v["n"]) for k, v in DIR.load().items() if k != "_meta" and v.get("n")}
+        except Exception:
+            _DIRN = set()
+    n = C.norm(name)
+    return len(n) > 2 and any(d == n or (len(n) > 4 and d.startswith(n)) for d in _DIRN)
+
+
+THREAT = re.compile(r"(?i)blacklist|debar|\bban|licen[cs]e|shut|suspend|cancel|revok|closure|seal")
+
+
+REVIEW_PIVOTS = """You check a list of company news items before they are shown to an investor as "pivots" - events that
+can change how the market values the company. For each, the company's size is given (annual revenue and market value,
+Rs crore). Keep it only if it could plausibly move the share price or change the business:
+- court, arbitration, tax or regulatory cases: keep only if the money at stake is a meaningful share of revenue or
+  profit, or the case threatens a licence, a plant, a product or a key contract. A consumer-court case, a small fine,
+  a demand of a few crore for a company with thousands of crore of revenue -> DROP.
+- orders, acquisitions, capex, fund-raises: keep only if large for this company's size.
+- management: keep CEO / MD / CFO / chairman / promoter changes; drop independent or nominee directors.
+- drop: brokerage rating changes, automated stock scores, splits / bonus / dividends, IPO or listing news, opinion
+  pieces and "should you buy" articles, sector news that only mentions the company, routine product launches.
+Answer one line per item, nothing else:  id | KEEP or DROP | reason (max 10 words)
+
+ITEMS:
+"""
+
+
+def screen(idx, cache, review_limit=300, minutes=8):
+    """Takes out what isn't a real pivot or a real broker call. Rule checks first, then the company's size, then a
+    review by the stronger AI of what is left (each pivot is reviewed once; what is dropped stays dropped)."""
+    out = cache.setdefault("screened_out", {})
+    try:
+        import fundamentals
+        F = fundamentals.load()
+    except Exception:
+        F = {}
+
+    def size(r):
+        f = F.get(str(r.get("code") or "")) or {}
+        return max(f.get("rev") or 0, f.get("ttm_rev") or 0), f.get("mcap") or 0
+
+    def drop(k, uid, why):
+        out[uid] = why
+        idx[k].pop(uid, None)
+
+    # broker calls
+    for uid, r in list(idx["calls"].items()):
+        b, co, title = (r.get("broker") or "").strip(), r.get("company") or "", r.get("title") or ""
+        text = f"{title} {r.get('why', '')}"
+        if b in ("", "-") and not QUANT.search(text):
+            drop("calls", uid, "no broker named"); continue
+        if b and (C.norm(b)[:6] == C.norm(co)[:6] or C.norm(b) in C.norm(co)):
+            drop("calls", uid, "the company itself, not a broker"); continue
+        if not r.get("code") and (co in ("", "-") or FOREIGN.search(title) or not _indian(co)):
+            drop("calls", uid, "not an Indian listed company"); continue
+        if QUANT.search(text) and not FIRM.search(b):
+            r["kind"] = "quant"
+        elif TECH.search(text) or (b and not FIRM.search(b) and re.fullmatch(r"[A-Z][a-z]+( [A-Z][a-z]+){1,2}", b)):
+            r["kind"] = "technical"
+        else:
+            r["kind"] = "research"
+        if r.get("action") == "initiate" and not INIT.search(text):
+            r["action"] = "new call"
+
+    # pivots: rules, then size
+    for uid, r in list(idx["pivots"].items()):
+        if r.get("src"):  # from a concall or an investor deck: the company's own words, already filtered
+            continue
+        what, title, typ = r.get("what") or "", r.get("title") or "", (r.get("type") or "").lower()
+        both = f"{what} {title}"
+        if not r.get("company") or r["company"] == "-":
+            drop("pivots", uid, "no company"); continue
+        if typ == "rating" and not CREDIT.search(both):
+            drop("pivots", uid, "a brokerage rating or stock score - see Broker calls"); continue
+        if QUANT.search(both):
+            drop("pivots", uid, "automated stock score"); continue
+        if typ == "management" and not TOP_JOB.search(what):
+            drop("pivots", uid, "not a top-management change"); continue
+        if JUNK.search(what) or re.search(r"(?i)value trap|should you|what does .* mean|stock split|bonus issue|record date", title):
+            drop("pivots", uid, "routine or opinion, not a pivot"); continue
+        amts = [a for a in (_crore(what), _crore(title)) if a is not None]
+        amt = max(amts) if amts else None
+        rev, cap = size(r)
+        if amt is not None and not THREAT.search(both) and (rev or cap) and amt < 0.01 * rev and amt < 0.005 * cap and typ in (
+                "legal", "m&a", "funding", "order", "debt reduction & fund-raising"):
+            drop("pivots", uid, f"Rs {amt:g} crore is small for a company of this size"); continue
+
+    # what is left: one review by the stronger AI, newest first, a few batches per update
+    todo = sorted((r for r in idx["pivots"].values() if not r.get("src") and not r.get("rv")),
+                  key=lambda r: r["date"], reverse=True)[:review_limit]
+    if not todo:
+        return
+    try:
+        pool = C.Pool(quality=True)
+    except C.AIError:
+        return
+    stop = time.time() + minutes * 60
+    kept = dropped = 0
+    for i in range(0, len(todo), 50):
+        if time.time() > stop:
+            break
+        batch = todo[i:i + 50]
+        lines = []
+        for j, r in enumerate(batch):
+            rev, cap = size(r)
+            sz = f"revenue Rs {rev:,.0f} cr, market value Rs {cap:,.0f} cr" if rev or cap else "size not known"
+            lines.append(f"[{j}] {r['company']} ({sz}) | {r.get('type', '')}: {r.get('what', '')} | headline: {r.get('title', '')[:160]}")
+        try:
+            text, _ = pool.ask(REVIEW_PIVOTS + "\n".join(lines), label=f"checking pivots {i + 1}-{i + len(batch)} of {len(todo)}")
+        except C.AIError as e:
+            say(f"  pivot review stopped: {str(e)[:100]}")
+            break
+        for ln in text.splitlines():
+            m = re.match(r"\s*\[?(\d+)\]?\s*\|\s*(KEEP|DROP)\s*\|?\s*(.*)", ln, re.I)
+            if not m or int(m.group(1)) >= len(batch):
+                continue
+            r = batch[int(m.group(1))]
+            if m.group(2).upper() == "DROP":
+                drop("pivots", r["uid"], "review: " + m.group(3).strip()[:80]); dropped += 1
+            else:
+                r["rv"] = 1; kept += 1
+    say(f"  pivots checked for size and relevance: {kept} kept, {dropped} dropped")
 
 
 # ============================================================================ one name, one sector, no repeats
