@@ -432,6 +432,71 @@ def _close_one(num, company, ok=True):
     _gh("PATCH", f"/issues/{num}", json={"state": "closed"})
 
 
+def open_research(company, code, sector, start):
+    """A fact sheet without an AI web search (Gemini's search isn't free; Groq's runs out early each day):
+    Wikipedia's article on the company, dated headlines from Google News going back to {start}, and the company's
+    own exchange filings / turning points we have collected. Sources stay with each line."""
+    import xml.etree.ElementTree as ET
+    import requests
+    name = short_name(company)
+    H = {"User-Agent": "MarketDesk/1.0 (research; github.com/prasoonvj-del/concalls)"}
+    out, srcs = [], []
+    try:  # Wikipedia: the business, history, plants, segments
+        r = requests.get("https://en.wikipedia.org/w/api.php", headers=H, timeout=20, params={
+            "action": "query", "list": "search", "srsearch": f'"{name}" India company', "format": "json", "srlimit": 3})
+        for hit in (r.json().get("query", {}).get("search") or []):
+            title = hit["title"]
+            if name.split()[0].lower() not in title.lower():
+                continue
+            r2 = requests.get("https://en.wikipedia.org/w/api.php", headers=H, timeout=20, params={
+                "action": "query", "prop": "extracts", "explaintext": 1, "titles": title, "format": "json"})
+            page = next(iter(r2.json().get("query", {}).get("pages", {}).values()), {})
+            txt = re.sub(r"\n{2,}", "\n", page.get("extract") or "")
+            txt = re.split(r"\n== (?:See also|References|External links|Notes) ==", txt)[0]
+            if len(txt) > 400:
+                out.append(f"### From Wikipedia ({title})\n" + txt[:7000])
+                srcs.append(f"https://en.wikipedia.org/wiki/{quote_plus(title.replace(' ', '_'))}")
+            break
+    except Exception:
+        pass
+    heads = []
+    for q in (f'"{name}"', f'"{name}" (capacity OR order OR acquisition OR plant OR guidance OR results)'):
+        try:  # Google News: dated headlines, newest and older
+            r = requests.get("https://news.google.com/rss/search", headers=H, timeout=20,
+                             params={"q": f"{q} after:{start[:4]}-01-01", "hl": "en-IN", "gl": "IN", "ceid": "IN:en"})
+            for it in ET.fromstring(r.content).iter("item"):
+                t, d = it.findtext("title") or "", it.findtext("pubDate") or ""
+                src = it.findtext("source") or ""
+                try:
+                    dd = dt.datetime.strptime(d[5:16], "%d %b %Y").strftime("%b %Y")
+                except ValueError:
+                    dd = d[5:16]
+                heads.append((d and dt.datetime.strptime(d[5:16], "%d %b %Y") if d else dt.datetime.min, f"- {dd}: {t} [{src}]"))
+        except Exception:
+            continue
+    seen, lines = set(), []
+    for _, ln in sorted(heads, key=lambda x: x[0]):
+        k = re.sub(r"\W+", "", ln.lower())[:70]
+        if k not in seen:
+            seen.add(k)
+            lines.append(ln)
+    if lines:
+        out.append("### Headlines (Google News, oldest first)\n" + "\n".join(lines[-120:]))
+        srcs.append("news.google.com")
+    try:
+        T = json.loads((C.DATA / "trackers.json").read_text(encoding="utf-8"))  # turning points, orders, results we collected
+        T = T.get("trackers", T)
+        rows = [r for k in ("pivots", "orders", "results", "events", "calls") for r in (T.get(k) or [])
+                if str(r.get("code")) == str(code) or short_name(r.get("company", "")).lower() == name.lower()]
+        if rows:
+            out.append("### Our record of filings and news\n" + "\n".join(
+                f"- {r.get('date', '')}: {r.get('type', '')} {r.get('what') or r.get('title') or r.get('head') or ''} "
+                f"{r.get('why', '')}".strip() for r in sorted(rows, key=lambda r: r.get("date", ""))[-60:]))
+    except Exception:
+        pass
+    return "\n\n".join(out), ", ".join(srcs)
+
+
 def _record(code, name):
     try:
         import timeline
@@ -500,7 +565,7 @@ def step(mode="full", hard_stop=None):
     deadline = time.time() + minutes * 60
     if hard_stop:
         deadline = min(deadline, hard_stop)
-    made, search_fails = 0, 0
+    made, search_fails, search_down = 0, 0, False
     start = (today - dt.timedelta(days=730)).strftime("%b %Y")
     for c in todo:
         if made >= n_max or time.time() > deadline or (hard_stop and time.time() + 7 * 60 > hard_stop):
@@ -538,21 +603,19 @@ def step(mode="full", hard_stop=None):
                 facts, src, used = ask_gemini_search(research)
             except C.AIError as e:
                 say(f"  Gemini search: {str(e)[:160]} - using Groq's web search")
-        if facts is None:
-            if ai is None:
-                break
+        if facts is None and ai is not None and not search_down:
             try:
                 facts, used = ask_compound(ai, research), COMPOUND
-            except C.QuotaOver as e2:
-                say(f"  {e2}")
-                break
-            except C.AIError as e2:
-                say(f"  {c['company']}: {str(e2)[:140]}")
+            except C.AIError as e2:  # (used up for the day, or failing: the open sources below take over)
+                say(f"  {c['company']}: web search - {str(e2)[:120]}")
                 search_fails += 1
-                if search_fails >= 3 or not [m for m in SEARCHERS if m[0] not in _working.get("groq_off", set())]:
-                    say("  web search isn't answering - the rest wait for the next update")
-                    break
-                continue
+                if isinstance(e2, C.QuotaOver) or search_fails >= 2 or \
+                        not [m for m in SEARCHERS if m[0] not in _working.get("groq_off", set())]:
+                    search_down = True
+                    say("  AI web search isn't available - researching from Wikipedia, Google News and our filings")
+        if facts is None:
+            facts, src = open_research(c["company"], code, args["sector"], start)
+            used = "open sources"
         search_fails = 0
         facts = re.sub(r"【[^】]*】", "", facts)
         if len(facts) < 600:

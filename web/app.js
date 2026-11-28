@@ -142,6 +142,14 @@
     ul.replaceWith(wrap);
     return box.innerHTML;
   }
+  // last touch on every page: BSE's "-$" suffix on some company names, and stray **bold** marks in one-liners
+  function tidyText(root) {
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const fix = [];
+    for (let n = w.nextNode(); n; n = w.nextNode()) if (/-\$|\*\*|&amp;/.test(n.nodeValue)) fix.push(n);
+    fix.forEach((n) => { n.nodeValue = n.nodeValue.replace(/(Ltd|Limited|Ltd\.)-\$/g, "$1").replace(/\*\*/g, "").replace(/&amp;/g, "&"); });
+    root.querySelectorAll("a[title],[title]").forEach((e) => { if (/-\$/.test(e.title)) e.title = e.title.replace(/-\$/g, ""); });
+  }
   function watchUp(html) {
     const box = document.createElement("div"); box.innerHTML = html;
     const hs = [...box.querySelectorAll("h1,h2,h3,h4")];
@@ -2532,6 +2540,7 @@
     }
     fillDecks(view);
     numberRefs(view);
+    tidyText(view);
     if (!arg) scrollTo(0, 0);
     // after the first page is on screen, fetch the shared company data quietly so the next page opens at once
     if (!route.warm) { route.warm = 1; const warm = () => { loadCtx(); readsData(); if (!window.DESK_CONEWS) loadScript("data/conews.js").catch(() => {}); }; if (window.requestIdleCallback) requestIdleCallback(warm, { timeout: 2500 }); else setTimeout(warm, 1200); }

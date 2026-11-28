@@ -198,6 +198,7 @@ def ascii_tables(text):
 
 def md(text):
     """Markdown -> HTML, tolerant of AI formatting (headings/lists stuck to the end of a table)."""
+    text = re.sub(r"&amp;(?=[\s\w])", "&", text or "")  # the writer's own "&amp;" would show as text
     lines, out = ascii_tables(text).splitlines(), []
     for i, ln in enumerate(lines):
         prev = out[-1] if out else ""
