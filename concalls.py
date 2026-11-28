@@ -945,6 +945,9 @@ def linked_transcript(data, text):
     except Exception:
         pass
     seen, tried = set(), 0
+    # OCR glues the next word onto a link ("...Archives.aspxWe", "...company-updatesKindly"): cut it off
+    urls = [re.sub(r"(\.(?:aspx|html?|pdf|php|jsp))[A-Z]\w*$", r"\1", u) for u in urls]
+    urls = [re.sub(r"(?<=[a-z0-9])[A-Z][a-z]{2,}$", "", u) for u in urls]
     for u in sorted(dict.fromkeys(u.rstrip(".,;") for u in urls),
                     key=lambda u: (not re.search(r"transcript|concall|earnings.?call|conference", u, re.I), not u.lower().endswith(".pdf"))):
         if u in seen or re.search(r"bseindia|nseindia|youtube|zoom\.|webex|teams\.|mailto|linkedin|twitter", u, re.I):
@@ -970,17 +973,26 @@ def linked_transcript(data, text):
             except Exception:
                 body = ""
         elif "html" in r.headers.get("content-type", ""):
-            # a page listing documents: take a transcript PDF linked from it
-            for m in re.finditer(r'href=["\']([^"\']+\.pdf)["\']', r.text, re.I):
-                link = requests.compat.urljoin(r.url, m.group(1))
-                if re.search(r"transcript|concall|earnings", link, re.I):
-                    try:
-                        r2 = requests.get(link, timeout=45, headers={"User-Agent": "Mozilla/5.0"})
-                        if r2.content[:4] == b"%PDF":
-                            body = pdf_text(r2.content)
+            # a page listing documents: the transcript PDF linked from it, this quarter's first
+            cands = []
+            for m in re.finditer(r'<a\b[^>]*href=["\']([^"\'#]+)["\'][^>]*>(.*?)</a>', r.text, re.I | re.S):
+                href, label = m.group(1), re.sub(r"<[^>]+>|\s+", " ", m.group(2))
+                both = href + " " + label
+                if not re.search(r"\.pdf|download|getfile|document", href, re.I):
+                    continue
+                score = 2 * bool(re.search(r"transcript|concall|earnings.?call|conference.?call", both, re.I)) + \
+                    bool(re.search(r"Q2|FY.?27|2026|Sep|Oct|Nov|H1", both, re.I))
+                if score >= 2:
+                    cands.append((-score, requests.compat.urljoin(r.url, href)))
+            for _, link in sorted(cands)[:3]:
+                try:
+                    r2 = requests.get(link, timeout=45, headers={"User-Agent": "Mozilla/5.0"})
+                    if r2.content[:4] == b"%PDF":
+                        body = pdf_text(r2.content)
+                        if len(body) >= 3000 and TRANSCRIPT_WORDS.search(body[:20000]):
                             break
-                    except Exception:
-                        continue
+                except Exception:
+                    continue
         if len(body) >= 3000 and TRANSCRIPT_WORDS.search(body[:20000]):
             say(f"    (the filing only linked to the transcript - read it from {u[:70]})")
             return body
