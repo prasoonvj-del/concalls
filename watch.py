@@ -273,8 +273,9 @@ def sector_items(sector, quarter, lib, industry=None):
 OVERVIEW_ADD = """
 ## What we were watching
 Check the items below against these summaries: for each, does it show up in this quarter's calls? Use one bullet
-per item: ✅ showed up / ◐ partly / ⏳ not yet / ✖ went the other way / — not discussed, then the companies and the
-evidence from their summaries. Skip this section if there are no items. Put it right after "What changed since
+per watched item (not one per company - put the companies together on that item's line): ✅ showed up / ◐ partly /
+⏳ not yet / ✖ went the other way / — not discussed, then the item in a few words, then the companies and the
+evidence in one sentence. At most 10 bullets. Skip this section if there are no items. Put it right after "What changed since
 last quarter".
 {items}
 """

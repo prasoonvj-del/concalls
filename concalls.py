@@ -117,6 +117,11 @@ Write a sector overview in Markdown: what are managements across the sector sayi
 (table: Company | Tone | Key reason)
 ## Company one-liners
 
+Formatting (it is shown on a web page and phone): plain Markdown only - headings, short paragraphs, bullets with a
+**bold lead-in**, and Markdown tables (| a | b |) where a table helps. Never use code blocks (```), ASCII-art boxes or
++----+ borders, emojis or horizontal rules. Keep each bullet to one or two sentences. In "What we were watching", one
+short bullet per watched item, grouped: items that showed up first, then partly, not yet, went the other way.
+
 SUMMARIES:
 {body}
 """
@@ -139,9 +144,61 @@ def here(rel):
     return BASE / str(rel).replace("\\", "/")
 
 
+def ascii_tables(text):
+    """AI writers sometimes draw a table in a code block with +---+ borders. Turn it into a real (markdown) table;
+    any other code block loses its fence so it reads as text."""
+    def conv(block):
+        rows, cur = [], None
+        for ln in block.splitlines():
+            t = ln.strip()
+            if not t:
+                continue
+            if re.fullmatch(r"[+\-=|: ]+", t) and "-" in t:  # a border line: ends the row being built
+                if cur:
+                    rows.append(cur)
+                cur = None
+                continue
+            if t.startswith("|"):
+                cells = [c.strip() for c in t.strip("|").split("|")]
+                if cur is None:
+                    cur = cells
+                else:
+                    cur = [((a + " " + b).strip()) for a, b in zip(cur + [""] * (len(cells) - len(cur)), cells + [""] * (len(cur) - len(cells)))]
+            else:
+                return None
+        if cur:
+            rows.append(cur)
+        if not rows:
+            return None
+        n = max(len(r) for r in rows)
+        rows = [r + [""] * (n - len(r)) for r in rows]
+        if n == 1:  # a one-column box is just a heading / note
+            return "\n".join(f"**{r[0]}**" for r in rows)
+        head, body, cap = rows[0], rows[1:], ""
+        if sum(1 for c in head if c) == 1 and body:  # a title row spanning the box
+            cap, head, body = next(c for c in head if c), body[0], body[1:]
+        if not body:
+            return (f"**{cap}**\n\n" if cap else "") + " · ".join(c for c in head if c)
+        cell = lambda c: re.sub(r"(?<!^)\s*(?:^|\s)[*•]\s", "<br>• ", c).replace("* ", "• ", 1) if c.startswith(("* ", "• ")) else c  # noqa: E731
+        tc = lambda x: " ".join(w if any(ch.isdigit() for ch in w) else w.capitalize() for w in x.split()) if x.isupper() else x  # noqa: E731
+        out = ([f"**{tc(cap)}**", ""] if cap else []) + ["| " + " | ".join(tc(h) for h in head) + " |", "|" + "---|" * n]
+        out += ["| " + " | ".join(cell(c) for c in r) + " |" for r in body]
+        return "\n".join(out)
+
+    def rep(m):
+        body = m.group(1)
+        if re.search(r"^\s*\+[-=+]{6,}", body, re.M):
+            parts = re.split(r"\n\s*\n", body.strip())
+            got = [conv(p) for p in parts]
+            if all(got):
+                return "\n\n" + "\n\n".join(got) + "\n\n"
+        return "\n" + body + "\n"
+    return re.sub(r"```[a-zA-Z]*\s*\n?(.*?)```", rep, text or "", flags=re.S)
+
+
 def md(text):
     """Markdown -> HTML, tolerant of AI formatting (headings/lists stuck to the end of a table)."""
-    lines, out = (text or "").splitlines(), []
+    lines, out = ascii_tables(text).splitlines(), []
     for i, ln in enumerate(lines):
         prev = out[-1] if out else ""
         if prev.strip().startswith("|") and not ln.strip().startswith("|"):
@@ -150,6 +207,11 @@ def md(text):
             out.append("")  # headings need a blank line before them
         elif re.match(r"\s*\|", ln) and prev.strip() and not prev.strip().startswith("|"):
             out.append("")  # tables too
+        elif re.match(r"(?:[-*+]|\d+\.) \S", ln) and prev.strip() and not re.match(r"\s*(?:[-*+]|\d+\.) ", prev) \
+                and not prev.startswith(" "):
+            out.append("")  # a list straight after a paragraph line (no blank line) is still a list
+        elif re.match(r"\*\*[^*]{2,60}:?\*\*", ln) and prev.strip() and not re.match(r"\s*(?:[-*+]|\d+\.) ", prev):
+            out.append("")  # "**Divergence:**" on its own line starts a new paragraph
         out.append(ln)
     return mdlib.markdown("\n".join(out), extensions=["tables", "sane_lists"])
 

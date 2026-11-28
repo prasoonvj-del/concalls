@@ -68,7 +68,7 @@
     if (window.DESK_OVH[o.k] == null) { try { await loadScript("data/cc/" + o.k + ".js" + CCV); } catch (e) { staleCheck(true); return ""; } }
     const x = window.DESK_OVH[o.k];
     if (!x || typeof x !== "object" || x.c !== o.sector + (o.ind || "")) { staleCheck(true); return ""; }
-    return raInto(rateTables(dirInto(watchUp(x.h || ""), o.shifts || []), o.sector), o.sector, o.ind || "");
+    return raInto(rateTables(dirInto(watchUp(watchedTidy(x.h || "")), o.shifts || []), o.sector), o.sector, o.ind || "");
   }
   // "Where the industry is heading": sources as small labels, and each shift's momentum - how many of the
   // industry's companies talked about it, quarter by quarter (counted in code from their concall summaries)
@@ -77,8 +77,21 @@
     const h = [...box.querySelectorAll("h2,h3")].find((e) => /where the industry is heading/i.test(e.textContent));
     if (!h) return html;
     h.classList.add("dirh");
+    // sources as small numbers (tap one to see it), listed once under the section
+    const srcs = [];
+    const num = (t) => { t = t.trim(); let i = srcs.indexOf(t); if (i < 0) { srcs.push(t); i = srcs.length - 1; } return i + 1; };
+    let lastN = h;
     for (let n = h.nextElementSibling; n && !/^H[12]$/.test(n.tagName); n = n.nextElementSibling) {
-      n.innerHTML = n.innerHTML.replace(/\[([^\]<>]{3,140})\]/g, (m, t) => `<span class="srct${/^background$/i.test(t.trim()) ? " bg" : /^govt/i.test(t.trim()) ? " gv" : ""}">${t}</span>`);
+      lastN = n;
+      n.innerHTML = n.innerHTML.replace(/\s*\[([^\]<>]{3,240})\]/g, (m, t) => {
+        const parts = t.split(/\s*;\s*/).filter(Boolean);
+        return `<sup class="cn">${parts.map((p) => `<a tabindex="0" data-src="${p.replace(/"/g, "&quot;")}">${num(p)}</a>`).join(",")}</sup>`;
+      });
+    }
+    if (srcs.length) {
+      const l = document.createElement("div"); l.className = "cnl";
+      l.innerHTML = `<b>Sources</b> ` + srcs.map((t, i) => `<span><i>${i + 1}</i> ${t}</span>`).join("");
+      lastN.after(l);
     }
     if (shifts.length) {
       const st = { early: "early", scaling: "scaling", mainstream: "mainstream" };
@@ -93,6 +106,42 @@
     return box.innerHTML;
   }
   // "What to watch next quarter" sits just above the "Bullish vs cautious" table
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest && e.target.closest(".cn a");
+    const old = document.querySelector(".cntip");
+    if (old) old.remove();
+    if (!a) return;
+    const tip = document.createElement("div"); tip.className = "cntip"; tip.textContent = a.dataset.src;
+    document.body.appendChild(tip);
+    const r = a.getBoundingClientRect();
+    tip.style.left = Math.max(8, Math.min(window.innerWidth - tip.offsetWidth - 8, r.left - 20)) + "px";
+    tip.style.top = (r.bottom + window.scrollY + 6) + "px";
+  });
+  // "What we were watching": one compact table - status chip, company, what - grouped by status, long lists folded
+  function watchedTidy(html) {
+    const box = document.createElement("div"); box.innerHTML = html;
+    const h = [...box.querySelectorAll("h2,h3")].find((e) => /what we were watching/i.test(e.textContent));
+    const ul = h && h.nextElementSibling;
+    if (!ul || !/^(UL|OL)$/.test(ul.tagName)) return html;
+    const ST = [["✅", "showed up", "ok"], ["◐", "partly", "pt"], ["⏳", "not yet", "ny"], ["✖", "went the other way", "no"], ["—", "not discussed", "nd"]];
+    const rows = [...ul.children].map((li) => {
+      let t = li.innerHTML.trim();
+      const st = ST.find((x) => t.startsWith(x[0])) || ST[4];
+      t = t.replace(/^\s*(✅|◐|⏳|✖|—|❌)\s*/, "").replace(/^(showed up|partly|not yet|went the other way|not discussed)\s*[·:\-–]?\s*/i, "");
+      const m = /^(?:<strong>|<b>)?([^:<]{2,60}?)(?:<\/strong>|<\/b>)?\s*:\s*(.*)$/s.exec(t);
+      return { st, who: m ? m[1].trim() : "", what: m ? m[2] : t };
+    });
+    if (!rows.length) return html;
+    rows.sort((a, b) => ST.indexOf(a.st) - ST.indexOf(b.st));
+    const counts = ST.map((x) => [x, rows.filter((r) => r.st === x).length]).filter((x) => x[1]);
+    const tr = (r) => `<tr><td><span class="wst ${r.st[2]}">${r.st[0]} ${r.st[1]}</span></td><td>${r.who ? `<b>${r.who}</b>` : ""}</td><td>${r.what}</td></tr>`;
+    const wrap = document.createElement("div"); wrap.className = "wwatch";
+    wrap.innerHTML = `<div class="m">${counts.map(([x, n]) => `<span class="wst ${x[2]}">${x[0]} ${n} ${x[1]}</span>`).join(" ")}</div>
+      <table class="wtab">${rows.slice(0, 8).map(tr).join("")}</table>
+      ${rows.length > 8 ? `<details><summary>${rows.length - 8} more</summary><table class="wtab">${rows.slice(8).map(tr).join("")}</table></details>` : ""}`;
+    ul.replaceWith(wrap);
+    return box.innerHTML;
+  }
   function watchUp(html) {
     const box = document.createElement("div"); box.innerHTML = html;
     const hs = [...box.querySelectorAll("h1,h2,h3,h4")];

@@ -426,6 +426,14 @@ table.cpeer th[data-k]{cursor:pointer}
 .pbar em{font-style:normal;font-size:10.5px;color:var(--muted)}
 .ptrend .pbar{background:none!important;border:0!important;padding:0!important;box-shadow:none!important}
 .dirh{color:var(--accent)}
+.wwatch .m{margin:2px 0 8px;display:flex;gap:6px;flex-wrap:wrap}.wtab{width:100%;border-collapse:collapse;font-size:13.5px}.wtab td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}.wtab td:first-child{white-space:nowrap;width:1%}.wtab td:nth-child(2){white-space:nowrap;width:1%}
+.wwatch details summary{cursor:pointer;color:var(--muted);font-size:12.5px;margin:6px 0}
+.wst{font-size:11.5px;padding:1px 8px;border-radius:999px;white-space:nowrap;background:var(--surface-2);color:var(--muted)}.wst.ok{background:color-mix(in srgb,#1f9d55 14%,transparent);color:#1f9d55}.wst.pt{background:color-mix(in srgb,#d08a00 15%,transparent);color:#b07400}.wst.ny{background:color-mix(in srgb,#5b7cfa 13%,transparent);color:#4a67d8}.wst.no{background:color-mix(in srgb,#e5484d 13%,transparent);color:#d23b40}
+@media (max-width:700px){.wtab td:nth-child(2){white-space:normal}}
+.cn{font-size:10.5px;line-height:0;margin-left:1px;white-space:nowrap}.cn a{color:var(--accent,#2d8f7b);cursor:pointer;text-decoration:none;padding:0 1px;font-weight:600}
+.cn a:hover{text-decoration:underline}
+.cnl{font-size:12px;color:var(--muted);margin:8px 0 4px;line-height:1.5;display:flex;flex-wrap:wrap;gap:2px 12px;max-width:100%}.cnl b{width:100%}.cnl span{white-space:normal}.cnl i{font-style:normal;font-weight:600;color:var(--accent,#2d8f7b);margin-right:2px}
+.cntip{position:absolute;z-index:999;max-width:320px;background:var(--surface,#fff);border:1px solid var(--line-2,#ddd);border-radius:8px;padding:6px 10px;font-size:12.5px;box-shadow:0 6px 20px rgba(0,0,0,.15)}
 .srct{font-size:11.5px;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--muted);border:1px solid var(--line-2);white-space:nowrap}
 .srct.bg{background:transparent;border-style:dashed}.srct.gv{color:var(--s6);border-color:color-mix(in srgb,var(--s6) 35%,transparent)}
 .shifts{margin:8px 0 14px;padding:10px 12px;border-radius:14px;background:var(--surface-2)}
