@@ -518,28 +518,27 @@ def build(quiet=False):
     (data / "index.js").write_text(_js("DESK_INDEX", None, meta), encoding="utf-8")
     # cache-busting: every build gets new file addresses, so a refresh always shows the latest edition
     stamp = dt.datetime.now(IST).strftime("%Y%m%d%H%M")
-    page = (PUBLIC / "index.html").read_text(encoding="utf-8")
-    for name in ("app.css", "app.js", "data/index.js"):
-        page = page.replace(f'"{name}"', f'"{name}?v={stamp}"')
-    page = page.replace("<head>", '<head>\n<meta http-equiv="Cache-Control" content="no-cache">', 1)
-    (PUBLIC / "index.html").write_text(page, encoding="utf-8")
     js = (PUBLIC / "app.js").read_text(encoding="utf-8")
+    import hashlib
+    vh = lambda rel: hashlib.md5((PUBLIC / rel).read_bytes()).hexdigest()[:10] if (PUBLIC / rel).exists() else stamp  # noqa: E731
+    # each file's address carries a fingerprint of its content: a file that didn't change keeps its address, so the
+    # browser keeps using its saved copy after an update instead of downloading it again
     js = js.replace('"data/brief-" + date + ".js"', '"data/brief-" + date + ".js?v=' + stamp + '"')
     js = js.replace('"data/tabs-" + date + ".js"', '"data/tabs-" + date + ".js?v=' + stamp + '"')
-    js = js.replace('loadScript("data/concalls.js")', 'loadScript("data/concalls.js?v=' + stamp + '")')
-    js = js.replace('loadScript("data/readacross.js")', 'loadScript("data/readacross.js?v=' + stamp + '")')
     js = js.replace('const CCV = ""', 'const CCV = "?v=' + stamp + '"')
     js = js.replace('const BUILD = ""', 'const BUILD = "' + stamp + '"')
     (data / "build.js").write_text(f'window.DESK_BUILD_NOW = "{stamp}";', encoding="utf-8")
-    js = js.replace('loadScript("data/newsarchive.js")', 'loadScript("data/newsarchive.js?v=' + stamp + '")')
-    js = js.replace('loadScript("data/directory.js")', 'loadScript("data/directory.js?v=' + stamp + '")')
-    js = js.replace('loadScript("data/search.js")', 'loadScript("data/search.js?v=' + stamp + '")')
-    js = js.replace('loadScript("data/tlindex.js")', 'loadScript("data/tlindex.js?v=' + stamp + '")')
-    js = js.replace('loadScript("data/bsindex.js")', 'loadScript("data/bsindex.js?v=' + stamp + '")')
-    js = js.replace('loadScript("data/conews.js")', 'loadScript("data/conews.js?v=' + stamp + '")')
-    js = js.replace('loadScript("data/trackers.js")', 'loadScript("data/trackers.js?v=' + stamp + '")')
-    js = js.replace('loadScript("data/presentations.js")', 'loadScript("data/presentations.js?v=' + stamp + '")')
+    for f in ("concalls", "readacross", "newsarchive", "directory", "search", "tlindex", "bsindex", "conews",
+              "trackers", "presentations"):
+        js = js.replace(f'loadScript("data/{f}.js")', f'loadScript("data/{f}.js?v={vh("data/" + f + ".js")}")')
+    for f in ("cctext", "reads", "global", "hlindex"):
+        js = js.replace(f'"data/{f}.js" + CCV', f'"data/{f}.js?v={vh("data/" + f + ".js")}"')
     (PUBLIC / "app.js").write_text(js, encoding="utf-8")
+    page = (PUBLIC / "index.html").read_text(encoding="utf-8")
+    for name in ("app.css", "app.js", "data/index.js"):
+        page = page.replace(f'"{name}"', f'"{name}?v={hashlib.md5((PUBLIC / name).read_bytes()).hexdigest()[:10]}"')
+    page = page.replace("<head>", '<head>\n<meta http-equiv="Cache-Control" content="no-cache">', 1)
+    (PUBLIC / "index.html").write_text(page, encoding="utf-8")
     if not quiet:
         C.say(f"Website built: {PUBLIC / 'index.html'}  ({len(index)} briefs, {len(cc['calls'])} concall summaries)")
     return PUBLIC / "index.html"

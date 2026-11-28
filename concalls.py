@@ -912,6 +912,8 @@ def get_text(call):
             ocr = ocr_text(pdf)
             if len(ocr) >= 3000:
                 text = ocr
+            elif ocr:  # a scanned covering letter: the link to the transcript is in the picture
+                text = linked_transcript(b"", re.sub(r"(https?://\S+)\s*\n\s*(\S+)", r"\1\2", ocr)) or text
     if len(text) < 3000:
         return None, "PDF is a scanned image (no text) - open it on BSE"
     txt.write_text(text, encoding="utf-8")
