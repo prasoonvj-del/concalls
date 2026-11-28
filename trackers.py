@@ -390,14 +390,20 @@ THREAT = re.compile(r"(?i)blacklist|debar|\bban|licen[cs]e|shut|suspend|cancel|r
 
 REVIEW_PIVOTS = """You check a list of company news items before they are shown to an investor as "pivots" - events that
 can change how the market values the company. For each, the company's size is given (annual revenue and market value,
-Rs crore). Keep it only if it could plausibly move the share price or change the business:
-- court, arbitration, tax or regulatory cases: keep only if the money at stake is a meaningful share of revenue or
-  profit, or the case threatens a licence, a plant, a product or a key contract. A consumer-court case, a small fine,
-  a demand of a few crore for a company with thousands of crore of revenue -> DROP.
-- orders, acquisitions, capex, fund-raises: keep only if large for this company's size.
-- management: keep CEO / MD / CFO / chairman / promoter changes; drop independent or nominee directors.
-- drop: brokerage rating changes, automated stock scores, splits / bonus / dividends, IPO or listing news, opinion
-  pieces and "should you buy" articles, sector news that only mentions the company, routine product launches.
+Rs crore). DROP an item only when it is clearly not material; when unsure, KEEP.
+DROP:
+- court, arbitration, tax or regulatory cases where the money at stake is plainly tiny for the company (a consumer-court
+  case, a fine or demand of a few crore against thousands of crore of revenue) and nothing threatens a licence, plant,
+  product or key contract.
+- orders, acquisitions, capex or fund-raises whose stated amount is tiny for the company (well under 1% of revenue).
+- independent / nominee director changes; brokerage buy / sell ratings and automated stock scores; stock splits, bonus,
+  dividends; IPO or listing news of other companies; opinion pieces and "should you buy" articles; sector news that
+  only mentions the company; launches of a single routine product; credit ratings merely reaffirmed.
+KEEP (these are pivots):
+- credit rating upgrades / downgrades / watch changes (CRISIL, ICRA, CARE, S&P, Moody's, Fitch...), demergers,
+  mergers, buybacks, open offers, promoter or large stake changes, entry into a new business or market, plant
+  commissioning, USFDA / regulatory approvals or rejections, CEO / MD / CFO / chairman changes, large guidance changes.
+- deals whose size isn't stated, unless obviously trivial.
 Answer one line per item, nothing else:  id | KEEP or DROP | reason (max 10 words)
 
 ITEMS:
@@ -408,6 +414,21 @@ def screen(idx, cache, review_limit=300, minutes=8):
     """Takes out what isn't a real pivot or a real broker call. Rule checks first, then the company's size, then a
     review by the stronger AI of what is left (each pivot is reviewed once; what is dropped stays dropped)."""
     out = cache.setdefault("screened_out", {})
+    if not cache.get("review_v2"):  # the first review was too strict (it dropped credit ratings, demergers): check again
+        try:
+            from pathlib import Path
+            back = json.loads((Path(__file__).parent / "tools" / "restore_pivots.json").read_text(encoding="utf-8"))
+        except Exception:
+            back = []
+        for r in back:
+            if out.pop(r["uid"], None) is not None:
+                r.pop("rv", None)
+                idx["pivots"][r["uid"]] = r
+        for u in [u for u, v in out.items() if v.startswith("review")]:
+            out.pop(u)
+        for r in idx["pivots"].values():
+            r.pop("rv", None)
+        cache["review_v2"] = True
     try:
         import fundamentals
         F = fundamentals.load()
