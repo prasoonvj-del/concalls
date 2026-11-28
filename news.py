@@ -642,6 +642,11 @@ def ask_fitted(pool, head, lines, label):
 BRIEF_DIR = C.DATA / "news"
 
 
+def esc_html(t):
+    import html
+    return html.escape(t or "", quote=False)
+
+
 def md_html(text):
     """Markdown -> HTML; [12, 40] become story chips the website makes clickable."""
     h = C.md(text)
@@ -875,6 +880,9 @@ def build(conf=None, log_failed=True):
         if m:
             one = md_html(m.group(1)).replace("<p>", "").replace("</p>", "")
             text = text.replace(m.group(0), "")
+        if not one and items:  # too few stories for a write-up: its main headline instead of a blank
+            top_s = max(items, key=lambda x: (x.get("importance", 0), x.get("outlets", 0)))
+            one = esc_html(top_s["title"]) + f' <a class="r" data-id="{top_s["id"]}">1</a>'
         out_sections.append({"cat": c, "one": one, "html": md_html(text) if text else "",
                              "ids": [s["id"] for s in items],
                              "pos": sum(s["sentiment"] == "+" for s in items),
