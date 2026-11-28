@@ -151,6 +151,10 @@ def step(lib, pool, limit=60, deadline=None, reads=10):
         st = stories.get(c["code"]) or {}
         dk = sorted(k for k in decks if k.split("_")[0] == str(c["code"]))[-1:]
         return hashlib.md5(f"v3|{c['summary']}|{c.get('model')}|{bool(st.get('biz'))}|{dk}".encode()).hexdigest()[:10]
+    # companies read before without a mix are tried again once with the deck slides (v4)
+    for v in cos.values():
+        if not v.get("dims") and not v.get("v4"):
+            v["k"] = ""
     todo = [c for c in latest if (cos.get(c["code"]) or {}).get("k") != key(c)]
     todo.sort(key=lambda c: -((F.get(c["code"]) or {}).get("mcap") or 0))
     SAY(f"\nBusiness mix: {len(todo)} companies to read, up to {limit} this update ...")
@@ -166,6 +170,13 @@ def step(lib, pool, limit=60, deadline=None, reads=10):
         except C.AIError as e:
             SAY(f"  {c['company']}: {str(e)[:100]}")
             continue
+        if js is not None and not _clean(js, mat) and not c.get("_slides_tried"):
+            try:  # the summaries don't give the split: read the deck's own slides
+                js2, mat2 = _extract(c, lib, stories, decks, pool, slides=True)
+                if js2 is not None and _clean(js2, mat2):
+                    js, mat = js2, mat2
+            except C.AIError:
+                pass
         if js is None:
             continue
         old = cos.get(c["code"]) or {}
@@ -183,7 +194,7 @@ def step(lib, pool, limit=60, deadline=None, reads=10):
                 done += 1
             except C.AIError:
                 pass
-        cos[c["code"]] = {"k": key(c), "company": c["company"], "q": c.get("quarter", ""),
+        cos[c["code"]] = {"k": key(c), "v4": True, "company": c["company"], "q": c.get("quarter", ""),
                           "basis": str(js.get("basis", ""))[:60], "model": str(js.get("model", ""))[:240],
                           "dims": dims, "hist": dict(sorted(hist.items())[-8:])}
         cos[c["code"]]["shift"] = shifts(cos[c["code"]])
@@ -195,8 +206,35 @@ def step(lib, pool, limit=60, deadline=None, reads=10):
     _reads(lib, pool, data, F, limit=reads, deadline=deadline)
 
 
-def _extract(c, lib, stories, decks, pool):
+_PRES = None
+
+
+def _deck_slides(code):
+    """Text of the company's latest investor deck (downloaded from BSE, not kept): slides usually carry the split."""
+    global _PRES
+    import decks as D
+    import tempfile
+    from pathlib import Path
+    if _PRES is None:
+        try:
+            _PRES = json.loads(C.PRES_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            _PRES = []
+    mine = sorted((d for d in _PRES if str(d.get("code")) == str(code)), key=lambda d: d.get("when", ""), reverse=True)
+    for d in mine[:1]:
+        text, problem = D.deck_text(d, Path(tempfile.mkdtemp()))
+        if text:
+            return f"INVESTOR DECK SLIDES ({d.get('when', '')[:10]}):\n" + text[:16000]
+    return ""
+
+
+def _extract(c, lib, stories, decks, pool, slides=False):
     mat = _material(c, lib, stories, decks)
+    if slides:
+        sl = _deck_slides(c["code"])
+        if not sl:
+            return None, mat
+        mat = mat[:5000] + "\n\n" + sl
     if len(mat) < 300:
         return None, mat
     prompt = PROMPT.format(company=c["company"], sector=C.sector_of(lib, c),

@@ -81,6 +81,9 @@ Use exactly this structure:
 **Tone:** <Positive / Mixed / Cautious / Negative> - <one-line reason>
 
 ### Key numbers
+### Revenue mix
+(only if the call gives it: each segment / product / customer type / geography as a share of revenue or its revenue,
+this quarter, and a year or quarter earlier if said - e.g. "Radiology 37% of revenue (vs 32% in FY24)". Skip if none.)
 ### Highlights
 ### Guidance & outlook
 ### Demand & industry commentary
