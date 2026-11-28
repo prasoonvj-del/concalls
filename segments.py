@@ -26,14 +26,15 @@ Return JSON only:
 {{"basis": "<what the shares are of, e.g. 'Q2 FY27 revenue' or 'FY26 revenue'>",
   "dims": [
     {{"dim": "segment" | "product" | "customer" | "channel" | "geography",
-      "parts": [{{"n": "<short name>", "pct": <share of revenue, number>, "growth": <YoY growth % or null>,
+      "parts": [{{"n": "<short name>", "pct": <share of revenue % if stated, else null>,
+                 "rev": <its revenue in Rs crore if stated, else null>, "growth": <YoY growth % or null>,
                  "margin": <segment EBIT/EBITDA margin % or null>}}]}}
   ],
   "model": "<one sentence: how this company makes money, e.g. 'B2B pathology via ~X franchisees, low capex per test'>"}}
 
-Rules: only figures the material states. A share may be worked out only as a remainder (e.g. radiology 37% -> pathology
-63%) or from revenue figures given for each part; if worked out, add "calc": true to that part. Leave out a dimension
-whose shares you can't get. Shares in one dimension must not add up to more than 100. If nothing usable: {{"dims": []}}.
+Rules: copy figures exactly as the material states them - shares (%) or the parts' revenue (Rs crore); do not
+calculate anything yourself. Include a dimension when the material gives shares or revenue for at least two of its
+parts. Revenue figures of different periods must not be mixed in one dimension. If nothing usable: {{"dims": []}}.
 "model" may be written from the material even without numbers.
 
 MATERIAL:
@@ -69,28 +70,41 @@ def _digits(x):
 
 
 def _clean(js, material):
-    """Keep only shares the material supports; drop dimensions that don't add up."""
+    """Shares the material supports: stated %, or worked out here from stated revenue (or as the one remainder)."""
     have = set(re.findall(r"\d+(?:\.\d+)?", material.replace(",", "")))
+    said = lambda x: x is not None and any(_digits(v) in have for v in (x, round(float(x), 1), int(float(x))))  # noqa: E731
+    num = lambda x: float(x) if isinstance(x, (int, float)) or (isinstance(x, str) and re.fullmatch(r"[\d.]+", x)) else None  # noqa: E731
     dims = []
     for d in js.get("dims") or []:
-        parts = []
+        raw = []
         for p in d.get("parts") or []:
-            try:
-                pct = float(p.get("pct"))
-            except (TypeError, ValueError):
-                continue
-            if not (0 < pct <= 100):
-                continue
-            stated = _digits(round(pct, 1)) in have or _digits(int(pct)) in have or _digits(pct) in have
-            if not stated and not p.get("calc"):
-                continue
-            parts.append({"n": str(p.get("n", ""))[:40], "pct": round(pct, 1),
-                          **({"g": p["growth"]} if isinstance(p.get("growth"), (int, float)) else {}),
-                          **({"m": p["margin"]} if isinstance(p.get("margin"), (int, float)) else {}),
-                          **({"calc": True} if p.get("calc") or not stated else {})})
+            pct, rev = num(p.get("pct")), num(p.get("rev"))
+            raw.append({"n": str(p.get("n", ""))[:40], "pct": pct if pct and 0 < pct <= 100 and said(pct) else None,
+                        "rev": rev if rev and rev > 0 and said(rev) else None, "g": num(p.get("growth")), "m": num(p.get("margin"))})
+        parts = []
+        if len(raw) >= 2 and all(r["rev"] for r in raw) and sum(1 for r in raw if r["pct"]) < len(raw):
+            tot = sum(r["rev"] for r in raw)  # every part's revenue given: shares worked out from them
+            parts = [dict(r, pct=round(r["rev"] / tot * 100, 1), calc=True) for r in raw]
+        else:
+            known = [r for r in raw if r["pct"]]
+            missing = [r for r in raw if not r["pct"]]
+            if len(missing) == 1 and len(known) >= 1 and sum(r["pct"] for r in known) < 100:
+                missing[0] = dict(missing[0], pct=round(100 - sum(r["pct"] for r in known), 1), calc=True)
+                known.append(missing[0])
+            parts = known
         tot = sum(p["pct"] for p in parts)
-        if len(parts) >= 2 and tot <= 103 and tot >= 60:
-            dims.append({"dim": str(d.get("dim", "segment"))[:12], "parts": sorted(parts, key=lambda p: -p["pct"])})
+        if len(parts) >= 2 and 60 <= tot <= 103:
+            out = []
+            for p in sorted(parts, key=lambda p: -p["pct"]):
+                q = {"n": p["n"], "pct": p["pct"]}
+                if p.get("g") is not None:
+                    q["g"] = p["g"]
+                if p.get("m") is not None:
+                    q["m"] = p["m"]
+                if p.get("calc"):
+                    q["calc"] = True
+                out.append(q)
+            dims.append({"dim": str(d.get("dim", "segment"))[:12], "parts": out})
     return dims
 
 
@@ -107,7 +121,7 @@ def step(lib, pool, limit=60, deadline=None, reads=10):
     latest = [c for c in C.latest_call_each(list(lib["calls"].values())) if c.get("summary") and c.get("code")]
     def key(c):
         st = stories.get(c["code"]) or {}
-        return hashlib.md5(f"{c['summary']}|{c.get('model')}|{bool(st.get('biz'))}".encode()).hexdigest()[:10]
+        return hashlib.md5(f"v2|{c['summary']}|{c.get('model')}|{bool(st.get('biz'))}".encode()).hexdigest()[:10]
     todo = [c for c in latest if (cos.get(c["code"]) or {}).get("k") != key(c)]
     todo.sort(key=lambda c: -((F.get(c["code"]) or {}).get("mcap") or 0))
     SAY(f"\nBusiness mix: {len(todo)} companies to read, up to {limit} this update ...")
