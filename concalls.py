@@ -954,8 +954,12 @@ def linked_transcript(data, text):
             break
         try:
             r = requests.get(u, timeout=45, headers={"User-Agent": "Mozilla/5.0"}, allow_redirects=True)
-        except Exception:
+        except Exception as e:
+            if os.getenv("DIAG"):
+                say(f"      link {u[:90]}: {str(e)[:80]}")
             continue
+        if os.getenv("DIAG"):
+            say(f"      link {u[:90]}: {r.status_code} {r.headers.get('content-type', '')[:30]} {len(r.content)} bytes")
         if r.status_code != 200:
             continue
         body = ""

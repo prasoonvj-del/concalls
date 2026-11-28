@@ -595,6 +595,18 @@ def story_line(s):
 MAX_RESCUES = 8
 
 
+def brief_story(s):
+    return {"id": s["id"], "title": s["title"], "desc": s["desc"],
+            "when": s["when"].astimezone(IST).isoformat(timespec="minutes"),
+            "cat": s["category"], "companies": s["companies"], "imp": s["importance"],
+            "sent": s["sentiment"], "outlets": s["outlets"], "sources": s["sources"],
+            **({"india": s["india"]} if s.get("india") else {})}
+
+
+def cited_ids(text):
+    return {int(n) for blk in re.findall(r"\[([\d,\s]+)\]", text or "") for n in re.findall(r"\d+", blk)}
+
+
 def usable_brief(text):
     """A section brief the page can show: has its one-line takeaway and some substance."""
     return bool(text) and re.search(r"\*\*In one line:\*\*\s*\S", text) is not None and len(text) > 250
@@ -806,7 +818,9 @@ def build(conf=None, log_failed=True):
                 why = str(e)
         if usable_brief(text):
             sections[c] = text
-            cache["sections"][c] = {"keys": keys, "text": text}
+            ci = cited_ids(text)
+            cache["sections"][c] = {"keys": keys, "text": text,
+                                    "stories": [brief_story(x) for x in by_cat[c] if x["id"] in ci]}
             save_cache(cache, now_utc)
         elif prev:  # never leave a sector blank: show the last good write-up until a writer is free
             sections[c] = prev["text"]
@@ -873,15 +887,30 @@ def build(conf=None, log_failed=True):
                   "relevant": len(relevant), "failed": len(failed),
                   "sources": len({x["name"] for s in relevant for x in s["sources"]})},
         "big": big_html, "bigFrom": big_from, "top": top, "sections": out_sections,
-        "stories": [{"id": s["id"], "title": s["title"], "desc": s["desc"],
-                     "when": s["when"].astimezone(IST).isoformat(timespec="minutes"),
-                     "cat": s["category"], "companies": s["companies"], "imp": s["importance"],
-                     "sent": s["sentiment"], "outlets": s["outlets"], "sources": s["sources"],
-                     **({"india": s["india"]} if s.get("india") else {})}
-                    for s in relevant],
+        "stories": [brief_story(s) for s in relevant],
         "failed": failed if log_failed else [],
         "tabs": [],
     }
+    # a write-up kept from an earlier run can cite stories that have since left the last-24-hours window:
+    # bring those stories along from the earlier editions, so every citation number opens its story
+    have = {x["id"] for x in brief["stories"]}
+    cited = cited_ids((big or "") + " " + " ".join(sections.values())) - have
+    for v in cache.get("sections", {}).values():  # stories saved with the write-ups they back
+        for st in v.get("stories", []):
+            if st["id"] in cited:
+                brief["stories"].append(dict(st, old=True))
+                cited.discard(st["id"])
+    if cited:
+        for f in sorted(BRIEF_DIR.glob("*.json"), reverse=True)[:4]:
+            try:
+                for st in json.loads(f.read_text(encoding="utf-8")).get("stories", []):
+                    if st["id"] in cited:
+                        brief["stories"].append(dict(st, old=True))
+                        cited.discard(st["id"])
+            except Exception:
+                continue
+            if not cited:
+                break
     for t_i, (tab, folders) in enumerate(conf["tabs"].items(), 1):
         try:
             brief["tabs"].append(build_tab(tab, folders, opml, conf, bulk, cache, t_i * 100000))

@@ -1,4 +1,5 @@
 """Check transcript reading on calls that were skipped as 'scanned' (by hand: .github/workflows/diag.yml)."""
+import re
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -12,5 +13,5 @@ for n in names:
         t, prob = C.get_text(c)
         if not t:
             o = C.ocr_text(C.PDF_DIR / f"{c['id']}.pdf")
-            print("   OCR text:", o[:600].replace(chr(10), " | "))
+            print("   URLs seen:", re.findall(r"(?:https?://|www\\.)\\S+", o))
         print(f"{c['company']} {c['date']}: {'OK ' + str(len(t)) + ' chars - ' + t[:160].replace(chr(10), ' ') if t else prob}", flush=True)

@@ -263,8 +263,10 @@ def upgrade_summaries(lib, qpool, deadline, build=False):
         key = importance()
         prio = lambda c: (not mine(c), c.get("code") not in hot, key(c))
     else:
-        todo = [c for c in todo if mine(c) or c.get("code") in hot]
-        prio = lambda c: (not mine(c), c.get("code") not in hot, -int(c["date"].replace("-", "")))
+        # ... and drafts with several figures that aren't in the transcript (5+): a full model re-reads those
+        doubt = lambda c: len(c.get("unverified") or []) >= 5  # noqa: E731
+        todo = [c for c in todo if mine(c) or c.get("code") in hot or doubt(c)]
+        prio = lambda c: (not mine(c), not doubt(c), c.get("code") not in hot, -int(c["date"].replace("-", "")))
     todo.sort(key=prio)
     if not todo:
         return set()
