@@ -642,6 +642,7 @@ def step(mode="full", hard_stop=None):
         if m:
             src = src or m.group(1).strip()
             text = text[:m.start()].rstrip()
+        text = re.sub(r"(?im)^\s*\**\s*PART\s*[12]\b[^\n]*$", "", text)  # stray "PART 2 - The story so far" lines
         biz = ""  # part 1: the business profile, shown at the top of the company page
         m = re.search(r"(?ims)^#+\s*(?:PART\s*1\W*)?The business\s*$(.*?)(?=^#+\s|^\s*\**\s*in one line|\Z)", text)
         if m:

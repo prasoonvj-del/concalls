@@ -1455,7 +1455,7 @@
         ${call.draft ? `<span class="badge" title="Written by a lighter AI model; a full-quality version replaces it as the free allowance allows">Quick draft · full version coming</span>` : ""}</div>
         ${call.checks.length ? `<div class="warn">Highlighted figures weren't found word-for-word in the transcript - check them in the PDF.</div>` : ""}
         ${bseWarn(call)}
-        ${callHtml}<p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p></div>` : "";
+        <div id="ccb">${callHtml}</div><p><a href="${esc(call.pdf)}" target="_blank" rel="noopener">Original transcript (PDF)</a></p></div>` : "";
     const deckCard = decks.length ? `<div class="card md"><h2>Investor deck <span class="m">${when(decks[0].when)}</span></h2>
         ${decks[0].one ? `<p><b>${esc(decks[0].one)}</b></p>` : ""}${deckBody(decks[0])}
         <p><a href="${esc(decks[0].pdf)}" target="_blank" rel="noopener">Open the deck (PDF)</a></p>
@@ -1471,12 +1471,13 @@
         <a href="#concalls/${encodeURIComponent(call.sector)}">the industry's direction →</a>
         <div class="m">✓ = its own latest concall talks about it</div></div>`;
     })();
-    const bizCard = story && story.biz ? `<div class="card md bizc"><h2>The business <span class="m">what it does, where it stands, its edge · researched on the web ${esc(story.at)}</span></h2>${story.biz}</div>`
+    const bizHtml = story && story.biz ? story.biz.replace(/<(p|h\d)>\s*(<strong>)?\s*PART\s*2\b[\s\S]*$/i, "").replace(/<(p|h\d)>\s*(<strong>)?\s*PART\s*1\b[^<]*(<\/strong>)?\s*<\/\1>/i, "") : "";
+    const bizCard = story && story.biz ? `<div class="card md bizc"><h2>The business <span class="m">what it does, where it stands, its edge · ${esc(story.at)}</span></h2><div id="bizb">${bizHtml}</div></div>`
       : story && bsCode ? `<div class="card"><h2>The business</h2><div class="m">The business profile comes with the next refresh of "the story so far" for this company${isOwner() ? ` - <a href="${requestLink(bsCode, story.company)}" target="_blank" rel="noopener">write it now</a>` : ""}.</div></div>` : "";
     const storyCard = story ? `<div class="card md"><h2>The story so far <span class="m">last 2 years · what changed in the business, and how the stock was re-valued</span></h2>
         ${story.one ? `<p><b>${esc(story.one)}</b></p>` : ""}<div id="bspx"></div>
         ${story.moves && story.moves.length ? `<div class="m" style="margin:2px 0 8px">Shaded: biggest 4-week moves - ${story.moves.map((m) => `<span class="${m.pct >= 0 ? "up" : "dn"}">${esc(m.from.slice(2, 7))} ${m.pct > 0 ? "+" : ""}${Math.round(m.pct)}%</span>`).join(" · ")}</div>` : ""}
-        ${story.html}
+        <div id="storyb">${story.html}</div>
         ${(story.check || []).length ? `<div class="warn">A second model couldn't find these in the research it was written from - treat them with care:<ul>${story.check.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
         <div class="m">${story.v >= 6 ? `Facts researched on the web, written by ${esc(/nemotron/i.test(story.model || "") ? "Nemotron 3 Ultra" : /gemini/i.test((story.model || "").split("+").pop()) ? "Gemini" : "AI")}${story.check && !story.check.length ? " · every claim matched to its research" : ""} · ` : ""}Researched on the web ${esc(story.at)}${story.sources ? " · sources: " + esc(story.sources) : ""} · price moves from real share-price data. Check before acting ·
         ${isOwner() ? `<a href="${requestLink(bsCode, story.company)}" target="_blank" rel="noopener">refresh it</a>` : ""}</div></div>`
@@ -1503,16 +1504,36 @@
     const myName = (call ? call.company : decodeURIComponent(name || "")).toLowerCase();
     const myReads = rdAll.filter((v) => (myCode && (v.cc || []).map(String).includes(myCode)) || (v.c || []).some((c) => c.toLowerCase() === myName)).slice(0, 6);
     const readCard = readsCard(myReads, "Worth reading", "analysis that names this company", "");
-    // right column: the story first, then what's moving it; your own notes last
-    const sideCards = `${storyCard}${exCard}${raCard}${readCard}${icCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
+    // reading order: what the company does | how its story has gone -> the industry's direction -> what it said on the
+    // call and in the deck | what else is moving it -> how it compares with peers -> its timeline -> your notes
+    const sideCards = `${exCard}${raCard}${readCard}${icCard}${hasTk ? `<div class="card"><h2>Pivots, results, orders & broker calls</h2>${trackerList()}</div>` : ""}
       <div class="card"><h2>In the news <span class="m">${plural(items.length, "story")} · ${pz}▲ ${nz}▼</span></h2>
         ${items.length >= 4 ? `<div id="cod"></div>` : ""}
-        ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>
-      ${notesCard}`;
-    // the wide peer table sits below the concall, right above the timeline, both full width
+        ${groups.length ? `<ul class="list" id="conl">${groups.slice(0, 10).map(newsLine).join("")}</ul>${groups.length > 10 ? `<button id="conm">Show ${groups.length - 10} more</button>` : ""}` : `<div class="m">No news in recent briefs.</div>`}</div>`;
+    const topRow = bizCard || storyCard ? `<div class="cogrid co-top"><div>${bizCard || `<div class="card"><h2>The business</h2><div class="m">The business profile comes with "the story so far".</div></div>`}</div><div>${storyCard}</div></div>` : "";
     body.innerHTML = call || decks.length
-      ? `${bizCard}${shiftLine}<div class="cogrid"><div>${concallCard}${deckCard}</div><div>${sideCards}</div></div>${await peerCard(call)}${await companyMix(call)}${tlCard}`
-      : `<div class="grid g2" style="align-items:start"><div>${bizCard}${askCard}${tlCard}</div><div>${sideCards}</div></div>`;
+      ? `${topRow}${shiftLine}<div class="cogrid"><div>${concallCard}${deckCard}</div><div>${sideCards}</div></div>${await peerCard(call)}${await companyMix(call)}${tlCard}${notesCard}`
+      : `${topRow}<div class="grid g2" style="align-items:start"><div>${askCard}${tlCard}</div><div>${sideCards}</div></div>${notesCard}`;
+    // side by side, columns end level: the longer one folds at the other's height, with "Show all"
+    const level = () => {
+      if (innerWidth <= 900) { clampBlock($("#bizb"), 700, "bizb"); clampBlock($("#storyb"), 600, "storyb"); clampBlock($("#ccb"), 900, "ccb"); return; }
+      const top = body.querySelector(".co-top");
+      if (top && $("#bizb") && $("#storyb")) {
+        const [L, R] = top.children, bz = $("#bizb"), sb = $("#storyb");
+        top.style.alignItems = "start"; L.style.display = R.style.display = "block";  // natural heights
+        const lh = L.firstElementChild.offsetHeight, rh = R.firstElementChild.offsetHeight;
+        if (lh > rh + 60) clampBlock(bz, Math.max(380, bz.offsetHeight - (lh - rh) - 40), "bizb");
+        else if (rh > lh + 60) clampBlock(sb, Math.max(380, sb.offsetHeight - (rh - lh) - 40), "storyb");
+        top.style.alignItems = ""; L.style.display = R.style.display = "";
+      }
+      const grid = body.querySelector(".co-top ~ .cogrid, .shiftc ~ .cogrid");
+      if (grid && $("#ccb")) {
+        const [L, R] = grid.children, cb = $("#ccb");
+        const over = L.offsetHeight - R.offsetHeight;
+        if (over > 200) clampBlock(cb, Math.max(700, cb.offsetHeight - over - 40), "ccb");
+      }
+    };
+    setTimeout(level, 60);
     clampBlock($("#tlb"), 520, "timeline");
     if ($("#conote")) $("#conote").onclick = () => openNote({ company: key });
     bindNoteActions(body);
