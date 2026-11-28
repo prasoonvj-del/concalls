@@ -592,6 +592,14 @@ def story_line(s):
     return f"[{s['id']}] {s['title']}{d} ({s['outlets']} outlet{'s' if s['outlets'] > 1 else ''})"
 
 
+MAX_RESCUES = 8
+
+
+def usable_brief(text):
+    """A section brief the page can show: has its one-line takeaway and some substance."""
+    return bool(text) and re.search(r"\*\*In one line:\*\*\s*\S", text) is not None and len(text) > 250
+
+
 def ask_fitted(pool, head, lines, label):
     """One request if the provider can take it all; otherwise in parts, then merged."""
     def job(ai):
@@ -767,6 +775,7 @@ def build(conf=None, log_failed=True):
         say(f"  trackers skipped: {str(e)[:150]}")
 
     sections = {}
+    rescues, rescue_until = 0, time.time() + 25 * 60  # full-quality rescues: a few, and not past ~25 min
     todo = [c for c in cats if len(by_cat[c]) >= conf["min_stories"]]
     say(f"\nWriting {len(todo)} sector briefs ...")
     for i, c in enumerate(todo, 1):
@@ -779,15 +788,29 @@ def build(conf=None, log_failed=True):
             continue
         say(f"[{i}/{len(todo)}] {c} ({len(by_cat[c])} stories, {new} new)")
         head = SECTION_PROMPT.format(cat=c, n=len(by_cat[c][:250]), hours=conf["hours"])
+        lines_c = [story_line(s) for s in by_cat[c][:250]]
+        text, why = "", ""
         try:
-            sections[c] = ask_fitted(bulk, head, [story_line(s) for s in by_cat[c][:250]], label=c)
-            cache["sections"][c] = {"keys": keys, "text": sections[c]}
+            text = ask_fitted(bulk, head, lines_c, label=c)
+        except C.AIError as e:  # (QuotaOver included: the other writers below may still be free)
+            why = str(e)
+        if not usable_brief(text) and rescues < MAX_RESCUES and time.time() < rescue_until:
+            # the everyday writers are used up or gave a poor answer: a full-quality writer does this one
+            rescues += 1
+            try:
+                say(f"    {'empty or incomplete answer' if not why else why[:80]} - a full-quality writer takes it")
+                text = ask_fitted(C.Pool(quality=True), head, lines_c, label=c + " (full)")
+            except C.AIError as e:
+                why = str(e)
+        if usable_brief(text):
+            sections[c] = text
+            cache["sections"][c] = {"keys": keys, "text": text}
             save_cache(cache, now_utc)
-        except C.QuotaOver as e:
-            say(f"\n{e}")
-            break
-        except C.AIError as e:
-            say(f"    failed: {e}")
+        elif prev:  # never leave a sector blank: show the last good write-up until a writer is free
+            sections[c] = prev["text"]
+            say(f"    no usable answer ({why[:80] or 'incomplete'}) - keeping the earlier write-up")
+        else:
+            say(f"    failed: {why or 'incomplete answer'}")
         time.sleep(pool.pause)
 
     big = ""
