@@ -466,6 +466,8 @@ def open_research(company, code, sector, start):
                              params={"q": f"{q} after:{start[:4]}-01-01", "hl": "en-IN", "gl": "IN", "ceid": "IN:en"})
             for it in ET.fromstring(r.content).iter("item"):
                 t, d = it.findtext("title") or "", it.findtext("pubDate") or ""
+                if re.search(r"share price|stock price|price today|quote and history|live nse|stock (?:rises|falls|jumps|gains)", t, re.I):
+                    continue  # price-ticker pages and daily move headlines: not the business story
                 src = it.findtext("source") or ""
                 try:
                     dd = dt.datetime.strptime(d[5:16], "%d %b %Y").strftime("%b %Y")
@@ -487,7 +489,7 @@ def open_research(company, code, sector, start):
         T = json.loads((C.DATA / "trackers.json").read_text(encoding="utf-8"))  # turning points, orders, results we collected
         T = T.get("trackers", T)
         rows = [r for k in ("pivots", "orders", "results", "events", "calls") for r in (T.get(k) or [])
-                if str(r.get("code")) == str(code) or short_name(r.get("company", "")).lower() == name.lower()]
+                if (code and str(r.get("code")) == str(code)) or short_name(r.get("company", "")).lower() == name.lower()]
         if rows:
             out.append("### Our record of filings and news\n" + "\n".join(
                 f"- {r.get('date', '')}: {r.get('type', '')} {r.get('what') or r.get('title') or r.get('head') or ''} "
