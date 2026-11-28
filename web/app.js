@@ -1472,7 +1472,9 @@
         <div class="m">✓ = its own latest concall talks about it</div></div>`;
     })();
     const bizHtml = story && story.biz ? story.biz.replace(/<(p|h\d)>\s*(<strong>)?\s*PART\s*2\b[\s\S]*$/i, "").replace(/<(p|h\d)>\s*(<strong>)?\s*PART\s*1\b[^<]*(<\/strong>)?\s*<\/\1>/i, "") : "";
-    const bizCard = story && story.biz ? `<div class="card md bizc"><h2>The business <span class="m">what it does, where it stands, its edge · ${esc(story.at)}</span></h2><div id="bizb">${bizHtml}</div></div>`
+    const mixHtml = await bizMix(call);
+    const bizCard = story && story.biz ? `<div class="card md bizc"><h2>The business <span class="m">what it does, where it stands, its edge · ${esc(story.at)}</span></h2>${mixHtml}<div id="bizb">${bizHtml}</div></div>`
+      : mixHtml ? `<div class="card md bizc"><h2>The business</h2>${mixHtml}<div class="m">The full business profile comes with "the story so far".</div></div>`
       : story && bsCode ? `<div class="card"><h2>The business</h2><div class="m">The business profile comes with the next refresh of "the story so far" for this company${isOwner() ? ` - <a href="${requestLink(bsCode, story.company)}" target="_blank" rel="noopener">write it now</a>` : ""}.</div></div>` : "";
     const storyCard = story ? `<div class="card md"><h2>The story so far <span class="m">last 2 years · what changed in the business, and how the stock was re-valued</span></h2>
         ${story.one ? `<p><b>${esc(story.one)}</b></p>` : ""}<div id="bspx"></div>
@@ -1514,6 +1516,8 @@
     body.innerHTML = call || decks.length
       ? `${topRow}${shiftLine}<div class="cogrid"><div>${concallCard}${deckCard}</div><div>${sideCards}</div></div>${await peerCard(call)}${await companyMix(call)}${tlCard}${notesCard}`
       : `${topRow}<div class="grid g2" style="align-items:start"><div>${askCard}${tlCard}</div><div>${sideCards}</div></div>${notesCard}`;
+    const all_ = body.querySelector(".bmix-all");
+    if (all_) all_.onclick = (e) => { e.preventDefault(); const m = body.querySelector(".card.mx"); if (m) m.scrollIntoView({ behavior: "smooth", block: "start" }); };
     // side by side, columns end level: the longer one folds at the other's height, with "Show all"
     const level = () => {
       if (innerWidth <= 900) { clampBlock($("#bizb"), 700, "bizb"); clampBlock($("#storyb"), 600, "storyb"); clampBlock($("#ccb"), 900, "ccb"); return; }
@@ -1691,6 +1695,31 @@
   }
   const MIXPAL = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6"];
   const DIMN = { segment: "Segments", product: "Products", customer: "Customers", channel: "Channels", geography: "Geography" };
+  // the company's own mix, shown inside "The business" card, with a few peers' bars right under it
+  async function bizMix(call) {
+    if (!call) return "";
+    const [cc, F, S] = await Promise.all([getConcalls(), getFund(), getSeg()]);
+    const v = S.cos[call.code];
+    if (!v || !(v.dims || []).length) return "";
+    const color = {}; let ci = 0;
+    const col = (n) => { const k = n.toLowerCase().replace(/[^a-z]/g, "").slice(0, 12); if (!(k in color)) color[k] = MIXPAL[ci++ % MIXPAL.length]; return cssv(color[k]); };
+    const sh = (d, p) => (v.shift || []).find((x) => x.dim === d.dim && x.n === p.n);
+    const bar = (d, w, shOf) => `<div class="mx-bar">${d.parts.map((p) => `<span style="width:${p.pct}%;background:${col(p.n)}" title="${esc(p.n)} ${p.pct}%"></span>`).join("")}</div>
+      <div class="mx-lab">${d.parts.map((p) => { const x = shOf && shOf(d, p); return `<span><i style="background:${col(p.n)}"></i>${esc(p.n)} <b>${p.pct}%</b>${x ? ` <span class="mx-sh ${x.pp > 0 ? "up" : "dn"}" title="${x.then}% → ${x.now}% since ${esc(x.since)}">${x.pp > 0 ? "▲" : "▼"}${Math.abs(x.pp)}pp</span>` : ""}${p.m != null ? ` <em>margin ${p.m}%</em>` : ""}</span>`; }).join("")}</div>`;
+    const byCo = {};
+    cc.calls.forEach((c) => { const k = norm(c.company); if (!byCo[k] || c.date > byCo[k].date) byCo[k] = c; });
+    const all = Object.values(byCo).filter((c) => c.code !== call.code && (S.cos[c.code] || {}).dims && S.cos[c.code].dims.length);
+    let peers = call.ind ? all.filter((c) => c.ind === call.ind) : [];
+    if (peers.length < 2) peers = all.filter((c) => c.sector === call.sector);
+    peers = peers.sort((a, b) => ((F[b.code] || {}).mcap || 0) - ((F[a.code] || {}).mcap || 0)).slice(0, 4);
+    const main = (x) => x.dims.find((d) => d.dim === "segment") || x.dims.find((d) => d.dim === "product") || x.dims[0];
+    const em = (c) => ((c.metrics || {}).ebitda_margin_pct != null ? `EBITDA ${Math.round(c.metrics.ebitda_margin_pct * 10) / 10}%` : "");
+    return `<div class="bmix"><h3>How its revenue splits <span class="m">${esc(v.basis || "")} · from its call and deck</span></h3>
+      ${v.dims.map((d) => `<div class="bmix-d"><div class="m">${esc(DIMN[d.dim] || d.dim)}${d.was_period ? " · ▲▼ vs " + esc(d.was_period) : ""}</div>${bar(d, 100, sh)}</div>`).join("")}
+      ${peers.length ? `<div class="bmix-p"><div class="m">Peers' split${em(call) ? ` · this company: ${em(call)}` : ""}</div>${peers.map((c) => { const pv = S.cos[c.code], d = main(pv);
+        return `<div class="bmix-pr"><a href="#companies/${encodeURIComponent(c.company)}">${esc(c.company.replace(/ (Ltd|Limited)\.?$/, ""))}</a><span class="m">${esc(DIMN[d.dim] || d.dim)}${em(c) ? " · " + em(c) : ""}</span>${bar(d, 100)}</div>`; }).join("")}
+        <a href="#" class="bmix-all">Full comparison with margins and returns ↓</a></div>` : `<div class="m" style="margin-top:6px">Peers' splits appear here as their calls and decks are read.</div>`}</div>`;
+  }
   // rows: latest calls (with .code, .company, .metrics); me: the company to highlight; scope: "sector|industry"
   function mixCard(rows, S, F, me, scope, title) {
     const have = rows.filter((c) => (S.cos[c.code] || {}).dims && S.cos[c.code].dims.length);
