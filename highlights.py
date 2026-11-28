@@ -507,7 +507,7 @@ def step(lib=None, force=False):
     say(f"\nTop developments: linking {len(cands)} companies with 2+ kinds of evidence ...")
     try:
         text, ai = C.Pool(quality=True).ask(PROMPT.format(n=len(cands), yesterday=yest, body=_body(cands), ahead=_ahead_body(ahead)),
-                                            label="top developments", max_wait=120)
+                                            label="top developments", max_wait=420)  # NVIDIA takes 2-4 min
     except C.AIError as e:
         say(f"  top developments wait for a full-quality model: {str(e)[:100]}")
         return
